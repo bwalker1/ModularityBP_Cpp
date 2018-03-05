@@ -79,12 +79,6 @@ BP_GraphColor::BP_GraphColor(const index_t _n, const double p, const int _q, con
             edges[i].push_back(j);
             edges[j].push_back(i);
         }//*/
-        /*
-         index_t j = (i+1)%n;
-         edges[i].push_back(j);
-         edges[j].push_back(i);
-         num_edges += 1;
-         //*/
     }
     
     num_edges *= 2;
@@ -200,8 +194,8 @@ BP_GraphColor::BP_GraphColor(const index_t _n, const double p, const int _q, con
     {
         double val = eps_dist(rng);
         //printf("%f\n",val);
-        //beliefs[idx] = truncate(1.0/q + val,q);
-        beliefs[idx] = unif_dist(rng);
+        beliefs[idx] = truncate(1.0/q + val,q);
+        //beliefs[idx] = unif_dist(rng);
     }//*/
     
     //print_beliefs(100);
@@ -233,7 +227,7 @@ BP_GraphColor::BP_GraphColor(const index_t _n, const double p, const int _q, con
 
 bool BP_GraphColor::run()
 {
-    
+    save = false;
     change = 1;
     unsigned long maxIters = 100;
     bool converged = false;
