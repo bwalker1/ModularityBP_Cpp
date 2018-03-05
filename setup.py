@@ -1,9 +1,9 @@
 from distutils.core import setup, Extension
 
-#ext_module=Extension(name="_modbp",
-#                     sources=[],
-#                     include_dirs=[]
-#                     )
+ext_module=Extension(name="_bp",
+                    sources=["modbp/src_cpp/bp.cpp","modbp/bp.i"],
+                    include_dirs=["modbp/src_cpp"],swig_opts=["-c++"]
+                    )
 
 options=dict( name='modbp',
     version='0.0',
@@ -14,6 +14,7 @@ options=dict( name='modbp',
     provides=['modbp'],
     author_email='wweir@med.unc.edu',
     description='',
+    ext_modules=[ext_module],
     zip_safe=False,
     classifiers=["Programming Language :: Python :: 2.7",
                  "Programming Language :: Python :: 3.3",
