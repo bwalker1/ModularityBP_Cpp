@@ -41,9 +41,10 @@ void print_array(double *arr, index_t n)
 }
 
 
+
 BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, const double _beta, bool _simultaneous, bool _transform) : q(_q),n(_n), beta(_beta), simultaneous(_simultaneous), neighbor_count(_n), order(_n), rng(int(5)), transform(_transform)
 {
-    save = true;
+    save = false;
     clock_t start = clock();
     
     printf("Constructing graph\n");
@@ -652,6 +653,11 @@ BP_Modularity::~BP_Modularity() {
     free(scratch);
     free(marginals);
 }
+
+index_t BP_Modularity::return5(vector<pair<index_t, index_t> > edgelist) { 
+    return 5;
+}
+
 
 
 

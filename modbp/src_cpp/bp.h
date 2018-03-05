@@ -45,6 +45,8 @@ public:
     void compute_marginals();
     
     void save_rgb();
+    
+    index_t return5(vector<pair<index_t,index_t> > edgelist);
 private:
     void normalize(double *beliefs, index_t i);
     
