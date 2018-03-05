@@ -41,7 +41,7 @@ void print_array(double *arr, index_t n)
 }
 
 
-BP_GraphColor::BP_GraphColor(const index_t _n, const double p, const int _q, const double _beta, bool _simultaneous, bool _transform) : q(_q),n(_n), beta(_beta), simultaneous(_simultaneous), neighbor_count(_n), order(_n), rng(int(5)), transform(_transform)
+BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, const double _beta, bool _simultaneous, bool _transform) : q(_q),n(_n), beta(_beta), simultaneous(_simultaneous), neighbor_count(_n), order(_n), rng(int(5)), transform(_transform)
 {
     save = true;
     clock_t start = clock();
@@ -231,7 +231,7 @@ BP_GraphColor::BP_GraphColor(const index_t _n, const double p, const int _q, con
     printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
 }
 
-bool BP_GraphColor::run()
+bool BP_Modularity::run()
 {
     
     change = 1;
@@ -265,7 +265,7 @@ bool BP_GraphColor::run()
     return converged;
 }
 
-void BP_GraphColor::stepNew()
+void BP_Modularity::stepNew()
 {
     changed = false;
     change = 0;
@@ -392,7 +392,7 @@ void BP_GraphColor::stepNew()
     }
 }
 
-void BP_GraphColor::step()
+void BP_Modularity::step()
 {
     //printf("Entering step\n");
     //print_all_arrays();
@@ -457,7 +457,7 @@ void BP_GraphColor::step()
 
 // enforce normalization constraint on outgoing messsages of node i
 // old version that used local storage of outgoing connections
-/*void BP_GraphColor::normalizeOld(double * beliefs, index_t i)
+/*void BP_Modularity::normalizeOld(double * beliefs, index_t i)
  {
  const index_t nn = neighbor_count[i];
  // iterate over all neighbors
@@ -477,7 +477,7 @@ void BP_GraphColor::step()
  }
  */
 
-void BP_GraphColor::normalize(double * beliefs, index_t i)
+void BP_Modularity::normalize(double * beliefs, index_t i)
 {
     const index_t nn = neighbor_count[i];
     // iterate over all neighbors
@@ -497,7 +497,7 @@ void BP_GraphColor::normalize(double * beliefs, index_t i)
 }
 
 /*
- void BP_GraphColor::print_all_arrays() {
+ void BP_Modularity::print_all_arrays() {
  //print_array(beliefs,q*num_edges);
  print_array(beliefs_offsets,n+1);
  print_array(neighbors,num_edges);
@@ -505,7 +505,7 @@ void BP_GraphColor::normalize(double * beliefs, index_t i)
  }
  */
 
-void BP_GraphColor::print_beliefs()
+void BP_Modularity::print_beliefs()
 {
     for (index_t i=0;i<n;++i)
     {
@@ -524,7 +524,7 @@ void BP_GraphColor::print_beliefs()
 }
 
 
-void BP_GraphColor::compute_marginals()
+void BP_Modularity::compute_marginals()
 {
     int limit = 200;
     vector<byte> red(limit),green(limit),blue(limit);
@@ -591,14 +591,14 @@ void data_save(const char* fn, vector<vector<byte> > data)
     fclose(fp);
 }
 
-void BP_GraphColor::save_rgb()
+void BP_Modularity::save_rgb()
 {
     data_save("/Users/ben/Data/red.csv",reds);
     data_save("/Users/ben/Data/green.csv",greens);
     data_save("/Users/ben/Data/blue.csv",blues);
 }
 
-void BP_GraphColor::print_marginals(size_t limit)
+void BP_Modularity::print_marginals(size_t limit)
 {
     compute_marginals();
     
@@ -616,7 +616,7 @@ void BP_GraphColor::print_marginals(size_t limit)
     }
 }
 
-void BP_GraphColor::print_beliefs(size_t limit)
+void BP_Modularity::print_beliefs(size_t limit)
 {
     size_t print_count = 0;
     for (index_t i=0;i<n;++i)
@@ -642,7 +642,7 @@ void BP_GraphColor::print_beliefs(size_t limit)
     }
 }
 
-BP_GraphColor::~BP_GraphColor() { 
+BP_Modularity::~BP_Modularity() { 
     free(beliefs);
     free(beliefs_new);
     free(beliefs_offsets);

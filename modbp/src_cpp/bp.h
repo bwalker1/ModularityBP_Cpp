@@ -23,12 +23,12 @@ typedef unsigned long index_t;
 
 void print_array(index_t *arr, index_t n);
 
-class BP_GraphColor
+class BP_Modularity
 {
 public:
     // initialize with Erdos-Renyi random graph
-    BP_GraphColor(const index_t n, const double p, const int q, const double beta, bool simultaneous = true, bool transform = true);
-    ~BP_GraphColor();
+    BP_Modularity(const index_t n, const double p, const int q, const double beta, bool simultaneous = true, bool transform = true);
+    ~BP_Modularity();
     
     // run BP to convergence
     bool run();

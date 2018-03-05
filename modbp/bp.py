@@ -100,44 +100,44 @@ TRANSFORM = _bp.TRANSFORM
 def print_array(arr, n):
     return _bp.print_array(arr, n)
 print_array = _bp.print_array
-class BP_GraphColor(_object):
+class BP_Modularity(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, BP_GraphColor, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, BP_Modularity, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, BP_GraphColor, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
     def __init__(self, n, p, q, beta, simultaneous=True, transform=True):
-        this = _bp.new_BP_GraphColor(n, p, q, beta, simultaneous, transform)
+        this = _bp.new_BP_Modularity(n, p, q, beta, simultaneous, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
-    __swig_destroy__ = _bp.delete_BP_GraphColor
+    __swig_destroy__ = _bp.delete_BP_Modularity
     __del__ = lambda self: None
 
     def run(self):
-        return _bp.BP_GraphColor_run(self)
+        return _bp.BP_Modularity_run(self)
 
     def step(self):
-        return _bp.BP_GraphColor_step(self)
+        return _bp.BP_Modularity_step(self)
 
     def stepNew(self):
-        return _bp.BP_GraphColor_stepNew(self)
+        return _bp.BP_Modularity_stepNew(self)
 
     def print_beliefs(self, *args):
-        return _bp.BP_GraphColor_print_beliefs(self, *args)
+        return _bp.BP_Modularity_print_beliefs(self, *args)
 
     def print_marginals(self, limit):
-        return _bp.BP_GraphColor_print_marginals(self, limit)
+        return _bp.BP_Modularity_print_marginals(self, limit)
 
     def compute_marginals(self):
-        return _bp.BP_GraphColor_compute_marginals(self)
+        return _bp.BP_Modularity_compute_marginals(self)
 
     def save_rgb(self):
-        return _bp.BP_GraphColor_save_rgb(self)
-BP_GraphColor_swigregister = _bp.BP_GraphColor_swigregister
-BP_GraphColor_swigregister(BP_GraphColor)
+        return _bp.BP_Modularity_save_rgb(self)
+BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
+BP_Modularity_swigregister(BP_Modularity)
 
 # This file is compatible with both classic and new-style classes.
 

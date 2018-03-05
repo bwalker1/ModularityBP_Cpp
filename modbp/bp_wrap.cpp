@@ -3003,7 +3003,7 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_BP_GraphColor swig_types[0]
+#define SWIGTYPE_p_BP_Modularity swig_types[0]
 #define SWIGTYPE_p_char swig_types[1]
 #define SWIGTYPE_p_unsigned_char swig_types[2]
 #define SWIGTYPE_p_unsigned_long swig_types[3]
@@ -3442,7 +3442,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_GraphColor__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   index_t arg1 ;
   double arg2 ;
@@ -3468,48 +3468,48 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
   PyObject * obj5 = 0 ;
-  BP_GraphColor *result = 0 ;
+  BP_Modularity *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:new_BP_GraphColor",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
   ecode1 = SWIG_AsVal_unsigned_SS_long(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_GraphColor" "', argument " "1"" of type '" "index_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "index_t""'");
   } 
   arg1 = static_cast< index_t >(val1);
   ecode2 = SWIG_AsVal_double(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_GraphColor" "', argument " "2"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "double""'");
   } 
   arg2 = static_cast< double >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_GraphColor" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   ecode4 = SWIG_AsVal_double(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_GraphColor" "', argument " "4"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "double""'");
   } 
   arg4 = static_cast< double >(val4);
   ecode5 = SWIG_AsVal_bool(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_GraphColor" "', argument " "5"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Modularity" "', argument " "5"" of type '" "bool""'");
   } 
   arg5 = static_cast< bool >(val5);
   ecode6 = SWIG_AsVal_bool(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_GraphColor" "', argument " "6"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Modularity" "', argument " "6"" of type '" "bool""'");
   } 
   arg6 = static_cast< bool >(val6);
-  result = (BP_GraphColor *)new BP_GraphColor(arg1,arg2,arg3,arg4,arg5,arg6);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_GraphColor, SWIG_POINTER_NEW |  0 );
+  result = (BP_Modularity *)new BP_Modularity(arg1,arg2,arg3,arg4,arg5,arg6);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_GraphColor__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   index_t arg1 ;
   double arg2 ;
@@ -3531,43 +3531,43 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
-  BP_GraphColor *result = 0 ;
+  BP_Modularity *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:new_BP_GraphColor",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
   ecode1 = SWIG_AsVal_unsigned_SS_long(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_GraphColor" "', argument " "1"" of type '" "index_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "index_t""'");
   } 
   arg1 = static_cast< index_t >(val1);
   ecode2 = SWIG_AsVal_double(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_GraphColor" "', argument " "2"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "double""'");
   } 
   arg2 = static_cast< double >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_GraphColor" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   ecode4 = SWIG_AsVal_double(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_GraphColor" "', argument " "4"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "double""'");
   } 
   arg4 = static_cast< double >(val4);
   ecode5 = SWIG_AsVal_bool(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_GraphColor" "', argument " "5"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Modularity" "', argument " "5"" of type '" "bool""'");
   } 
   arg5 = static_cast< bool >(val5);
-  result = (BP_GraphColor *)new BP_GraphColor(arg1,arg2,arg3,arg4,arg5);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_GraphColor, SWIG_POINTER_NEW |  0 );
+  result = (BP_Modularity *)new BP_Modularity(arg1,arg2,arg3,arg4,arg5);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_GraphColor__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   index_t arg1 ;
   double arg2 ;
@@ -3585,38 +3585,38 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
-  BP_GraphColor *result = 0 ;
+  BP_Modularity *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOO:new_BP_GraphColor",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   ecode1 = SWIG_AsVal_unsigned_SS_long(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_GraphColor" "', argument " "1"" of type '" "index_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "index_t""'");
   } 
   arg1 = static_cast< index_t >(val1);
   ecode2 = SWIG_AsVal_double(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_GraphColor" "', argument " "2"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "double""'");
   } 
   arg2 = static_cast< double >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_GraphColor" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   ecode4 = SWIG_AsVal_double(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_GraphColor" "', argument " "4"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "double""'");
   } 
   arg4 = static_cast< double >(val4);
-  result = (BP_GraphColor *)new BP_GraphColor(arg1,arg2,arg3,arg4);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_GraphColor, SWIG_POINTER_NEW |  0 );
+  result = (BP_Modularity *)new BP_Modularity(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_GraphColor(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
   PyObject *argv[7] = {
     0
@@ -3650,7 +3650,7 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor(PyObject *self, PyObject *args) {
             _v = SWIG_CheckState(res);
           }
           if (_v) {
-            return _wrap_new_BP_GraphColor__SWIG_2(self, args);
+            return _wrap_new_BP_Modularity__SWIG_2(self, args);
           }
         }
       }
@@ -3683,7 +3683,7 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor(PyObject *self, PyObject *args) {
               _v = SWIG_CheckState(res);
             }
             if (_v) {
-              return _wrap_new_BP_GraphColor__SWIG_1(self, args);
+              return _wrap_new_BP_Modularity__SWIG_1(self, args);
             }
           }
         }
@@ -3722,7 +3722,7 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor(PyObject *self, PyObject *args) {
                 _v = SWIG_CheckState(res);
               }
               if (_v) {
-                return _wrap_new_BP_GraphColor__SWIG_0(self, args);
+                return _wrap_new_BP_Modularity__SWIG_0(self, args);
               }
             }
           }
@@ -3732,28 +3732,28 @@ SWIGINTERN PyObject *_wrap_new_BP_GraphColor(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_BP_GraphColor'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_BP_Modularity'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    BP_GraphColor::BP_GraphColor(index_t const,double const,int const,double const,bool,bool)\n"
-    "    BP_GraphColor::BP_GraphColor(index_t const,double const,int const,double const,bool)\n"
-    "    BP_GraphColor::BP_GraphColor(index_t const,double const,int const,double const)\n");
+    "    BP_Modularity::BP_Modularity(index_t const,double const,int const,double const,bool,bool)\n"
+    "    BP_Modularity::BP_Modularity(index_t const,double const,int const,double const,bool)\n"
+    "    BP_Modularity::BP_Modularity(index_t const,double const,int const,double const)\n");
   return 0;
 }
 
 
-SWIGINTERN PyObject *_wrap_delete_BP_GraphColor(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_delete_BP_Modularity(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_BP_GraphColor",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, SWIG_POINTER_DISOWN |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_BP_Modularity",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_BP_GraphColor" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_BP_Modularity" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   delete arg1;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3762,20 +3762,20 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_run(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_run(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   bool result;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_GraphColor_run",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_run",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_run" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_run" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   result = (bool)(arg1)->run();
   resultobj = SWIG_From_bool(static_cast< bool >(result));
   return resultobj;
@@ -3784,19 +3784,19 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_step(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_step(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_GraphColor_step",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_step",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_step" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_step" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   (arg1)->step();
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3805,19 +3805,19 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_stepNew(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_stepNew(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_GraphColor_stepNew",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_stepNew",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_stepNew" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_stepNew" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   (arg1)->stepNew();
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3826,19 +3826,19 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_print_beliefs__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_print_beliefs__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_GraphColor_print_beliefs",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_print_beliefs",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_print_beliefs" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_print_beliefs" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   (arg1)->print_beliefs();
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3847,9 +3847,9 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_print_beliefs__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_print_beliefs__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   size_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -3858,15 +3858,15 @@ SWIGINTERN PyObject *_wrap_BP_GraphColor_print_beliefs__SWIG_1(PyObject *SWIGUNU
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_GraphColor_print_beliefs",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Modularity_print_beliefs",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_print_beliefs" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_print_beliefs" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   ecode2 = SWIG_AsVal_size_t(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_GraphColor_print_beliefs" "', argument " "2"" of type '" "size_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Modularity_print_beliefs" "', argument " "2"" of type '" "size_t""'");
   } 
   arg2 = static_cast< size_t >(val2);
   (arg1)->print_beliefs(arg2);
@@ -3877,7 +3877,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_print_beliefs(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_print_beliefs(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
   PyObject *argv[3] = {
     0
@@ -3892,16 +3892,16 @@ SWIGINTERN PyObject *_wrap_BP_GraphColor_print_beliefs(PyObject *self, PyObject 
   if (argc == 1) {
     int _v;
     void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_BP_GraphColor, 0);
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_BP_Modularity, 0);
     _v = SWIG_CheckState(res);
     if (_v) {
-      return _wrap_BP_GraphColor_print_beliefs__SWIG_0(self, args);
+      return _wrap_BP_Modularity_print_beliefs__SWIG_0(self, args);
     }
   }
   if (argc == 2) {
     int _v;
     void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_BP_GraphColor, 0);
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_BP_Modularity, 0);
     _v = SWIG_CheckState(res);
     if (_v) {
       {
@@ -3909,23 +3909,23 @@ SWIGINTERN PyObject *_wrap_BP_GraphColor_print_beliefs(PyObject *self, PyObject 
         _v = SWIG_CheckState(res);
       }
       if (_v) {
-        return _wrap_BP_GraphColor_print_beliefs__SWIG_1(self, args);
+        return _wrap_BP_Modularity_print_beliefs__SWIG_1(self, args);
       }
     }
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'BP_GraphColor_print_beliefs'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'BP_Modularity_print_beliefs'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    BP_GraphColor::print_beliefs()\n"
-    "    BP_GraphColor::print_beliefs(size_t)\n");
+    "    BP_Modularity::print_beliefs()\n"
+    "    BP_Modularity::print_beliefs(size_t)\n");
   return 0;
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_print_marginals(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_print_marginals(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   size_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -3934,15 +3934,15 @@ SWIGINTERN PyObject *_wrap_BP_GraphColor_print_marginals(PyObject *SWIGUNUSEDPAR
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_GraphColor_print_marginals",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Modularity_print_marginals",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_print_marginals" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_print_marginals" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   ecode2 = SWIG_AsVal_size_t(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_GraphColor_print_marginals" "', argument " "2"" of type '" "size_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Modularity_print_marginals" "', argument " "2"" of type '" "size_t""'");
   } 
   arg2 = static_cast< size_t >(val2);
   (arg1)->print_marginals(arg2);
@@ -3953,19 +3953,19 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_compute_marginals(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_compute_marginals(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_GraphColor_compute_marginals",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_compute_marginals",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_compute_marginals" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_compute_marginals" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   (arg1)->compute_marginals();
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3974,19 +3974,19 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_GraphColor_save_rgb(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_save_rgb(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  BP_GraphColor *arg1 = (BP_GraphColor *) 0 ;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_GraphColor_save_rgb",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_GraphColor, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_save_rgb",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_GraphColor_save_rgb" "', argument " "1"" of type '" "BP_GraphColor *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_save_rgb" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
-  arg1 = reinterpret_cast< BP_GraphColor * >(argp1);
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   (arg1)->save_rgb();
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3995,51 +3995,51 @@ fail:
 }
 
 
-SWIGINTERN PyObject *BP_GraphColor_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *BP_Modularity_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_BP_GraphColor, SWIG_NewClientData(obj));
+  SWIG_TypeNewClientData(SWIGTYPE_p_BP_Modularity, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"print_array", _wrap_print_array, METH_VARARGS, NULL},
-	 { (char *)"new_BP_GraphColor", _wrap_new_BP_GraphColor, METH_VARARGS, NULL},
-	 { (char *)"delete_BP_GraphColor", _wrap_delete_BP_GraphColor, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_run", _wrap_BP_GraphColor_run, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_step", _wrap_BP_GraphColor_step, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_stepNew", _wrap_BP_GraphColor_stepNew, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_print_beliefs", _wrap_BP_GraphColor_print_beliefs, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_print_marginals", _wrap_BP_GraphColor_print_marginals, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_compute_marginals", _wrap_BP_GraphColor_compute_marginals, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_save_rgb", _wrap_BP_GraphColor_save_rgb, METH_VARARGS, NULL},
-	 { (char *)"BP_GraphColor_swigregister", BP_GraphColor_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_BP_Modularity", _wrap_new_BP_Modularity, METH_VARARGS, NULL},
+	 { (char *)"delete_BP_Modularity", _wrap_delete_BP_Modularity, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_run", _wrap_BP_Modularity_run, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_step", _wrap_BP_Modularity_step, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_stepNew", _wrap_BP_Modularity_stepNew, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_print_beliefs", _wrap_BP_Modularity_print_beliefs, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_print_marginals", _wrap_BP_Modularity_print_marginals, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_compute_marginals", _wrap_BP_Modularity_compute_marginals, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_save_rgb", _wrap_BP_Modularity_save_rgb, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_swigregister", BP_Modularity_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static swig_type_info _swigt__p_BP_GraphColor = {"_p_BP_GraphColor", "BP_GraphColor *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_BP_Modularity = {"_p_BP_Modularity", "BP_Modularity *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_char = {"_p_unsigned_char", "unsigned char *|byte *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_unsigned_long = {"_p_unsigned_long", "index_t *|unsigned long *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
-  &_swigt__p_BP_GraphColor,
+  &_swigt__p_BP_Modularity,
   &_swigt__p_char,
   &_swigt__p_unsigned_char,
   &_swigt__p_unsigned_long,
 };
 
-static swig_cast_info _swigc__p_BP_GraphColor[] = {  {&_swigt__p_BP_GraphColor, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_BP_Modularity[] = {  {&_swigt__p_BP_Modularity, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_char[] = {  {&_swigt__p_unsigned_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_unsigned_long[] = {  {&_swigt__p_unsigned_long, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
-  _swigc__p_BP_GraphColor,
+  _swigc__p_BP_Modularity,
   _swigc__p_char,
   _swigc__p_unsigned_char,
   _swigc__p_unsigned_long,
