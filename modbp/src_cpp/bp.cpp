@@ -79,13 +79,7 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
             if (find(edges[i].begin(), edges[i].end(), j) != edges[i].end()) continue;
             edges[i].push_back(j);
             edges[j].push_back(i);
-        }//*/
-        /*
-         index_t j = (i+1)%n;
-         edges[i].push_back(j);
-         edges[j].push_back(i);
-         num_edges += 1;
-         //*/
+        }
     }
     
     num_edges *= 2;
