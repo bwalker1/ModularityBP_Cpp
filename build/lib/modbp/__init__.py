@@ -1,1 +1,0 @@
-from .ModularityBP import RandomERGraph
