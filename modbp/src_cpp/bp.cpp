@@ -201,8 +201,8 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     {
         double val = eps_dist(rng);
         //printf("%f\n",val);
-        //beliefs[idx] = truncate(1.0/q + val,q);
-        beliefs[idx] = unif_dist(rng);
+        beliefs[idx] = truncate(1.0/q + val,q);
+        //beliefs[idx] = unif_dist(rng);
     }//*/
     
     //print_beliefs(100);
@@ -456,28 +456,6 @@ void BP_Modularity::step()
     }
 }
 
-// enforce normalization constraint on outgoing messsages of node i
-// old version that used local storage of outgoing connections
-/*void BP_Modularity::normalizeOld(double * beliefs, index_t i)
- {
- const index_t nn = neighbor_count[i];
- // iterate over all neighbors
- for (size_t idx2 = 0; idx2 < nn; ++ idx2)
- {
- // iterate over all states
- double sum = 1e-12;
- for (size_t s = 0; s < q;++s)
- {
- sum += beliefs[beliefs_offsets[i]+nn*s+idx2];
- }
- for (size_t s = 0; s < q;++s)
- {
- beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
- }
- }
- }
- */
-
 void BP_Modularity::normalize(double * beliefs, index_t i)
 {
     const index_t nn = neighbor_count[i];
@@ -496,15 +474,6 @@ void BP_Modularity::normalize(double * beliefs, index_t i)
         }
     }
 }
-
-/*
- void BP_Modularity::print_all_arrays() {
- //print_array(beliefs,q*num_edges);
- print_array(beliefs_offsets,n+1);
- print_array(neighbors,num_edges);
- print_array(neighbors_offsets,n+1);
- }
- */
 
 void BP_Modularity::print_beliefs()
 {
