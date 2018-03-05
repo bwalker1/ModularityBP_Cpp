@@ -1,9 +1,9 @@
 from distutils.core import setup, Extension
 
-ext_module=Extension(name="_modbp",
-                     sources=[],
-                     include_dirs=[]
-                     )
+#ext_module=Extension(name="_modbp",
+#                     sources=[],
+#                     include_dirs=[]
+#                     )
 
 options=dict( name='modbp',
     version='0.0',
