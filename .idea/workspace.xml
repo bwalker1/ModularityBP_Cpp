@@ -3,14 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="d6f6ffec-8b4b-475c-8778-b2ff96e41e49" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ModularityBP/bp.i" afterPath="$PROJECT_DIR$/ModularityBP/bp.i" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/ModularityBP.py" afterPath="$PROJECT_DIR$/modbp/ModularityBP.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/__init__.py" afterPath="$PROJECT_DIR$/modbp/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/bp.i" afterPath="$PROJECT_DIR$/modbp/bp.i" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/bp.py" afterPath="$PROJECT_DIR$/modbp/bp.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/bp_wrap.cpp" afterPath="$PROJECT_DIR$/modbp/bp_wrap.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/src_cpp/bp.cpp" afterPath="$PROJECT_DIR$/modbp/src_cpp/bp.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/modbp/src_cpp/bp.h" afterPath="$PROJECT_DIR$/modbp/src_cpp/bp.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/test_modbp.py" afterPath="$PROJECT_DIR$/test/test_modbp.py" />
     </list>
     <ignored path="ModularityBP_Cpp.iws" />
@@ -31,26 +26,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="bp.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ModularityBP/bp.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="720">
-              <caret line="139" column="26" selection-start-line="139" selection-start-column="0" selection-end-line="139" selection-end-column="26" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="bp_wrap.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ModularityBP/bp_wrap.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="ModularityBP.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modbp/ModularityBP.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -76,8 +51,8 @@
       <file leaf-file-name="bp.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modbp/src_cpp/bp.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="277">
-              <caret line="33" column="15" selection-start-line="33" selection-start-column="15" selection-end-line="33" selection-end-column="15" />
+            <state relative-caret-position="480">
+              <caret line="42" column="4" selection-start-line="42" selection-start-column="4" selection-end-line="42" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -86,8 +61,28 @@
       <file leaf-file-name="bp.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modbp/bp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="224">
-              <caret line="102" column="19" selection-start-line="102" selection-start-column="6" selection-end-line="102" selection-end-column="19" />
+            <state relative-caret-position="3074">
+              <caret line="317" column="31" selection-start-line="140" selection-start-column="19" selection-end-line="140" selection-end-column="40" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bp_wrap.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modbp/bp_wrap.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="69151">
+              <caret line="8616" column="2" selection-start-line="8616" selection-start-column="0" selection-end-line="8616" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bp.i" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modbp/bp.i">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="225">
+              <caret line="15" column="16" selection-start-line="15" selection-start-column="11" selection-end-line="15" selection-end-column="16" />
               <folding />
             </state>
           </provider>
@@ -106,8 +101,8 @@
       <file leaf-file-name="test_modbp.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/test/test_modbp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="6" column="27" selection-start-line="6" selection-start-column="14" selection-end-line="6" selection-end-column="27" />
+            <state relative-caret-position="60">
+              <caret line="4" column="11" selection-start-line="4" selection-start-column="11" selection-end-line="4" selection-end-column="11" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
@@ -130,8 +125,8 @@
       <file leaf-file-name="bp.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/modbp/src_cpp/bp.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="64" column="46" selection-start-line="64" selection-start-column="46" selection-end-line="64" selection-end-column="46" />
+            <state relative-caret-position="3345">
+              <caret line="330" column="47" selection-start-line="330" selection-start-column="47" selection-end-line="330" selection-end-column="47" />
               <folding />
             </state>
           </provider>
@@ -157,7 +152,6 @@
         <option value="$PROJECT_DIR$/modbp/README.rst" />
         <option value="$PROJECT_DIR$/modbp/test/test_modbp.py" />
         <option value="$PROJECT_DIR$/test/context.py" />
-        <option value="$PROJECT_DIR$/modbp/bp.i" />
         <option value="$PROJECT_DIR$/modbp/src_cpp/bp.i" />
         <option value="$PROJECT_DIR$/modbp/__init__.py" />
         <option value="$PROJECT_DIR$/ModularityBP/bp.i" />
@@ -166,6 +160,7 @@
         <option value="$PROJECT_DIR$/modbp/src_cpp/bp.cpp" />
         <option value="$PROJECT_DIR$/modbp/src_cpp/bp.h" />
         <option value="$PROJECT_DIR$/modbp/ModularityBP.py" />
+        <option value="$PROJECT_DIR$/modbp/bp.i" />
         <option value="$PROJECT_DIR$/test/test_modbp.py" />
       </list>
     </option>
@@ -283,6 +278,118 @@
       <recent name="$PROJECT_DIR$/ModularityBP" />
       <recent name="$PROJECT_DIR$" />
     </key>
+  </component>
+  <component name="RestoreUpdateTree" date="Moments ago" ActionInfo="_Update">
+    <UpdatedFiles>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Updated from server" />
+        <option name="myStatusName" value="Changed on server" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="CHANGED_ON_SERVER" />
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Updated" />
+          <option name="myStatusName" value="Changed" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="UPDATED" />
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/.gitignore</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/modbp/src_cpp/bp.cpp</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/modbp/src_cpp/bp.h</PATH>
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Created" />
+          <option name="myStatusName" value="Created" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="CREATED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Deleted" />
+          <option name="myStatusName" value="Deleted" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="true" />
+          <option name="myId" value="REMOVED_FROM_REPOSITORY" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Restored" />
+          <option name="myStatusName" value="Will be restored" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="RESTORED" />
+        </FILE-GROUP>
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Modified" />
+        <option name="myStatusName" value="Modified" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MODIFIED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Skipped" />
+        <option name="myStatusName" value="Skipped" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="SKIPPED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with conflicts" />
+        <option name="myStatusName" value="Will be merged with conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_CONFLICTS" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with tree conflicts" />
+        <option name="myStatusName" value="Merged with tree conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_TREE_CONFLICT" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with property conflicts" />
+        <option name="myStatusName" value="Will be merged with property conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_PROPERTY_CONFLICT" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged" />
+        <option name="myStatusName" value="Will be merged" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Not in repository" />
+        <option name="myStatusName" value="Not in repository" />
+        <option name="mySupportsDeletion" value="true" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="UNKNOWN" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Locally added" />
+        <option name="myStatusName" value="Locally added" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="LOCALLY_ADDED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Locally removed" />
+        <option name="myStatusName" value="Locally removed" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="LOCALLY_REMOVED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Switched" />
+        <option name="myStatusName" value="Switched" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="SWITCHED" />
+      </FILE-GROUP>
+    </UpdatedFiles>
   </component>
   <component name="RunManager" selected="Python.test_modbp">
     <configuration default="false" name="test_modbp" type="PythonConfigurationType" factoryName="Python" temporary="true">
@@ -477,7 +584,14 @@
       <option name="project" value="LOCAL" />
       <updated>1520272089779</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="changed name of BP modularity">
+      <created>1520285800729</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1520285800730</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -486,14 +600,14 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20708661" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32961586" sideWeight="0.5031496" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32961586" sideWeight="0.4968504" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32961586" sideWeight="0.5062992" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32961586" sideWeight="0.49370077" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3294347" sideWeight="0.75222224" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29739776" sideWeight="0.6669291" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29739776" sideWeight="0.6629921" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -518,19 +632,20 @@
     <MESSAGE value="added setup for python wrapper and registered with pypi" />
     <MESSAGE value="added testfiles and classfile" />
     <MESSAGE value="moved cpp code into src folder&#10;created swig interface file and updated setup.py&#10;added testing of the BP_GraphColor object" />
-    <option name="LAST_COMMIT_MESSAGE" value="moved cpp code into src folder&#10;created swig interface file and updated setup.py&#10;added testing of the BP_GraphColor object" />
+    <MESSAGE value="changed name of BP modularity" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed name of BP modularity" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/test/test_modbp.py</url>
-          <line>15</line>
+          <line>18</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/test/test_modbp.py</url>
-          <line>10</line>
+          <line>12</line>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
@@ -647,13 +762,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modbp/bp.i">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" column="0" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="23160">
@@ -722,34 +830,34 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modbp/src_cpp/bp.h">
+    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2016.2/python_stubs/-2131660280/igraph/_igraph.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="277">
-          <caret line="33" column="15" selection-start-line="33" selection-start-column="15" selection-end-line="33" selection-end-column="15" />
+        <state relative-caret-position="175">
+          <caret line="1943" column="64" selection-start-line="1943" selection-start-column="64" selection-end-line="1943" selection-end-column="64" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/modbp/src_cpp/bp.cpp">
+    <entry file="file://$PROJECT_DIR$/modbp/src_cpp/bp.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="64" column="46" selection-start-line="64" selection-start-column="46" selection-end-line="64" selection-end-column="46" />
+        <state relative-caret-position="480">
+          <caret line="42" column="4" selection-start-line="42" selection-start-column="4" selection-end-line="42" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/modbp/bp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="102" column="19" selection-start-line="102" selection-start-column="6" selection-end-line="102" selection-end-column="19" />
+        <state relative-caret-position="3074">
+          <caret line="317" column="31" selection-start-line="140" selection-start-column="19" selection-end-line="140" selection-end-column="40" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Library/Caches/PyCharm2016.2/python_stubs/-2131660280/igraph/_igraph.py">
+    <entry file="file://$PROJECT_DIR$/modbp/bp_wrap.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="1943" column="64" selection-start-line="1943" selection-start-column="64" selection-end-line="1943" selection-end-column="64" />
+        <state relative-caret-position="69151">
+          <caret line="8616" column="2" selection-start-line="8616" selection-start-column="0" selection-end-line="8616" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -764,10 +872,26 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/modbp/bp.i">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="15" column="16" selection-start-line="15" selection-start-column="11" selection-end-line="15" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modbp/src_cpp/bp.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3345">
+          <caret line="330" column="47" selection-start-line="330" selection-start-column="47" selection-end-line="330" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test/test_modbp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="27" selection-start-line="6" selection-start-column="14" selection-end-line="6" selection-end-column="27" />
+        <state relative-caret-position="60">
+          <caret line="4" column="11" selection-start-line="4" selection-start-column="11" selection-end-line="4" selection-end-column="11" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
