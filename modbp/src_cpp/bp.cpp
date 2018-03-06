@@ -202,7 +202,11 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
         {
 			theta[s] += nn * marginals[q*i + s];
         }
+        
     }
+    
+    compute_marginals();
+    memcpy(marginals_old,marginals,q*n*sizeof(double));
     
     clock_t finish = clock();
     printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
@@ -328,12 +332,13 @@ void BP_Modularity::step()
             {
                 sum += scratch[nn*s+idx];
             }
-            if (sum > 0)
+            if (!isinf(sum) && !isnan(sum) && sum > 0)
             {
                 for (size_t s = 0; s < q;++s)
                 {
-                    scratch[nn*s+idx] /= sum;
+                    scratch[nn*s+idx] /= sum;;
                 }
+                
             }
             else
             {
@@ -341,7 +346,9 @@ void BP_Modularity::step()
                 {
                     scratch[nn*s+idx] = 1.0/q;
                 }
+                
             }
+            
         }
         
         // write the scratch space out to non-local memory

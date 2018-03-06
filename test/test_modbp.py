@@ -31,8 +31,8 @@ def main():
     ig.plot(RSBM.graph,layout=RSBM.graph.layout('kk'))
 
     print("running time {:.4f}".format(time()-t))
-    marginals = bpgc.return_marginals()
-    print(np.array(marginals))
+    #marginals = bpgc.return_marginals()
+    #print(np.array(marginals))
     return 0
 
 if __name__=='__main__':
