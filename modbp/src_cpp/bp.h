@@ -9,8 +9,6 @@
 #ifndef bp_hpp
 #define bp_hpp
 
-#define TRANSFORM 1
-
 #include <stdio.h>
 #include <vector>
 #include <unordered_map>
@@ -27,14 +25,13 @@ class BP_Modularity
 {
 public:
     // initialize with Erdos-Renyi random graph
-    BP_Modularity(const index_t n, const double p, const int q, const double beta, bool simultaneous = true, bool transform = true);
+    BP_Modularity(const index_t n, const double p, const int q, const double beta, bool transform = true);
     ~BP_Modularity();
     
     // run BP to convergence
     bool run();
     // run one pass of the belief propagation update
     void step();
-    void stepNew();
     
     void print_beliefs();
     void print_beliefs(size_t limit);
@@ -43,8 +40,7 @@ public:
     
     
     void compute_marginals();
-    
-    void save_rgb();
+
     
     index_t return5(vector<pair<index_t,index_t> > edgelist);
 private:
@@ -66,11 +62,12 @@ private:
     
     double * marginals;
     
+    vector<double> theta;
+    
     index_t n;
     int q;
     double beta;
     
-    bool simultaneous;
     bool transform;
     vector<index_t> isomorphism;
     vector<index_t> r_isomorphism;
@@ -84,6 +81,7 @@ private:
     vector<index_t> order;
     
     double scale;
+    double prefactor;
     
     double eps;
     
@@ -93,12 +91,9 @@ private:
     
     inline index_t n_neighbors(index_t i) { return neighbors_offsets[i+1]-neighbors_offsets[i]; }
     
-    void print_all_arrays();
     void print_neighbors(index_t k) { print_array(neighbors+neighbors_offsets[k],n_neighbors(k));}
     
     default_random_engine rng;
-    
-    vector<vector<byte> > reds,greens,blues;
 };
 
 #endif /* bp_hpp */

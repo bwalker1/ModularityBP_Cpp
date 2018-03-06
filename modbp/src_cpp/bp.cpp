@@ -42,14 +42,14 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, const double _beta, bool _simultaneous, bool _transform) : q(_q),n(_n), beta(_beta), simultaneous(_simultaneous), neighbor_count(_n), order(_n), rng(int(5)), transform(_transform)
+BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, const double _beta, bool _transform) : n(_n),q(_q), beta(_beta),  neighbor_count(_n), order(_n), rng((int)time(NULL)), transform(_transform), theta(_q)
 {
     save = false;
     clock_t start = clock();
     
     printf("Constructing graph\n");
     
-    scale = (1.0 - exp(-beta));
+    scale = exp(beta)-1;
     eps = 1e-8;
     computed_marginals = false;
     // create a random Erdos-Renyi graph and set up the internal variables
@@ -83,6 +83,8 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     }
     
     num_edges *= 2;
+    
+    prefactor = -beta/num_edges;
     
     //*
     // perform isomorphic transform of graph to improve memory adjacency properties
@@ -194,33 +196,24 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     for (size_t idx = 0;idx<q*num_edges;++idx)
     {
         double val = eps_dist(rng);
-        //printf("%f\n",val);
         beliefs[idx] = truncate(1.0/q + val,q);
         //beliefs[idx] = unif_dist(rng);
     }//*/
-    
-    //print_beliefs(100);
-    
-    /*
-    for (index_t i=0;i<n;++i)
-    {
-        const index_t nn = neighbor_count[i];
-        for (int s=0;s<q;++s)
-        {
-            double val;
-            if (s ==0) val = 0.9;
-            else val = 0.05;
-            for (index_t idx = 0;idx<nn;++idx)
-            {
-                beliefs[beliefs_offsets[i]+nn*s+idx] = val;
-            }
-        }
-    }//*/
+
     for (index_t i=0;i<n;++i)
     {
         normalize(beliefs,i);
     }
-    compute_marginals();
+    
+    // initialize values of theta
+    for (index_t i=0;i<n;++i)
+    {
+        index_t nn = n_neighbors(i);
+        for (index_t s = 0; s<q;++s)
+        {
+            //theta[s] += nn * 1
+        }
+    }
     
     clock_t finish = clock();
     printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
@@ -234,15 +227,10 @@ bool BP_Modularity::run()
     bool converged = false;
     for (unsigned long iter = 0; iter < maxIters; ++iter)
     {
-        stepNew();
-        //changes.push_back(change);
+        step();
+
         printf("Iteration %lu: change %f\n",iter+1,change);
-        //print_beliefs(size_t(-1));
-        // store the current marginals
-        if (save)
-        {
-            compute_marginals();
-        }
+
         
         
         if (!changed)
@@ -260,33 +248,18 @@ bool BP_Modularity::run()
     return converged;
 }
 
-void BP_Modularity::stepNew()
+void BP_Modularity::step()
 {
     changed = false;
     change = 0;
-    double * belief_write;
-    if (simultaneous)
-    {
-        belief_write = beliefs_new;
-    }
-    else
-    {
-        belief_write = beliefs;
-        //memcpy(beliefs_new, beliefs, q*num_edges*sizeof(double));
-    }
     
-    // go through each node
-    //shuffle(order.begin(), order.end(), rng);
-    uniform_int_distribution<index_t> choice_dist(0,n-1);
+    // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
-        //index_t i = order[node_idx];
-        //index_t i = choice_dist(rng);
         index_t i = node_idx;
         const index_t nn = neighbor_count[i];
         if (nn==0) continue;
         
-        //*
         // first, see how much change we had to incoming beliefs so we know if we need to update
         double local_change = 0;
         for (index_t idx=beliefs_offsets[i];idx<beliefs_offsets[i+1];++idx)
@@ -304,29 +277,27 @@ void BP_Modularity::stepNew()
         change += local_change;
         
         // update our record of what our incoming beliefs were for future comparison
-        if (!simultaneous)
-        {
-            memcpy(beliefs_new+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
-        }
-        //*/
+        memcpy(beliefs_new+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
+
         
         // iterate over all states
         for (int s = 0; s < q;++s)
         {
             // incoming beliefs are already stored locally
-            // go over each outgoing connection and figure out all of the outgoing beliefs, write to scratch space
+            // figure out the sum of logs part of the update equation that uses the incoming beliefs
             for (index_t idx=0; idx<nn; ++idx)
             {
-                scratch[nn*s+idx] = 1;
+                scratch[nn*s+idx] = 0;
                 for (index_t idx2 = 0;idx2<nn;++idx2)
                 {
                     if (idx2 == idx) continue;
-                    //assert(beliefs_offsets[i]+nn*s + idx < q*num_edges);
-                    double mult = (1.0-scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-                    //belief_write[beliefs_offsets[k]+nnk*s+idx_out] *= mult;
-                    scratch[nn*s+idx]*=mult;
+                    double add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                    scratch[nn*s+idx] += add;
                 }
+                // evaluate the rest of the update equation
+                scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
             }
+            
         }
         
         // normalize the scratch space
@@ -349,7 +320,7 @@ void BP_Modularity::stepNew()
             {
                 for (size_t s = 0; s < q;++s)
                 {
-                    scratch[nn*s+idx] = 0.5;
+                    scratch[nn*s+idx] = 1.0/q;
                 }
             }
         }
@@ -363,90 +334,9 @@ void BP_Modularity::stepNew()
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
                 
-                belief_write[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
+                beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
             }
         }
-    }
-    // compute the total change
-    /*
-     change = 0;
-     for (int i=0;i<q*num_edges;++i)
-     {
-     change += fabs(beliefs[i] - beliefs_new[i]);
-     }
-     change /= (2*q*num_edges);
-     //*/
-    
-    if (simultaneous)
-    {
-        swap(beliefs,beliefs_new);
-    }
-    if (change > eps)
-    {
-        changed = true;
-    }
-}
-
-void BP_Modularity::step()
-{
-    //printf("Entering step\n");
-    //print_all_arrays();
-    double * belief_write;
-    if (simultaneous)
-    {
-        belief_write = beliefs_new;
-    }
-    else
-    {
-        memcpy(beliefs_new, beliefs, q*num_edges*sizeof(double));
-        belief_write = beliefs;
-    }
-    
-    // go through each node
-    for (index_t i = 0;i<n;++i)
-    {
-        
-        const index_t nn = neighbor_count[i];
-        
-        // iterate over all states
-        for (int s = 0; s < q;++s)
-        {
-            // grab all incoming beliefs into scratch space
-            for (index_t idx=0;idx<nn;++idx)
-            {
-                index_t k = neighbors[neighbors_offsets[i]+idx];
-                // find which neighbor we are of k
-                index_t idx2 = neighbors_reversed[neighbors_offsets[i]+idx];
-                
-                scratch[idx] = beliefs[beliefs_offsets[k]+n_neighbors(k)*s + idx2];
-            }
-            // go over each outgoing connection and update the belief
-            for (index_t idx=0; idx<nn; ++idx)
-            {
-                belief_write[beliefs_offsets[i]+nn*s+idx] = 1;
-                for (int idx2 = 0;idx2<nn;++idx2)
-                {
-                    if (idx2 == idx) continue;
-                    //assert(beliefs_offsets[i]+nn*s + idx < q*num_edges);
-                    double mult = (1.0-scale*scratch[idx2]);
-                    belief_write[beliefs_offsets[i]+nn*s+idx] *= mult;
-                }
-            }
-        }
-        
-        normalize(belief_write,i);
-    }
-    
-    change = 0;
-    // compute the total change
-    for (int i=0;i<q*num_edges;++i)
-    {
-        change += fabs(beliefs[i] - beliefs_new[i]);
-    }
-    change /= (2*q*num_edges);
-    if (simultaneous)
-    {
-        swap(beliefs,beliefs_new);
     }
 }
 
@@ -490,8 +380,6 @@ void BP_Modularity::print_beliefs()
 
 void BP_Modularity::compute_marginals()
 {
-    int limit = 200;
-    vector<byte> red(limit),green(limit),blue(limit);
     for (index_t node_idx=0;node_idx<n;++node_idx)
     {
         index_t i;
@@ -519,47 +407,7 @@ void BP_Modularity::compute_marginals()
         {
             marginals[q*i + s] /= marginal_sum;
         }
-        if ( q==3 && i < limit)
-        {
-            red[i] = 256*marginals[q*i];
-            green[i] = 256*marginals[q*i+1];
-            blue[i] = 256*marginals[q*i+2];
-        }
     }
-    if (q==3)
-    {
-        reds.push_back(red);
-        greens.push_back(green);
-        blues.push_back(blue);
-    }
-}
-
-void data_save(const char* fn, vector<vector<byte> > data)
-{
-    FILE *fp = fopen(fn,"w+");
-    for (int i=0;i<data.size();++i)
-    {
-        for (int j=0;j<data[i].size();++j)
-        {
-            fprintf(fp,"%d",data[i][j]);
-            if (j < data[i].size()-1)
-            {
-                fprintf(fp,",");
-            }
-        }
-        if (i<data.size()-1)
-        {
-            fprintf(fp,"\n");
-        }
-    }
-    fclose(fp);
-}
-
-void BP_Modularity::save_rgb()
-{
-    data_save("/Users/ben/Data/red.csv",reds);
-    data_save("/Users/ben/Data/green.csv",greens);
-    data_save("/Users/ben/Data/blue.csv",blues);
 }
 
 void BP_Modularity::print_marginals(size_t limit)
@@ -616,11 +464,6 @@ BP_Modularity::~BP_Modularity() {
     free(scratch);
     free(marginals);
 }
-
-index_t BP_Modularity::return5(vector<pair<index_t, index_t> > edgelist) { 
-    return 5;
-}
-
 
 
 
