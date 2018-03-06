@@ -42,7 +42,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const double p, const int _q, const double _beta, bool _transform) : n(_n),q(_q), beta(_beta),  neighbor_count(_n), order(_n), rng((int)time(NULL)), transform(_transform), theta(_q)
+BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, bool _transform) : n(_n),q(_q), beta(_beta),  neighbor_count(_n), order(_n), rng((int)time(NULL)), transform(_transform), theta(_q)
 {
     clock_t start = clock();
     
@@ -54,34 +54,10 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     // create a random Erdos-Renyi graph and set up the internal variables
     vector<vector<index_t> > edges(n);
     uniform_real_distribution<double> pdist(0,1);
-    binomial_distribution<index_t> bdist(n,p/2);
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
     num_edges = 0;
-	/*
-    for (index_t i=0;i<n;++i)
-    {
-        order[i] = i;
-        //*
-        // figure out how many edges to create
-        index_t edges_to_create = bdist(rng);
-        num_edges += edges_to_create;
-        // find where the edges are going
-        set<index_t> dest;
-        while (dest.size() < edges_to_create)
-        {
-            auto val = destdist(rng);
-            if (val == i) continue;
-            dest.insert(val);
-        }
-        for (auto j : dest)
-        {
-            if (find(edges[i].begin(), edges[i].end(), j) != edges[i].end()) continue;
-            edges[i].push_back(j);
-            edges[j].push_back(i);
-        }
-    }
-	*/
+
 	for (auto p : edgelist)
 	{
 		index_t i = p.first;
@@ -501,6 +477,25 @@ BP_Modularity::~BP_Modularity() {
     free(marginals);
 	free(marginals_old);
 }
+
+vector<vector<double> > BP_Modularity::return_marginals() { 
+    // make sure the marginals are up-to-date
+    compute_marginals();
+    
+    vector<vector<double> > ret(n);
+    
+    for (index_t i=0;i<n;++i)
+    {
+        ret[i].resize(q);
+        for (index_t s=0;s<q;++s)
+        {
+            ret[i][s] = marginals[q*i+s];
+        }
+    }
+    
+    return ret;
+}
+
 
 
 

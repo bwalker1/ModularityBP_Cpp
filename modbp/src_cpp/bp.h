@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize with Erdos-Renyi random graph
-	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const double p, const int q, const double beta, bool transform = true);
+	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, bool transform = true);
     ~BP_Modularity();
     
     // run BP to convergence
@@ -43,6 +43,8 @@ public:
     void compute_marginals();
     double compute_bethe_free_energy();
     double compute_factorized_free_energy();
+    
+    vector<vector<double> > return_marginals();
 private:
     void normalize(double *beliefs, index_t i);
     
