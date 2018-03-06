@@ -440,6 +440,7 @@ double BP_Modularity::compute_factorized_free_energy()
 }
 
 
+
 void BP_Modularity::print_beliefs(size_t limit)
 {
     size_t print_count = 0;

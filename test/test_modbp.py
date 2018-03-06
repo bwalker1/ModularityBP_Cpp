@@ -1,22 +1,35 @@
 from context import modbp
 from time import time
 import numpy as np
+import igraph as ig
 
 def main():
-    n=1000
+    n=200
+    q=3
+    nblocks=q
+    pin=(5.0*q)/n
+    pout=(.50*q)/n
     t=time()
+    prob_mat=np.identity(nblocks)*pin + (np.ones((nblocks,nblocks))-np.identity(nblocks))*pout
 
-    prob_mat=np.array([[.7,.1],[.1,.7]])
-    #erg=modbp.RandomSBMGraph(n=n,comm_prob_mat=prob_mat)
-    erg = modbp.RandomERGraph(n=n,p=3.0/n)
+    RSBM = modbp.RandomSBMGraph(n=n,comm_prob_mat=prob_mat)
+    m= RSBM.m
     print("time to construct {:.4f}".format(time()-t))
-    elist=erg.get_edgelist()
+    elist=RSBM.get_edgelist()
     elist.sort()
     pv=modbp.bp.PairVector(elist)
-    bpgc=modbp.BP_Modularity(edgelist=pv, _n=n, q=4, beta=1, transform=False)
-    t=time()
-    bpgc.run()
-    print( "BFE={:.3f}".format(bpgc.compute_bethe_free_energy()))
+    bpgc=modbp.BP_Modularity(edgelist=pv, _n=n, q=q, beta=1, transform=False)
+    old_marg=np.array(bpgc.return_marginals())
+    for i in range(10):
+        bpgc.step()
+        new_marg=np.array(bpgc.return_marginals())
+        print ("Change in margins {:d}: {:.3f}".format(i,np.sum(np.abs(old_marg-new_marg))/(1.0*q*n)))
+        old_marg=new_marg
+
+    color_dict={0:"red",1:"blue",2:'green'}
+    RSBM.graph.vs['color']=map(lambda x : color_dict[np.argmax(x)],old_marg)
+    ig.plot(RSBM.graph,layout=RSBM.graph.layout('kk'))
+
     print("running time {:.4f}".format(time()-t))
     marginals = bpgc.return_marginals()
     print(np.array(marginals))
