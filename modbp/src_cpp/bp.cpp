@@ -332,13 +332,12 @@ void BP_Modularity::step()
             {
                 sum += scratch[nn*s+idx];
             }
-            if (!isinf(sum) && !isnan(sum) && sum > 0)
+            if (sum > 0)
             {
                 for (size_t s = 0; s < q;++s)
                 {
-                    scratch[nn*s+idx] /= sum;;
+                    scratch[nn*s+idx] /= sum;
                 }
-                
             }
             else
             {
@@ -346,9 +345,7 @@ void BP_Modularity::step()
                 {
                     scratch[nn*s+idx] = 1.0/q;
                 }
-                
             }
-            
         }
         
         // write the scratch space out to non-local memory
