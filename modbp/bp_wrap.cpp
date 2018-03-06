@@ -3130,13 +3130,6 @@ namespace swig {
 #include "src_cpp/bp.h"
 
 
-SWIGINTERNINLINE PyObject*
-  SWIG_From_int  (int value)
-{
-  return PyInt_FromLong((long) value);
-}
-
-
 SWIGINTERN int
 SWIG_AsVal_double (PyObject *obj, double *val)
 {
@@ -3422,6 +3415,9 @@ SWIG_AsVal_size_t (PyObject * obj, size_t *val)
 #endif
   return res;
 }
+
+
+  #define SWIG_From_double   PyFloat_FromDouble 
 
 
   #define SWIG_From_long   PyInt_FromLong 
@@ -5175,73 +5171,6 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   int arg3 ;
   double arg4 ;
   bool arg5 ;
-  bool arg6 ;
-  unsigned long val1 ;
-  int ecode1 = 0 ;
-  double val2 ;
-  int ecode2 = 0 ;
-  int val3 ;
-  int ecode3 = 0 ;
-  double val4 ;
-  int ecode4 = 0 ;
-  bool val5 ;
-  int ecode5 = 0 ;
-  bool val6 ;
-  int ecode6 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  BP_Modularity *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
-  ecode1 = SWIG_AsVal_unsigned_SS_long(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "index_t""'");
-  } 
-  arg1 = static_cast< index_t >(val1);
-  ecode2 = SWIG_AsVal_double(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "double""'");
-  } 
-  arg2 = static_cast< double >(val2);
-  ecode3 = SWIG_AsVal_int(obj2, &val3);
-  if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "int""'");
-  } 
-  arg3 = static_cast< int >(val3);
-  ecode4 = SWIG_AsVal_double(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "double""'");
-  } 
-  arg4 = static_cast< double >(val4);
-  ecode5 = SWIG_AsVal_bool(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Modularity" "', argument " "5"" of type '" "bool""'");
-  } 
-  arg5 = static_cast< bool >(val5);
-  ecode6 = SWIG_AsVal_bool(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Modularity" "', argument " "6"" of type '" "bool""'");
-  } 
-  arg6 = static_cast< bool >(val6);
-  result = (BP_Modularity *)new BP_Modularity(arg1,arg2,arg3,arg4,arg5,arg6);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  index_t arg1 ;
-  double arg2 ;
-  int arg3 ;
-  double arg4 ;
-  bool arg5 ;
   unsigned long val1 ;
   int ecode1 = 0 ;
   double val2 ;
@@ -5293,7 +5222,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   index_t arg1 ;
   double arg2 ;
@@ -5344,14 +5273,14 @@ fail:
 
 SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
-  PyObject *argv[7] = {
+  PyObject *argv[6] = {
     0
   };
   Py_ssize_t ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 6) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 5) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
   if (argc == 4) {
@@ -5376,7 +5305,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
             _v = SWIG_CheckState(res);
           }
           if (_v) {
-            return _wrap_new_BP_Modularity__SWIG_2(self, args);
+            return _wrap_new_BP_Modularity__SWIG_1(self, args);
           }
         }
       }
@@ -5409,47 +5338,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
               _v = SWIG_CheckState(res);
             }
             if (_v) {
-              return _wrap_new_BP_Modularity__SWIG_1(self, args);
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 6) {
-    int _v;
-    {
-      int res = SWIG_AsVal_unsigned_SS_long(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      {
-        int res = SWIG_AsVal_double(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        {
-          int res = SWIG_AsVal_int(argv[2], NULL);
-          _v = SWIG_CheckState(res);
-        }
-        if (_v) {
-          {
-            int res = SWIG_AsVal_double(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_bool(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_bool(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                return _wrap_new_BP_Modularity__SWIG_0(self, args);
-              }
+              return _wrap_new_BP_Modularity__SWIG_0(self, args);
             }
           }
         }
@@ -5460,7 +5349,6 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_BP_Modularity'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    BP_Modularity::BP_Modularity(index_t const,double const,int const,double const,bool,bool)\n"
     "    BP_Modularity::BP_Modularity(index_t const,double const,int const,double const,bool)\n"
     "    BP_Modularity::BP_Modularity(index_t const,double const,int const,double const)\n");
   return 0;
@@ -5524,27 +5412,6 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_step(PyObject *SWIGUNUSEDPARM(self), Py
   }
   arg1 = reinterpret_cast< BP_Modularity * >(argp1);
   (arg1)->step();
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Modularity_stepNew(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_stepNew",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_stepNew" "', argument " "1"" of type '" "BP_Modularity *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
-  (arg1)->stepNew();
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5700,21 +5567,44 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_Modularity_save_rgb(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_BP_Modularity_compute_bethe_free_energy(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   BP_Modularity *arg1 = (BP_Modularity *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
+  double result;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_save_rgb",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_compute_bethe_free_energy",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_save_rgb" "', argument " "1"" of type '" "BP_Modularity *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_compute_bethe_free_energy" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
   arg1 = reinterpret_cast< BP_Modularity * >(argp1);
-  (arg1)->save_rgb();
-  resultobj = SWIG_Py_Void();
+  result = (double)(arg1)->compute_bethe_free_energy();
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_BP_Modularity_compute_factorized_free_energy(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  double result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_compute_factorized_free_energy",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_compute_factorized_free_energy" "', argument " "1"" of type '" "BP_Modularity *""'"); 
+  }
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
+  result = (double)(arg1)->compute_factorized_free_energy();
+  resultobj = SWIG_From_double(static_cast< double >(result));
   return resultobj;
 fail:
   return NULL;
@@ -8572,11 +8462,11 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_BP_Modularity", _wrap_delete_BP_Modularity, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_run", _wrap_BP_Modularity_run, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_step", _wrap_BP_Modularity_step, METH_VARARGS, NULL},
-	 { (char *)"BP_Modularity_stepNew", _wrap_BP_Modularity_stepNew, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_print_beliefs", _wrap_BP_Modularity_print_beliefs, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_print_marginals", _wrap_BP_Modularity_print_marginals, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_compute_marginals", _wrap_BP_Modularity_compute_marginals, METH_VARARGS, NULL},
-	 { (char *)"BP_Modularity_save_rgb", _wrap_BP_Modularity_save_rgb, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_compute_bethe_free_energy", _wrap_BP_Modularity_compute_bethe_free_energy, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_compute_factorized_free_energy", _wrap_BP_Modularity_compute_factorized_free_energy, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_return5", _wrap_BP_Modularity_return5, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_swigregister", BP_Modularity_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_SwigPyIterator", _wrap_delete_SwigPyIterator, METH_VARARGS, NULL},
@@ -9393,7 +9283,6 @@ SWIG_init(void) {
   
   SWIG_InstallConstants(d,swig_const_table);
   
-  SWIG_Python_SetConstant(d, "TRANSFORM",SWIG_From_int(static_cast< int >(1)));
 #if PY_VERSION_HEX >= 0x03000000
   return m;
 #else

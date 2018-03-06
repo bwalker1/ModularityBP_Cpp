@@ -438,6 +438,23 @@ void BP_Modularity::print_marginals(size_t limit)
     }
 }
 
+double BP_Modularity::compute_bethe_free_energy()
+{   //TODO
+    // - 1/(b*beta) ( sum_i {log Z_i} - sum_{i,j \in E} log Z_{ij} + beta/4m \sum_i theta^2 )
+    double bfe=0.0;
+    return bfe;
+}
+
+double BP_Modularity::compute_factorized_free_energy()
+{
+    //TODO
+    //Calculate the bethe free energy of the factorized state ( each node uniform on all communities)
+    //log(1-1/q-exp(beta))
+    double bffe=0.0;
+    return bffe;
+}
+
+
 void BP_Modularity::print_beliefs(size_t limit)
 {
     size_t print_count = 0;

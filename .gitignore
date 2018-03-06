@@ -4,3 +4,4 @@ modbp/src_cpp/Mod_BP_Xcode/
 *.pyc
 build/
 modbp/src_cpp/VS/
+.idea/

@@ -95,7 +95,6 @@ except __builtin__.Exception:
         pass
     _newclass = 0
 
-TRANSFORM = _bp.TRANSFORM
 
 def print_array(arr, n):
     return _bp.print_array(arr, n)
@@ -107,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, n, p, q, beta, simultaneous=True, transform=True):
-        this = _bp.new_BP_Modularity(n, p, q, beta, simultaneous, transform)
+    def __init__(self, n, p, q, beta, transform=True):
+        this = _bp.new_BP_Modularity(n, p, q, beta, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -122,9 +121,6 @@ class BP_Modularity(_object):
     def step(self):
         return _bp.BP_Modularity_step(self)
 
-    def stepNew(self):
-        return _bp.BP_Modularity_stepNew(self)
-
     def print_beliefs(self, *args):
         return _bp.BP_Modularity_print_beliefs(self, *args)
 
@@ -134,8 +130,11 @@ class BP_Modularity(_object):
     def compute_marginals(self):
         return _bp.BP_Modularity_compute_marginals(self)
 
-    def save_rgb(self):
-        return _bp.BP_Modularity_save_rgb(self)
+    def compute_bethe_free_energy(self):
+        return _bp.BP_Modularity_compute_bethe_free_energy(self)
+
+    def compute_factorized_free_energy(self):
+        return _bp.BP_Modularity_compute_factorized_free_energy(self)
 
     def return5(self, edgelist):
         return _bp.BP_Modularity_return5(self, edgelist)
