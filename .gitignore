@@ -9,3 +9,4 @@ ModularityBP.xcodeproj/project.xcworkspace/xcuserdata/ben.xcuserdatad/UserInterf
 *.xcuserstate
 *.pyc
 build/
+.idea/

@@ -40,8 +40,8 @@ public:
     
     
     void compute_marginals();
-
-    
+    double compute_bethe_free_energy();
+    double compute_factorized_free_energy();
     index_t return5(vector<pair<index_t,index_t> > edgelist);
 private:
     void normalize(double *beliefs, index_t i);
