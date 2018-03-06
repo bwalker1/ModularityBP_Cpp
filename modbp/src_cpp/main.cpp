@@ -19,7 +19,7 @@ using namespace std;
 
 int main(int argc, const char * argv[]) {
     index_t n = 1e5;
-    BP_Modularity bp(n,3.0/n,4,1);
+    /*BP_Modularity bp(n,3.0/n,4,1);
     
     clock_t start = clock();
     bp.run();
@@ -32,4 +32,5 @@ int main(int argc, const char * argv[]) {
 	unsigned char in;
 	scanf("%c", &in);
 #endif
+*/
 }

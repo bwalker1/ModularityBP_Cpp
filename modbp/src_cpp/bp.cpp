@@ -42,9 +42,8 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, const double _beta, bool _transform) : n(_n),q(_q), beta(_beta),  neighbor_count(_n), order(_n), rng((int)time(NULL)), transform(_transform), theta(_q)
+BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const double p, const int _q, const double _beta, bool _transform) : n(_n),q(_q), beta(_beta),  neighbor_count(_n), order(_n), rng((int)time(NULL)), transform(_transform), theta(_q)
 {
-    save = false;
     clock_t start = clock();
     
     printf("Constructing graph\n");
@@ -59,6 +58,7 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
     num_edges = 0;
+	/*
     for (index_t i=0;i<n;++i)
     {
         order[i] = i;
@@ -81,8 +81,16 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
             edges[j].push_back(i);
         }
     }
+	*/
+	for (auto p : edgelist)
+	{
+		index_t i = p.first;
+		index_t j = p.second;
+		edges[i].push_back(j);
+		edges[j].push_back(i);
+	}
     
-    num_edges *= 2;
+    num_edges = 2*edgelist.size();
     
     prefactor = -beta/num_edges;
     
@@ -146,6 +154,12 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     
     marginals = (double*) malloc(q*n*sizeof(double));
 	marginals_old = (double*)malloc(q * n* sizeof(double));
+
+	if (!(beliefs&&beliefs_new&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
+	{
+		fprintf(stderr, "ERROR: Failed to allocate memory.\n");
+		exit(1);
+	}
     
     // set up offsets for fast access and copy graph structure into neighbors array
     size_t neighbors_offset_count = 0;
@@ -185,21 +199,18 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     scratch = (double*) malloc(q*max_degree*sizeof(double));
     if (!scratch)
     {
-        printf("Scratch failed to allocate\n");
+		fprintf(stderr, "ERROR: Failed to allocate memory.\n");
         exit(1);
     }
     
     // set starting value of beliefs
     // generate values for each state and then normalize
     normal_distribution<double> eps_dist(0,0.1);
-    exponential_distribution<double> unif_dist(1);
-    //*
     for (size_t idx = 0;idx<q*num_edges;++idx)
     {
         double val = eps_dist(rng);
         beliefs[idx] = truncate(1.0/q + val,q);
-        //beliefs[idx] = unif_dist(rng);
-    }//*/
+    }
 
     for (index_t i=0;i<n;++i)
     {
@@ -233,8 +244,6 @@ bool BP_Modularity::run()
 
         printf("Iteration %lu: change %f\n",iter+1,change);
 
-        
-        
         if (!changed)
         {
             converged = true;
