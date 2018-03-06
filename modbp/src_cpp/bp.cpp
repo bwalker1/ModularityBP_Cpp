@@ -25,7 +25,7 @@ double truncate(const double in, const int q)
 
 void print_array(index_t *arr, index_t n)
 {
-    for (int i=0;i<n;++i)
+    for (index_t i=0;i<n;++i)
     {
         printf("%lu ",arr[i]);
     }
@@ -33,7 +33,7 @@ void print_array(index_t *arr, index_t n)
 }
 void print_array(double *arr, index_t n)
 {
-    for (int i=0;i<n;++i)
+    for (index_t i=0;i<n;++i)
     {
         printf("%f ",arr[i]);
     }
@@ -123,7 +123,7 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
         }
         // apply the isomorphism
         vector<vector<index_t> > new_edges(n);
-        for (int i=0;i<n;++i)
+        for (index_t i=0;i<n;++i)
         {
             for (int j=0;j<edges[i].size();++j)
             {
@@ -145,6 +145,7 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     neighbors_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
     
     marginals = (double*) malloc(q*n*sizeof(double));
+	marginals_old = (double*)malloc(q * n* sizeof(double));
     
     // set up offsets for fast access and copy graph structure into neighbors array
     size_t neighbors_offset_count = 0;
@@ -154,20 +155,20 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     beliefs_offsets[0] = 0;
     neighbors_offsets[0] = 0;
     max_degree = 0;
-    for (int i=0;i<n;++i)
+    for (index_t i=0;i<n;++i)
     {
         beliefs_offset_count += q*edges[i].size();
         neighbors_offset_count += edges[i].size();
-        neighbor_count[i] = edges[i].size();
+        neighbor_count[i] = (index_t) edges[i].size();
         
         beliefs_offsets[i+1] = beliefs_offset_count;
         neighbors_offsets[i+1] = neighbors_offset_count;
         
-        max_degree = max(max_degree,edges[i].size());
+        max_degree = max(max_degree,(index_t) edges[i].size());
         
-        for (int j=0;j<edges[i].size();++j)
+        for (index_t j=0;j<edges[i].size();++j)
         {
-            assert(neighbor_c < num_edges);
+            //assert(neighbor_c < num_edges);
             neighbors[neighbor_c++] = edges[i][j];
             neighbor_offset_map[i][edges[i][j]] = j;
         }
@@ -208,10 +209,11 @@ BP_Modularity::BP_Modularity(const index_t _n, const double p, const int _q, con
     // initialize values of theta
     for (index_t i=0;i<n;++i)
     {
+		compute_marginal(i);
         index_t nn = n_neighbors(i);
         for (index_t s = 0; s<q;++s)
         {
-            //theta[s] += nn * 1
+			theta[s] += nn * marginals[q*i + s];
         }
     }
     
@@ -248,6 +250,30 @@ bool BP_Modularity::run()
     return converged;
 }
 
+void BP_Modularity::compute_marginal(index_t i)
+{
+	const index_t nn = neighbor_count[i];
+	// iterate over all states
+	double Z = 0;
+	for (index_t s = 0; s < q; ++s)
+	{
+		marginals[q*i+s] = 0;
+		for (index_t idx2 = 0; idx2<nn; ++idx2)
+		{
+			double add = log(1 + scale * (beliefs[beliefs_offsets[i] + nn * s + idx2]));
+			marginals[q*i+s] += add;
+		}
+		// evaluate the rest of the update equation
+		marginals[q*i+s] = exp(prefactor*nn*theta[s] + marginals[q*i+s]);
+		Z += marginals[q*i + s];
+	}
+	// normalize
+	for (index_t s = 0; s < q; ++s)
+	{
+		marginals[q*i + s] /= Z;
+	}
+}
+
 void BP_Modularity::step()
 {
     changed = false;
@@ -275,9 +301,18 @@ void BP_Modularity::step()
         // if we changed any nodes, set this to true so we know we haven't converged
         changed = true;
         change += local_change;
+
+		// we should update the nodes contribution to theta
+		compute_marginal(i);
+		for (index_t s = 0; s < q; ++s)
+		{
+			theta[s] += nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+		}
         
         // update our record of what our incoming beliefs were for future comparison
         memcpy(beliefs_new+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
+		// do the same for marginals
+		memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
 
         
         // iterate over all states
@@ -297,7 +332,6 @@ void BP_Modularity::step()
                 // evaluate the rest of the update equation
                 scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
             }
-            
         }
         
         // normalize the scratch space
@@ -359,6 +393,14 @@ void BP_Modularity::normalize(double * beliefs, index_t i)
     }
 }
 
+void BP_Modularity::compute_marginals()
+{
+	for (index_t i = 0; i < n; ++i)
+	{
+		compute_marginal(i);
+	}
+}
+
 void BP_Modularity::print_beliefs()
 {
     for (index_t i=0;i<n;++i)
@@ -377,38 +419,6 @@ void BP_Modularity::print_beliefs()
     }
 }
 
-
-void BP_Modularity::compute_marginals()
-{
-    for (index_t node_idx=0;node_idx<n;++node_idx)
-    {
-        index_t i;
-        if (transform)
-        {
-            i = r_isomorphism[node_idx];
-        }
-        else
-        {
-            i = node_idx;
-        }
-        double marginal_sum = 0;
-        for (int s = 0; s < q; ++s)
-        {
-            double marginal = 1;
-            const index_t nn = neighbor_count[i];
-            for (index_t idx = 0; idx < nn;++idx)
-            {
-                marginal *= beliefs[beliefs_offsets[i] + nn*s + idx];
-            }
-            marginals[q*i + s] = marginal;
-            marginal_sum += marginal;
-        }
-        for (int s=0; s < q;++s)
-        {
-            marginals[q*i + s] /= marginal_sum;
-        }
-    }
-}
 
 void BP_Modularity::print_marginals(size_t limit)
 {
@@ -463,6 +473,7 @@ BP_Modularity::~BP_Modularity() {
     free(neighbors_reversed);
     free(scratch);
     free(marginals);
+	free(marginals_old);
 }
 
 

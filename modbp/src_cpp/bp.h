@@ -13,6 +13,7 @@
 #include <vector>
 #include <unordered_map>
 #include <random>
+#include <time.h>
 
 using namespace std;
 
@@ -30,6 +31,7 @@ public:
     
     // run BP to convergence
     bool run();
+	
     // run one pass of the belief propagation update
     void step();
     
@@ -61,6 +63,7 @@ private:
     double * scratch;
     
     double * marginals;
+	double * marginals_old;
     
     vector<double> theta;
     
@@ -89,11 +92,13 @@ private:
     bool computed_marginals;
     bool save;
     
-    inline index_t n_neighbors(index_t i) { return neighbors_offsets[i+1]-neighbors_offsets[i]; }
+    inline index_t n_neighbors(index_t i) { return (index_t) neighbors_offsets[i+1]-neighbors_offsets[i]; }
     
     void print_neighbors(index_t k) { print_array(neighbors+neighbors_offsets[k],n_neighbors(k));}
     
     default_random_engine rng;
+
+	void compute_marginal(index_t i);
 };
 
 #endif /* bp_hpp */
