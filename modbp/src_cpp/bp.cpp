@@ -42,7 +42,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, bool _transform) : n(_n),q(_q), beta(_beta),  neighbor_count(_n), order(_n), rng((int)time(NULL)), transform(_transform), theta(_q)
+BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta),transform(_transform),     order(_n), rng((int)time(NULL))
 {
     clock_t start = clock();
     
@@ -222,18 +222,18 @@ bool BP_Modularity::run()
     {
         step();
 
-        printf("Iteration %lu: change %f\n",iter+1,change);
+        //printf("Iteration %lu: change %f\n",iter+1,change);
 
         if (!changed)
         {
             converged = true;
-            printf("Converged after %lu iterations.\n",iter+1);
+            //printf("Converged after %lu iterations.\n",iter+1);
             break;
         }
     }
     if (!converged)
     {
-        printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
+        //printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
     }
     
     return converged;
