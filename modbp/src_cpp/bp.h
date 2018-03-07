@@ -46,7 +46,7 @@ public:
     void setBeta(double in) { beta = in; scale = exp(beta)-1; };
     
     index_t getq() const { return q; };
-    void setq();
+    void setq(double new_q);
 private:
     void initializeBeliefs();
     void initializeTheta();

@@ -422,8 +422,10 @@ vector<vector<double> > BP_Modularity::return_marginals() {
     return ret;
 }
 
-void BP_Modularity::setq() { 
+void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
+    q = new_q;
+    
     free(beliefs);
     free(beliefs_old);
     free(marginals);
