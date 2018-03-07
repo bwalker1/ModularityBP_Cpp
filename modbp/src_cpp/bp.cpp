@@ -46,7 +46,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
 {
     clock_t start = clock();
     
-    printf("Constructing graph\n");
+    //printf("Constructing graph\n");
     
     scale = exp(beta)-1;
     eps = 1e-8;
@@ -121,7 +121,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     //*/
     
     beliefs = (double*) malloc(q*num_edges*sizeof(double));
-    beliefs_new = (double*) calloc(q*num_edges,sizeof(double));
+    beliefs_old = (double*) calloc(q*num_edges,sizeof(double));
     beliefs_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
     
     neighbors = (index_t*) malloc(num_edges*sizeof(index_t));
@@ -131,7 +131,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     marginals = (double*) malloc(q*n*sizeof(double));
 	marginals_old = (double*)malloc(q * n* sizeof(double));
 
-	if (!(beliefs&&beliefs_new&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
+	if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
 	{
 		fprintf(stderr, "ERROR: Failed to allocate memory.\n");
 		exit(1);
@@ -179,37 +179,19 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
         exit(1);
     }
     
-    // set starting value of beliefs
-    // generate values for each state and then normalize
-    normal_distribution<double> eps_dist(0,0.1);
-    for (size_t idx = 0;idx<q*num_edges;++idx)
-    {
-        double val = eps_dist(rng);
-        beliefs[idx] = truncate(1.0/q + val,q);
-    }
+    initializeBeliefs();
 
     for (index_t i=0;i<n;++i)
     {
         normalize(beliefs,i);
     }
     
-    // initialize values of theta
-    for (index_t i=0;i<n;++i)
-    {
-		compute_marginal(i);
-        index_t nn = n_neighbors(i);
-        for (index_t s = 0; s<q;++s)
-        {
-			theta[s] += nn * marginals[q*i + s];
-        }
-        
-    }
+    initializeTheta();
     
-    compute_marginals();
     memcpy(marginals_old,marginals,q*n*sizeof(double));
     
     clock_t finish = clock();
-    printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
+    //printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
 }
 
 bool BP_Modularity::run()
@@ -279,7 +261,7 @@ void BP_Modularity::step()
         double local_change = 0;
         for (index_t idx=beliefs_offsets[i];idx<beliefs_offsets[i+1];++idx)
         {
-            local_change += fabs(beliefs[idx] - beliefs_new[idx]);
+            local_change += fabs(beliefs[idx] - beliefs_old[idx]);
         }
         local_change /= q*nn;
         if (local_change < eps)
@@ -299,7 +281,7 @@ void BP_Modularity::step()
 		}
         
         // update our record of what our incoming beliefs were for future comparison
-        memcpy(beliefs_new+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
+        memcpy(beliefs_old+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
 		// do the same for marginals
 		memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
 
@@ -390,42 +372,8 @@ void BP_Modularity::compute_marginals()
 	}
 }
 
-void BP_Modularity::print_beliefs()
-{
-    for (index_t i=0;i<n;++i)
-    {
-        index_t nn = neighbor_count[i];
-        // iterate over all states
-        for (int s = 0; s < q;++s)
-        {
-            for (index_t idx=0;idx<nn;++idx)
-            {
-                index_t k = neighbors[neighbors_offsets[i]+idx];
-                double belief = beliefs[beliefs_offsets[i]+nn*s+idx];
-                printf("X_%d^(%lu->%lu)=%f\n",s,i,k,belief);
-            }
-        }
-    }
-}
 
 
-void BP_Modularity::print_marginals(size_t limit)
-{
-    compute_marginals();
-    
-    index_t print_count = 0;
-    for (index_t i=0;i<n;++i)
-    {
-        for (int s=0;s<q;++s)
-        {
-            printf("P_%d(%lu) = %f\n",s,i,marginals[print_count++]);
-        }
-        if (print_count > limit)
-        {
-            return;
-        }
-    }
-}
 
 double BP_Modularity::compute_bethe_free_energy()
 {   //TODO
@@ -444,36 +392,9 @@ double BP_Modularity::compute_factorized_free_energy()
 }
 
 
-
-void BP_Modularity::print_beliefs(size_t limit)
-{
-    size_t print_count = 0;
-    for (index_t i=0;i<n;++i)
-    {
-        index_t nn = neighbor_count[i];
-        for (index_t idx=0;idx<nn;++idx)
-        {
-            index_t k = neighbors[neighbors_offsets[i]+idx];
-            // iterate over all states
-            for (int s = 0; s < q;++s)
-            {
-                
-                
-                double belief = beliefs[beliefs_offsets[i]+nn*s+idx];
-                printf("X_%d^(%lu->%lu)=%f\n",s,i,k,belief);
-                ++ print_count;
-                if (print_count >= limit)
-                {
-                    return;
-                }
-            }
-        }
-    }
-}
-
 BP_Modularity::~BP_Modularity() { 
     free(beliefs);
-    free(beliefs_new);
+    free(beliefs_old);
     free(beliefs_offsets);
     free(neighbors);
     free(neighbors_offsets);
@@ -500,6 +421,61 @@ vector<vector<double> > BP_Modularity::return_marginals() {
     
     return ret;
 }
+
+void BP_Modularity::setq() { 
+    // rearrange the optimizer to have a different q and reinitialize
+    free(beliefs);
+    free(beliefs_old);
+    free(marginals);
+    free(marginals_old);
+    free(scratch);
+    
+    beliefs = (double*) malloc(q*num_edges*sizeof(double));
+    beliefs_old = (double*) calloc(q*num_edges,sizeof(double));
+    marginals = (double*) malloc(q*n*sizeof(double));
+    marginals_old = (double*)malloc(q * n* sizeof(double));
+    scratch = (double*) malloc(q*max_degree*sizeof(double));
+    
+    if (!(beliefs&&beliefs_old&&marginals&&marginals_old&&scratch))
+    {
+        fprintf(stderr,"Memory failed to allocate.\n");
+        exit(1);
+    }
+    
+    initializeBeliefs();
+    
+    initializeTheta();
+    
+    memcpy(marginals_old,marginals,q*n*sizeof(double));
+}
+
+void BP_Modularity::initializeBeliefs() { 
+    // set starting value of beliefs
+    // generate values for each state and then normalize
+    normal_distribution<double> eps_dist(0,0.1);
+    for (size_t idx = 0;idx<q*num_edges;++idx)
+    {
+        double val = eps_dist(rng);
+        beliefs[idx] = truncate(1.0/q + val,q);
+    }
+}
+
+void BP_Modularity::initializeTheta() { 
+    // initialize values of theta
+    compute_marginals();
+    for (index_t i=0;i<n;++i)
+    {
+        index_t nn = n_neighbors(i);
+        for (index_t s = 0; s<q;++s)
+        {
+            theta[s] += nn * marginals[q*i + s];
+        }
+        
+    };
+}
+
+
+
 
 
 

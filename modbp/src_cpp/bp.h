@@ -35,17 +35,21 @@ public:
     // run one pass of the belief propagation update
     void step();
     
-    void print_beliefs();
-    void print_beliefs(size_t limit);
-    void print_marginals(size_t limit);
-    
-    
     void compute_marginals();
     double compute_bethe_free_energy();
     double compute_factorized_free_energy();
     
     vector<vector<double> > return_marginals();
+    
+    // accessors
+    double getBeta() const { return beta; };
+    void setBeta(double in) { beta = in; scale = exp(beta)-1; };
+    
+    index_t getq() const { return q; };
+    void setq();
 private:
+    void initializeBeliefs();
+    void initializeTheta();
     void normalize(double *beliefs, index_t i);
     
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
@@ -53,7 +57,7 @@ private:
     
     // private variables
     double * beliefs;
-    double * beliefs_new;     // for out-of-place updates
+    double * beliefs_old;     // for out-of-place updates
     size_t * beliefs_offsets;
     
     index_t * neighbors;
