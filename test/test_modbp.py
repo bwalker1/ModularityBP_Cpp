@@ -14,6 +14,7 @@ def main():
 
     RSBM = modbp.RandomSBMGraph(n=n,comm_prob_mat=prob_mat)
     m= RSBM.m
+
     print("time to construct {:.4f}".format(time()-t))
     elist=RSBM.get_edgelist()
     elist.sort()
@@ -28,7 +29,8 @@ def main():
 
     color_dict={0:"red",1:"blue",2:'green'}
     RSBM.graph.vs['color']=map(lambda x : color_dict[np.argmax(x)],old_marg)
-    ig.plot(RSBM.graph,layout=RSBM.graph.layout('kk'))
+    print("NMI: {:.3f}".format(RSBM.get_AMI_with_blocks(RSBM.graph.vs['color'])))
+    # ig.plot(RSBM.graph,layout=RSBM.graph.layout('kk'))
 
     print("running time {:.4f}".format(time()-t))
     #marginals = bpgc.return_marginals()

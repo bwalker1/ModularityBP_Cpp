@@ -1,5 +1,6 @@
 import numpy as np
 import igraph as ig
+import sklearn.metrics as skm
 
 class RandomGraph():
     def __init__(self):
@@ -17,6 +18,7 @@ class RandomGraph():
     @property
     def n(self):
         return self.graph.vcount()
+
 
 class RandomERGraph(RandomGraph):
 
@@ -36,5 +38,22 @@ class RandomSBMGraph(RandomGraph):
             pass
         self.graph=ig.Graph.SBM(n=n,pref_matrix=comm_prob_mat,block_sizes=block_sizes,directed=False,loops=False)
 
+        #nodes are assigned on bases of block
+        block=[]
+        for i,blk in enumerate(block_sizes):
+            block+=[i for _ in range(blk)]
+        self.graph.vs['block']=block
 
+    @property
+    def block(self):
+        return self.graph.vs['block']
 
+    def get_AMI_with_blocks(self,labels):
+        """
+
+        :param labels:
+        :type labels:
+        :return:
+        :rtype:
+        """
+        return skm.adjusted_mutual_info_score(labels_pred=labels,labels_true=self.block)
