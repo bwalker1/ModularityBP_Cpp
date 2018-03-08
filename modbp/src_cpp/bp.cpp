@@ -438,6 +438,14 @@ void BP_Modularity::setq(double new_q) {
     marginals_old = (double*)malloc(q * n* sizeof(double));
     scratch = (double*) malloc(q*max_degree*sizeof(double));
     
+    // regenerate the beliefs_offsets
+    index_t offset_count = 0;
+    for (index_t i = 0; i<n;++i)
+    {
+        offset_count += neighbor_count[i];
+        beliefs_offsets[i+1] = q*offset_count;
+    }
+    
     if (!(beliefs&&beliefs_old&&marginals&&marginals_old&&scratch))
     {
         fprintf(stderr,"Memory failed to allocate.\n");
