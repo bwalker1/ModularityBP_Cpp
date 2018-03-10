@@ -91,19 +91,22 @@ class ModularityBP():
         self.degrees=self.graph.degree()
         self.edgelist = self._get_edgelist()
         self._edgelistpv= self._get_edgelistpv()
-
+        self._bpmod=None
 
     def run_modbp(self,beta,q,niter=100):
-        cbpm=BP_Modularity(self._edgelistpv,_n=self.n,q=q,beta=beta)
-        cbpm.run(niter)
-        cmargs=np.array(cbpm.return_marginals())
+        if self._bpmod is None:
+            self._bpmod=BP_Modularity(self._edgelistpv,_n=self.n,q=q,beta=beta)
+        else:
+            self._bpmod.setBeta(beta)
+            self._bpmod.setq(q)
+            self._bpmod.run(niter)
+        cmargs=np.array(self._bpmod.return_marginals())
         cpartition = np.argmax(cmargs, axis=1)
         #assure it is initialized
         self.marginals[q]=self.marginals.get(q,{})
         self.partitions[q]=self.partitions.get(q,{})
         self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
         self.niters[q]=self.niters.get(q,{})
-
         #set values
         self.marginals[q][beta]=cmargs
         self.partitions[q][beta]=cpartition
@@ -140,10 +143,11 @@ class ModularityBP():
             j=a[1]
             if cpartition[i]==cpartition[j]:
                 #TODO make this weighted and add gamma
-                return (1-(self.degrees[i]*self.degrees[j])/(2.0*self.m))
+                return (1.0-(self.degrees[i]*self.degrees[j])/(2.0*self.m))
             else:
-                return 0
+                return 0.0
+        t=np.apply_along_axis(func1d=_mod,arr=self.edgelist,axis=1)
 
-        return 1.0/(self.m)*np.sum(np.apply_along_axis(func1d=_mod,arr=self.edgelist,axis=0))
+        return 1.0/(self.m)*np.sum(np.apply_along_axis(func1d=_mod,arr=self.edgelist,axis=1))
 
 
