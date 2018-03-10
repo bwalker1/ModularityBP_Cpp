@@ -42,7 +42,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta),transform(_transform),     order(_n), rng((int)time(NULL))
+BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, const double _resgamma, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta), resgamma(_resgamma),transform(_transform),     order(_n), rng((int)time(NULL))
 {
     clock_t start = clock();
     
@@ -68,7 +68,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     
     num_edges = 2*edgelist.size();
     
-    prefactor = -beta/num_edges;
+    prefactor = -(beta * resgamma)/num_edges;
     
     //*
     // perform isomorphic transform of graph to improve memory adjacency properties
@@ -194,11 +194,11 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     //printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
 }
 
-bool BP_Modularity::run()
+bool BP_Modularity::run(unsigned long maxIters)
 {
     
     change = 1;
-    unsigned long maxIters = 100;
+    //unsigned long maxIters = 100;
     bool converged = false;
     for (unsigned long iter = 0; iter < maxIters; ++iter)
     {

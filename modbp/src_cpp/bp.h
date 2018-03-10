@@ -26,11 +26,11 @@ class BP_Modularity
 {
 public:
     // initialize with Erdos-Renyi random graph
-	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, bool transform = true);
+	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, const double resgamma = 1.0, bool transform = true);
     ~BP_Modularity();
     
     // run BP to convergence
-    bool run();
+    bool run(unsigned long maxIters=100);
 	
     // run one pass of the belief propagation update
     void step();
@@ -74,6 +74,7 @@ private:
     index_t n;
     int q;
     double beta;
+    double resgamma;
     
     bool transform;
     vector<index_t> isomorphism;

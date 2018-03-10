@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, edgelist, _n, q, beta, transform=True):
-        this = _bp.new_BP_Modularity(edgelist, _n, q, beta, transform)
+    def __init__(self, edgelist, _n, q, beta, resgamma=1.0, transform=True):
+        this = _bp.new_BP_Modularity(edgelist, _n, q, beta, resgamma, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -115,17 +115,11 @@ class BP_Modularity(_object):
     __swig_destroy__ = _bp.delete_BP_Modularity
     __del__ = lambda self: None
 
-    def run(self):
-        return _bp.BP_Modularity_run(self)
+    def run(self, maxIters=100):
+        return _bp.BP_Modularity_run(self, maxIters)
 
     def step(self):
         return _bp.BP_Modularity_step(self)
-
-    def print_beliefs(self, *args):
-        return _bp.BP_Modularity_print_beliefs(self, *args)
-
-    def print_marginals(self, limit):
-        return _bp.BP_Modularity_print_marginals(self, limit)
 
     def compute_marginals(self):
         return _bp.BP_Modularity_compute_marginals(self)
@@ -138,6 +132,18 @@ class BP_Modularity(_object):
 
     def return_marginals(self):
         return _bp.BP_Modularity_return_marginals(self)
+
+    def getBeta(self):
+        return _bp.BP_Modularity_getBeta(self)
+
+    def setBeta(self, arg2):
+        return _bp.BP_Modularity_setBeta(self, arg2)
+
+    def getq(self):
+        return _bp.BP_Modularity_getq(self)
+
+    def setq(self, new_q):
+        return _bp.BP_Modularity_setq(self, new_q)
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
 BP_Modularity_swigregister(BP_Modularity)
 

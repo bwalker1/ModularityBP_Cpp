@@ -14,12 +14,12 @@ def test_detection():
     pin = 5*q/n
     pout = 0.5*q/n
     prob_mat=np.identity(nblocks)*pin + (np.ones((nblocks,nblocks))-np.identity(nblocks))*pout
-    print prob_mat
+    print (prob_mat)
     RSBM = modbp.RandomSBMGraph(n=n,comm_prob_mat=prob_mat)
     ER = modbp.RandomERGraph(n=n,p=5/n)
-    print np.array(ER.get_edgelist())
+    print (np.array(ER.get_edgelist()))
     return
-    
+
     step = (cmax/cmin)/11
     nsamples = len(np.arange(cmin,cmax,step))
     xs = np.empty(nsamples)
@@ -98,9 +98,22 @@ def test_transform():
 	
 def test_qstar():
 	pass
-	
+
+def test_modinterface_class():
+    n=200
+    q=2
+    pin = 5 * q / n
+    pout = 0.5 * q / n
+    prob_mat = np.identity(q) * pin + (np.ones((q, q)) - np.identity(q)) * pout
+    randSBM=modbp.RandomSBMGraph(n,prob_mat)
+    mbpinterface=modbp.ModularityBP(randSBM.graph)
+    mbpinterface.run_modbp(beta=1.0,q=2)
+    mbpinterface.run_modbp(beta=.5,q=2)
+    print (mbpinterface.retrival_modularities)
+
 def main():
-	test_transform()
+	#test_transform()
+    test_modinterface_class()
 
 if __name__=='__main__':
     main()
