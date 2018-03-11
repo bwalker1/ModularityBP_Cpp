@@ -67,8 +67,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
 	}
     
     num_edges = 2*edgelist.size();
-    
-    prefactor = -(beta * resgamma)/num_edges;
+    prefactor = -(beta)/num_edges;
     
     //*
     // perform isomorphic transform of graph to improve memory adjacency properties
@@ -421,6 +420,18 @@ vector<vector<double> > BP_Modularity::return_marginals() {
     
     return ret;
 }
+
+void BP_Modularity::setBeta(double in, bool reset) {
+    beta = in;
+    scale = exp(beta)-1;
+    if (reset){
+        //reset the beliefs from previous beta.
+        initializeBeliefs();
+        initializeTheta();
+        memcpy(marginals_old,marginals,q*n*sizeof(double));
+    }
+
+ }
 
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize

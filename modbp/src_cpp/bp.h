@@ -43,7 +43,7 @@ public:
     
     // accessors
     double getBeta() const { return beta; };
-    void setBeta(double in) { beta = in; scale = exp(beta)-1; };
+    void setBeta(double in, bool reset=true);
     
     index_t getq() const { return q; };
     void setq(double new_q);

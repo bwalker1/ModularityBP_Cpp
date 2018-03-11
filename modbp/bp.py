@@ -136,8 +136,8 @@ class BP_Modularity(_object):
     def getBeta(self):
         return _bp.BP_Modularity_getBeta(self)
 
-    def setBeta(self, arg2):
-        return _bp.BP_Modularity_setBeta(self, arg2)
+    def setBeta(self, arg2, reset=True):
+        return _bp.BP_Modularity_setBeta(self, arg2, reset)
 
     def getq(self):
         return _bp.BP_Modularity_getq(self)

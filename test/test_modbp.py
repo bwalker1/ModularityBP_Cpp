@@ -101,14 +101,14 @@ def test_qstar():
 
 def test_modinterface_class():
     n=200
-    q=2
+    q=3
     pin = 5 * q / n
     pout = 0.5 * q / n
     prob_mat = np.identity(q) * pin + (np.ones((q, q)) - np.identity(q)) * pout
     randSBM=modbp.RandomSBMGraph(n,prob_mat)
     mbpinterface=modbp.ModularityBP(randSBM.graph)
-    mbpinterface.run_modbp(beta=1.0,q=2)
-    mbpinterface.run_modbp(beta=.5,q=2)
+    mbpinterface.run_modbp(beta=1.0,q=q)
+    # mbpinterface.run_modbp(beta=.5,q=2)
     print (mbpinterface.retrival_modularities)
 
 def main():
