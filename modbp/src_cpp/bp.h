@@ -30,7 +30,7 @@ public:
     ~BP_Modularity();
     
     // run BP to convergence
-    bool run(unsigned long maxIters=100);
+    long run(unsigned long maxIters=100);
 	
     // run one pass of the belief propagation update
     void step();

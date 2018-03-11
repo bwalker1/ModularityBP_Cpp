@@ -193,7 +193,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     //printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
 }
 
-bool BP_Modularity::run(unsigned long maxIters)
+long BP_Modularity::run(unsigned long maxIters)
 {
     
     change = 1;
@@ -203,21 +203,20 @@ bool BP_Modularity::run(unsigned long maxIters)
     {
         step();
 
-        //printf("Iteration %lu: change %f\n",iter+1,change);
+//        printf("Iteration %lu: change %f\n",iter+1,change);
 
         if (!changed)
         {
             converged = true;
+            return iter;
+
             //printf("Converged after %lu iterations.\n",iter+1);
-            break;
         }
     }
-    if (!converged)
-    {
+
+     return -1;
         //printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
-    }
-    
-    return converged;
+
 }
 
 void BP_Modularity::compute_marginal(index_t i)
