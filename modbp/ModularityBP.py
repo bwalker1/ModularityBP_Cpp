@@ -115,17 +115,17 @@ class ModularityBP():
 
         #these doesn't appear to be working.  I don't think the mariginals
         #are resetting correclty for differnt betas .
-        # if self._bpmod is None:
-        #     pv=PairVector(self.edgelist)
-        #     self._bpmod=BP_Modularity(pv, _n=self.n, q=q, beta=beta,transform=False)
-        #     iters=self._bpmod.run(niter)
-        # else:
-        #     self._bpmod.setBeta(beta)
-        #     self._bpmod.setq(q)
-        #     iters=self._bpmod.run(niter)
+        if self._bpmod is None:
+            pv=PairVector(self.edgelist)
+            self._bpmod=BP_Modularity(pv, _n=self.n, q=q, beta=beta,transform=False)
+            iters=self._bpmod.run(niter)
+        else:
+            self._bpmod.setBeta(beta)
+            self._bpmod.setq(q)
+            iters=self._bpmod.run(niter)
 
-        self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
-        iters = self._bpmod.run(niter)
+        # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
+        # iters = self._bpmod.run(niter)
         cmargs=np.array(self._bpmod.return_marginals())
         cpartition = np.argmax(cmargs, axis=1)
 
