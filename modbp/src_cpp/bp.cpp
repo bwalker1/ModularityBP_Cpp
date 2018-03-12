@@ -478,6 +478,12 @@ void BP_Modularity::initializeBeliefs() {
         double val = eps_dist(rng);
         beliefs[idx] = truncate(1.0/q + val,q);
     }
+    
+    // zero out old beliefs
+    for (size_t i=0;i<q*num_edges;++i)
+    {
+        beliefs_old[i] = 0;
+    }
 }
 
 void BP_Modularity::initializeTheta() { 
