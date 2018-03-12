@@ -452,8 +452,8 @@ void BP_Modularity::setq(double new_q) {
     index_t offset_count = 0;
     for (index_t i = 0; i<n;++i)
     {
-        offset_count += neighbor_count[i];
-        beliefs_offsets[i+1] = q*offset_count;
+        offset_count += q*neighbor_count[i];
+        beliefs_offsets[i+1] = offset_count;
     }
     
     if (!(beliefs&&beliefs_old&&marginals&&marginals_old&&scratch))
