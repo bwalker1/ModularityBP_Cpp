@@ -108,7 +108,9 @@ def test_modinterface_class():
     pin = c / (1.0 + ep) / (n * 1.0 / q)
     pout = c / (1 + 1.0 / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
-    read = True
+    print (prob_mat)
+
+    read = False #was using the same graph everytime for testing.
     if read:
         print 'loading graph from file'
         RSBM = modbp.RandomSBMGraph(n, prob_mat, graph=ig.load('RSMB_test.graphml.gz'))
@@ -116,36 +118,38 @@ def test_modinterface_class():
     else:
         RSBM = modbp.RandomSBMGraph(n=n, comm_prob_mat=prob_mat)
         RSBM.graph.save('RSMB_test.graphml.gz')
+    randSBM = modbp.RandomSBMGraph(n, prob_mat)
 
-    beta=1.3
-    #call directly
-    elist = RSBM.get_edgelist()
-    elist.sort()
-    pv = modbp.bp.PairVector(elist)
-    bpgc = modbp.BP_Modularity(edgelist=pv, _n=n, q=q, beta=beta, transform=False)
+    mbpinterface = modbp.ModularityBP(randSBM.graph)
+    mbpinterface.run_modbp(q=2, beta=1.2)
+    mbpinterface.run_modbp(q=2, beta=.2)
+    mbpinterface.run_modbp(q=2, beta=.1)
+    mbpinterface.run_modbp(q=2, beta=.01)
+    print (mbpinterface.retrival_modularities)
+    print()
+    mbpinterface = modbp.ModularityBP(randSBM.graph)
+    mbpinterface.run_modbp(q=2, beta=.01)
+    mbpinterface.run_modbp(q=2, beta=.1)
+    mbpinterface.run_modbp(q=2, beta=.2)
+    mbpinterface.run_modbp(q=2, beta=1.2)
+    print(mbpinterface.retrival_modularities)
+
+    # marg = np.array(bpgc.return_marginals())
+    # print (marg[:5])
+    # part=np.argmax(marg,axis=1)
+    # print ('niters to converge', bpgc.run(1000))
+    # print ("AMI: {:.3f}".format(RSBM.get_AMI_with_blocks(labels=part)))
+    # print ("percent: {:.3f}".format(np.sum(RSBM.block == part) / (1.0 * n)))
+    # #test it with the calss method
+    # mbpinterface = modbp.ModularityBP(RSBM.graph)  # create class
+    # mbpinterface.run_modbp(beta,2,1000)
+    # print(mbpinterface.marginals[2][beta][:5])
+    # print ('niters to converge',mbpinterface.niters[2][beta])
+    # print ('modularity: {:.4f}'.format(mbpinterface.retrival_modularities[2][beta]))
+    # print 'AMI=',RSBM.get_AMI_with_blocks(mbpinterface.partitions[2][beta])
+    # print "accuracy=",RSBM.get_accuracy(mbpinterface.partitions[2][beta])
 
 
-    marg = np.array(bpgc.return_marginals())
-    print (marg[:5])
-    part=np.argmax(marg,axis=1)
-    print ('niters to converge', bpgc.run(1000))
-    print ("AMI: {:.3f}".format(RSBM.get_AMI_with_blocks(labels=part)))
-    print ("percent: {:.3f}".format(np.sum(RSBM.block == part) / (1.0 * n)))
-
-    #test it with the calss method
-    mbpinterface = modbp.ModularityBP(RSBM.graph)  # create class
-    mbpinterface.run_modbp(beta,2,1000)
-    print(mbpinterface.marginals[2][beta][:5])
-    print ('niters to converge',mbpinterface.niters[2][beta])
-    print ('modularity: {:.4f}'.format(mbpinterface.retrival_modularities[2][beta]))
-    print 'AMI=',RSBM.get_AMI_with_blocks(mbpinterface.partitions[2][beta])
-    print "accuracy=",RSBM.get_accuracy(mbpinterface.partitions[2][beta])
-
-# def test_generategraph():
-#     t=time()
-#     RER=modbp.RandomERGraph(n=1000,p=.05)
-#     print (RER.edgelist[:5])
-#     print ('creationg time',time()-t)
 
 def main():
 	#test_transform()
