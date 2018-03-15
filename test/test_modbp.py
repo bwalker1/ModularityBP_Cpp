@@ -149,11 +149,29 @@ def test_modinterface_class():
     # print 'AMI=',RSBM.get_AMI_with_blocks(mbpinterface.partitions[2][beta])
     # print "accuracy=",RSBM.get_accuracy(mbpinterface.partitions[2][beta])
 
-
-
+def test_generate_graph():
+    np.random.seed(1)
+    n = 24
+    q = 3
+    nblocks = q
+    c = 3.0
+    ep = .1
+    pin = c / (1.0 + ep) / (n * 1.0 / q)
+    pout = c / (1 + 1.0 / ep) / (n * 1.0 / q)
+    prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
+    ml_sbm=modbp.MultilayerSBM(n,comm_prob_mat=prob_mat,layers=3,transition_prob=.2)
+    print()
+    print()
+    print(ml_sbm.layer_sbms[0].graph.vs['id'])
+    print(ml_sbm.layer_sbms[0].graph.vs['block'])
+    print
+    print(ml_sbm.layer_sbms[1].graph.vs['id'])
+    print(ml_sbm.layer_sbms[1].graph.vs['block'])
+    print
+    print(ml_sbm.layer_sbms[2].graph.vs['id'])
+    print(ml_sbm.layer_sbms[2].graph.vs['block'])
+    print(ml_sbm.inter_layer_adj)
 def main():
-	#test_transform()
-    test_modinterface_class()
-
+    test_generate_graph()
 if __name__=='__main__':
     main()
