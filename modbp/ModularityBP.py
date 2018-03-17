@@ -34,11 +34,18 @@ class ModularityBP():
         if self._bpmod is None:
             pv=PairVector(self.edgelist)
             self._bpmod=BP_Modularity(pv, _n=self.n, q=q, beta=beta,transform=False)
+            print np.array(self._bpmod.return_marginals())
             iters=self._bpmod.run(niter)
+            print np.array(self._bpmod.return_marginals())
         else:
-            self._bpmod.setBeta(beta)
-            self._bpmod.setq(q)
+            if self._bpmod.getBeta() != beta:
+                self._bpmod.setBeta(beta)
+            if self._bpmod.getq() != q:
+                self._bpmod.setq(q)
+            print np.array(self._bpmod.return_marginals())
             iters=self._bpmod.run(niter)
+            print np.array(self._bpmod.return_marginals())
+        
 
         # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
         # iters = self._bpmod.run(niter)

@@ -42,7 +42,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, const double _resgamma, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta), resgamma(_resgamma),transform(_transform),     order(_n), rng((int)time(NULL))
+BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform),     order(_n), rng((int)5)
 {
     clock_t start = clock();
     
@@ -57,14 +57,14 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
     num_edges = 0;
-
-	for (auto p : edgelist)
-	{
-		index_t i = p.first;
-		index_t j = p.second;
-		edges[i].push_back(j);
-		edges[j].push_back(i);
-	}
+    
+    for (auto p : edgelist)
+    {
+        index_t i = p.first;
+        index_t j = p.second;
+        edges[i].push_back(j);
+        edges[j].push_back(i);
+    }
     
     num_edges = 2*edgelist.size();
     prefactor = -(beta)/num_edges;
@@ -128,13 +128,13 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     neighbors_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
     
     marginals = (double*) malloc(q*n*sizeof(double));
-	marginals_old = (double*)malloc(q * n* sizeof(double));
-
-	if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
-	{
-		fprintf(stderr, "ERROR: Failed to allocate memory.\n");
-		exit(1);
-	}
+    marginals_old = (double*)malloc(q * n* sizeof(double));
+    
+    if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
+    {
+        fprintf(stderr, "ERROR: Failed to allocate memory.\n");
+        exit(1);
+    }
     
     // set up offsets for fast access and copy graph structure into neighbors array
     size_t neighbors_offset_count = 0;
@@ -174,20 +174,11 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     scratch = (double*) malloc(q*max_degree*sizeof(double));
     if (!scratch)
     {
-		fprintf(stderr, "ERROR: Failed to allocate memory.\n");
+        fprintf(stderr, "ERROR: Failed to allocate memory.\n");
         exit(1);
     }
     
-    initializeBeliefs();
-
-    for (index_t i=0;i<n;++i)
-    {
-        normalize(beliefs,i);
-    }
-    
-    initializeTheta();
-    
-    memcpy(marginals_old,marginals,q*n*sizeof(double));
+    this->setBeta(beta,true);
     
     clock_t finish = clock();
     //printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
@@ -202,45 +193,48 @@ long BP_Modularity::run(unsigned long maxIters)
     for (unsigned long iter = 0; iter < maxIters; ++iter)
     {
         step();
-
-//        printf("Iteration %lu: change %f\n",iter+1,change);
-
+        
+        if (verbose)
+            printf("Iteration %lu: change %f\n",iter+1,change);
+        
         if (!changed)
         {
             converged = true;
             return iter;
-
-            //printf("Converged after %lu iterations.\n",iter+1);
+            
+            if (verbose)
+                printf("Converged after %lu iterations.\n",iter+1);
         }
     }
-
-     return -1;
-        //printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
-
+    if (verbose)
+        printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
+    return -1;
+    
+    
 }
 
 void BP_Modularity::compute_marginal(index_t i)
 {
-	const index_t nn = neighbor_count[i];
-	// iterate over all states
-	double Z = 0;
-	for (index_t s = 0; s < q; ++s)
-	{
-		marginals[q*i+s] = 0;
-		for (index_t idx2 = 0; idx2<nn; ++idx2)
-		{
-			double add = log(1 + scale * (beliefs[beliefs_offsets[i] + nn * s + idx2]));
-			marginals[q*i+s] += add;
-		}
-		// evaluate the rest of the update equation
-		marginals[q*i+s] = exp(prefactor*nn*theta[s] + marginals[q*i+s]);
-		Z += marginals[q*i + s];
-	}
-	// normalize
-	for (index_t s = 0; s < q; ++s)
-	{
-		marginals[q*i + s] /= Z;
-	}
+    const index_t nn = neighbor_count[i];
+    // iterate over all states
+    double Z = 0;
+    for (index_t s = 0; s < q; ++s)
+    {
+        marginals[q*i+s] = 0;
+        for (index_t idx2 = 0; idx2<nn; ++idx2)
+        {
+            double add = log(1 + scale * (beliefs[beliefs_offsets[i] + nn * s + idx2]));
+            marginals[q*i+s] += add;
+        }
+        // evaluate the rest of the update equation
+        marginals[q*i+s] = exp(prefactor*nn*theta[s] + marginals[q*i+s]);
+        Z += marginals[q*i + s];
+    }
+    // normalize
+    for (index_t s = 0; s < q; ++s)
+    {
+        marginals[q*i + s] /= Z;
+    }
 }
 
 void BP_Modularity::step()
@@ -270,19 +264,19 @@ void BP_Modularity::step()
         // if we changed any nodes, set this to true so we know we haven't converged
         changed = true;
         change += local_change;
-
-		// we should update the nodes contribution to theta
-		compute_marginal(i);
-		for (index_t s = 0; s < q; ++s)
-		{
-			theta[s] += nn * (marginals[q*i + s] - marginals_old[q*i + s]);
-		}
+        
+        // we should update the nodes contribution to theta
+        compute_marginal(i);
+        for (index_t s = 0; s < q; ++s)
+        {
+            theta[s] += nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+        }
         
         // update our record of what our incoming beliefs were for future comparison
         memcpy(beliefs_old+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
-		// do the same for marginals
-		memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
-
+        // do the same for marginals
+        memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
+        
         
         // iterate over all states
         for (int s = 0; s < q;++s)
@@ -364,10 +358,10 @@ void BP_Modularity::normalize(double * beliefs, index_t i)
 
 void BP_Modularity::compute_marginals()
 {
-	for (index_t i = 0; i < n; ++i)
-	{
-		compute_marginal(i);
-	}
+    for (index_t i = 0; i < n; ++i)
+    {
+        compute_marginal(i);
+    }
 }
 
 
@@ -399,7 +393,7 @@ BP_Modularity::~BP_Modularity() {
     free(neighbors_reversed);
     free(scratch);
     free(marginals);
-	free(marginals_old);
+    free(marginals_old);
 }
 
 vector<vector<double> > BP_Modularity::return_marginals() { 
@@ -423,14 +417,15 @@ vector<vector<double> > BP_Modularity::return_marginals() {
 void BP_Modularity::setBeta(double in, bool reset) {
     beta = in;
     scale = exp(beta)-1;
+    prefactor = -(beta)/num_edges;
     if (reset){
         //reset the beliefs from previous beta.
         initializeBeliefs();
         initializeTheta();
         memcpy(marginals_old,marginals,q*n*sizeof(double));
     }
-
- }
+    
+}
 
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
@@ -479,6 +474,11 @@ void BP_Modularity::initializeBeliefs() {
         beliefs[idx] = truncate(1.0/q + val,q);
     }
     
+    for (index_t i=0;i<n;++i)
+    {
+        normalize(beliefs,i);
+    }
+    
     // zero out old beliefs
     for (size_t i=0;i<q*num_edges;++i)
     {
@@ -488,6 +488,10 @@ void BP_Modularity::initializeBeliefs() {
 
 void BP_Modularity::initializeTheta() { 
     // initialize values of theta
+    for (index_t s = 0; s<q;++s)
+    {
+        theta[s] = 0;
+    }
     compute_marginals();
     for (index_t i=0;i<n;++i)
     {

@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, edgelist, _n, q, beta, resgamma=1.0, transform=True):
-        this = _bp.new_BP_Modularity(edgelist, _n, q, beta, resgamma, transform)
+    def __init__(self, edgelist, _n, q, beta, resgamma=1.0, verbose=False, transform=False):
+        this = _bp.new_BP_Modularity(edgelist, _n, q, beta, resgamma, verbose, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -144,6 +144,12 @@ class BP_Modularity(_object):
 
     def setq(self, new_q):
         return _bp.BP_Modularity_setq(self, new_q)
+
+    def getVerbose(self):
+        return _bp.BP_Modularity_getVerbose(self)
+
+    def setVerbose(self, arg2):
+        return _bp.BP_Modularity_setVerbose(self, arg2)
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
 BP_Modularity_swigregister(BP_Modularity)
 

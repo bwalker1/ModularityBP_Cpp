@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize with Erdos-Renyi random graph
-	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, const double resgamma = 1.0, bool transform = true);
+	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
     ~BP_Modularity();
     
     // run BP to convergence
@@ -47,6 +47,9 @@ public:
     
     index_t getq() const { return q; };
     void setq(double new_q);
+    
+    bool getVerbose() const { return verbose; };
+    void setVerbose(bool in) { verbose = in; };
 private:
     void initializeBeliefs();
     void initializeTheta();
@@ -103,6 +106,8 @@ private:
     default_random_engine rng;
 
 	void compute_marginal(index_t i);
+    
+    bool verbose;
 };
 
 #endif /* bp_hpp */

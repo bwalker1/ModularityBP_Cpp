@@ -122,17 +122,20 @@ def test_modinterface_class():
 
     mbpinterface = modbp.ModularityBP(randSBM.graph)
     mbpinterface.run_modbp(q=2, beta=1.2)
-    mbpinterface.run_modbp(q=2, beta=.2)
-    mbpinterface.run_modbp(q=2, beta=.1)
-    mbpinterface.run_modbp(q=2, beta=.01)
-    print (mbpinterface.retrival_modularities)
-    print()
+    #mbpinterface.run_modbp(q=2, beta=.2)
+    #mbpinterface.run_modbp(q=2, beta=.1)
+    #mbpinterface.run_modbp(q=2, beta=.01)
+    print ("When run first, %f"%mbpinterface.retrival_modularities[2][1.2])
+    #print("")
     mbpinterface = modbp.ModularityBP(randSBM.graph)
-    mbpinterface.run_modbp(q=2, beta=.01)
-    mbpinterface.run_modbp(q=2, beta=.1)
-    mbpinterface.run_modbp(q=2, beta=.2)
+    print "Running for beta=0.01"
+    mbpinterface.run_modbp(q=2, beta=0.01)
+    #mbpinterface.run_modbp(q=2, beta=.1)
+    #mbpinterface.run_modbp(q=2, beta=.2)
+    print "Running for beta=1.2"
     mbpinterface.run_modbp(q=2, beta=1.2)
-    print(mbpinterface.retrival_modularities)
+    
+    print("When run last, %f"%mbpinterface.retrival_modularities[2][1.2])
 
     # marg = np.array(bpgc.return_marginals())
     # print (marg[:5])
@@ -172,6 +175,6 @@ def test_generate_graph():
     print(ml_sbm.layer_sbms[2].graph.vs['block'])
     print(ml_sbm.inter_layer_adj)
 def main():
-    test_generate_graph()
+    test_modinterface_class()
 if __name__=='__main__':
     main()

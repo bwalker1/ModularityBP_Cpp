@@ -5,3 +5,5 @@ modbp/src_cpp/Mod_BP_Xcode/
 build/
 modbp/src_cpp/VS/
 .idea/
+test/.ipynb_checkpoints/test_modbp_notebook-checkpoint.ipynb
+test/RSMB_test.graphml.gz
