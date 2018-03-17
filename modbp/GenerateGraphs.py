@@ -112,8 +112,8 @@ class MultilayerSBM():
         for _ in range(layers-1):
             #create the next sbm from the previous one and add it to the list.
             self.layer_sbms.append(self.get_next_sbm(self.layer_sbms[-1]))
-        self.intra_layer_adj=self._get_intralayer_adj()
-        self.inter_layer_adj=self._get_interlayer_adj()
+        # self.intra_layer_adj=self._get_intralayer_adj()
+        # self.inter_layer_adj=self._get_interlayer_adj()
 
     def get_next_sbm(self,sbm):
         """
@@ -151,7 +151,7 @@ class MultilayerSBM():
         nxtsbm.graph=nxtsbm.graph.permute_vertices(perm_ids)
         return nxtsbm
 
-    def _get_intralayer_adj(self):
+    def get_intralayer_adj(self):
         intra_adj=np.zeros((self.n*self.nlayers,self.n*self.nlayers))
         for i,layer in enumerate(self.layer_sbms):
             offset=self.n*i
@@ -159,7 +159,7 @@ class MultilayerSBM():
             intra_adj[inds]=layer.get_adjacency()
         return intra_adj
 
-    def _get_interlayer_adj(self):
+    def get_interlayer_adj(self):
         #TODO this can be changed for different couplings. Right now I do only adjacent layers
         inter_adj=np.zeros((self.n*self.nlayers,self.n*self.nlayers))
         Iden_N=np.identity(self.n)
