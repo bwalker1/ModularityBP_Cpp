@@ -34,23 +34,25 @@ class ModularityBP():
         if self._bpmod is None:
             pv=PairVector(self.edgelist)
             self._bpmod=BP_Modularity(pv, _n=self.n, q=q, beta=beta,transform=False)
-            print np.array(self._bpmod.return_marginals())
+            # print np.array(self._bpmod.return_marginals())
             iters=self._bpmod.run(niter)
-            print np.array(self._bpmod.return_marginals())
+            # print np.array(self._bpmod.return_marginals())
         else:
             if self._bpmod.getBeta() != beta:
                 self._bpmod.setBeta(beta)
             if self._bpmod.getq() != q:
                 self._bpmod.setq(q)
-            print np.array(self._bpmod.return_marginals())
+            # print np.array(self._bpmod.return_marginals())
             iters=self._bpmod.run(niter)
-            print np.array(self._bpmod.return_marginals())
+            # print np.array(self._bpmod.return_marginals())
         
 
         # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
         # iters = self._bpmod.run(niter)
         cmargs=np.array(self._bpmod.return_marginals())
-        cpartition = np.argmax(cmargs, axis=1)
+
+        # cpartition = np.argmax(cmargs, axis=1)
+        cpartition=self._get_partition(cmargs)
 
         #assure it is initialized
         self.marginals[q]=self.marginals.get(q,{})
@@ -77,6 +79,25 @@ class ModularityBP():
             self.edgelist=self._get_edgelist()
         _edgelistpv = PairVector(self.edgelist) #cpp wrapper for list
         return _edgelistpv
+
+    def _get_partition(self,marginal):
+        """ We want to have argmax with randomly broken ties.
+
+        :param marginal:
+        :return:
+        """
+        #thanks to SO 42071597
+
+
+        def argmax_breakties(x):
+
+            return np.random.choice(np.flatnonzero(np.abs(x-x.max())<np.power(10.0,-4)))
+
+        return np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
+
+    def get_bstar(self,q):
+        c=(2.0*self.graph.ecount())/(self.vcount())
+        return np.log(q/(np.sqrt(c)-1)+1)
 
     def _get_retrival_modularity(self,beta,q):
         '''
@@ -113,8 +134,10 @@ class ModularityBP():
             cdeg=self.degrees[cind]
 
             if cind.shape[0]==1:
-                cAmat = self.graph.get_adjacency()[cind, cind]
 
+                # there can be no edges within a one node community
+                continue
+                # cAmat = self.graph.get_adjacency()[cind, cind]
             else:
                 #More efficiency way to do this?
                 adj=np.array(self.graph.get_adjacency().data)
