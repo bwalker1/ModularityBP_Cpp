@@ -508,7 +508,7 @@ void BP_Modularity::initializeTheta() {
     // initialize values of theta
     for (index_t s = 0; s<q;++s)
     {
-        theta[s] = 0;
+        theta[s] = num_edges/q;
     }
     compute_marginals();
     for (index_t i=0;i<n;++i)
