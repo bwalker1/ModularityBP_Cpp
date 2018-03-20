@@ -112,8 +112,6 @@ class BP_Modularity(_object):
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
-    __swig_destroy__ = _bp.delete_BP_Modularity
-    __del__ = lambda self: None
 
     def run(self, maxIters=100):
         return _bp.BP_Modularity_run(self, maxIters)
@@ -156,6 +154,8 @@ class BP_Modularity(_object):
 
     def setVerbose(self, arg2):
         return _bp.BP_Modularity_setVerbose(self, arg2)
+    __swig_destroy__ = _bp.delete_BP_Modularity
+    __del__ = lambda self: None
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
 BP_Modularity_swigregister(BP_Modularity)
 

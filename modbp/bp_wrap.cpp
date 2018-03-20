@@ -5723,27 +5723,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_delete_BP_Modularity(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_BP_Modularity",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_BP_Modularity" "', argument " "1"" of type '" "BP_Modularity *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
-  delete arg1;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_BP_Modularity_run__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   BP_Modularity *arg1 = (BP_Modularity *) 0 ;
@@ -6346,6 +6325,27 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_setVerbose(PyObject *SWIGUNUSEDPARM(sel
   } 
   arg2 = static_cast< bool >(val2);
   (arg1)->setVerbose(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_BP_Modularity(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_BP_Modularity",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_BP_Modularity" "', argument " "1"" of type '" "BP_Modularity *""'"); 
+  }
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
+  delete arg1;
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -11110,7 +11110,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"print_array", _wrap_print_array, METH_VARARGS, NULL},
 	 { (char *)"new_BP_Modularity", _wrap_new_BP_Modularity, METH_VARARGS, NULL},
-	 { (char *)"delete_BP_Modularity", _wrap_delete_BP_Modularity, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_run", _wrap_BP_Modularity_run, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_step", _wrap_BP_Modularity_step, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_compute_marginals", _wrap_BP_Modularity_compute_marginals, METH_VARARGS, NULL},
@@ -11125,6 +11124,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BP_Modularity_setq", _wrap_BP_Modularity_setq, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_getVerbose", _wrap_BP_Modularity_getVerbose, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_setVerbose", _wrap_BP_Modularity_setVerbose, METH_VARARGS, NULL},
+	 { (char *)"delete_BP_Modularity", _wrap_delete_BP_Modularity, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_swigregister", BP_Modularity_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_SwigPyIterator", _wrap_delete_SwigPyIterator, METH_VARARGS, NULL},
 	 { (char *)"SwigPyIterator_value", _wrap_SwigPyIterator_value, METH_VARARGS, NULL},

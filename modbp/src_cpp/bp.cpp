@@ -119,22 +119,33 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     }
     //*/
     
-    beliefs = (double*) malloc(q*num_edges*sizeof(double));
-    beliefs_old = (double*) calloc(q*num_edges,sizeof(double));
+    /*beliefs = (double*) malloc(2*q*num_edges*sizeof(double));
+    beliefs_old = (double*) calloc(2*q*num_edges,sizeof(double));
     beliefs_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
     
     neighbors = (index_t*) malloc(num_edges*sizeof(index_t));
     neighbors_reversed = (index_t*) malloc(num_edges*sizeof(index_t));
     neighbors_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
     
-    marginals = (double*) malloc(q*n*sizeof(double));
-    marginals_old = (double*)malloc(q * n* sizeof(double));
+    marginals = (double*) malloc(2*q*n*sizeof(double));
+    marginals_old = (double*)malloc(2*q * n* sizeof(double));
+    */
+    beliefs.resize(q*num_edges);
+    beliefs_old.resize(q*num_edges);
+    beliefs_offsets.resize(n+1);
     
-    if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
+    neighbors.resize(num_edges);
+    neighbors_reversed.resize(num_edges);
+    neighbors_offsets.resize(n+1);
+    
+    marginals.resize(q*n);
+    marginals_old.resize(q*n);
+    
+    /*if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
     {
         fprintf(stderr, "ERROR: Failed to allocate memory.\n");
         exit(1);
-    }
+    }*/
     
     // set up offsets for fast access and copy graph structure into neighbors array
     size_t neighbors_offset_count = 0;
@@ -171,12 +182,13 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
         }
     }
     
-    scratch = (double*) malloc(q*max_degree*sizeof(double));
-    if (!scratch)
+    //scratch = (double*) malloc(q*max_degree*sizeof(double));
+    scratch.resize(q*max_degree);
+    /*if (!scratch)
     {
         fprintf(stderr, "ERROR: Failed to allocate memory.\n");
         exit(1);
-    }
+    }*/
     
     this->setBeta(beta,true);
     
@@ -273,10 +285,11 @@ void BP_Modularity::step()
         }
         
         // update our record of what our incoming beliefs were for future comparison
-        memcpy(beliefs_old+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
+        //memcpy(beliefs_old+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
+        copy(beliefs.begin()+beliefs_offsets[i],beliefs.begin()+beliefs_offsets[i]+q*nn,beliefs_old.begin()+beliefs_offsets[i]);
         // do the same for marginals
-        memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
-        
+        //memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
+        copy(marginals.begin() + q*i, marginals.begin() + q*i + q, marginals_old.begin() + q*i);
         
         // iterate over all states
         for (int s = 0; s < q;++s)
@@ -338,7 +351,7 @@ void BP_Modularity::step()
     }
 }
 
-void BP_Modularity::normalize(double * beliefs, index_t i)
+void BP_Modularity::normalize(vector<double> beliefs, index_t i)
 {
     const index_t nn = neighbor_count[i];
     // iterate over all neighbors
@@ -385,18 +398,6 @@ double BP_Modularity::compute_factorized_free_energy()
 }
 
 
-BP_Modularity::~BP_Modularity() { 
-    free(beliefs);
-    free(beliefs_old);
-    free(beliefs_offsets);
-    free(neighbors);
-    free(neighbors_offsets);
-    free(neighbors_reversed);
-    free(scratch);
-    free(marginals);
-    free(marginals_old);
-}
-
 vector<vector<double> > BP_Modularity::return_marginals() { 
     // make sure the marginals are up-to-date
     compute_marginals();
@@ -423,7 +424,8 @@ void BP_Modularity::setBeta(double in, bool reset) {
         //reset the beliefs from previous beta.
         initializeBeliefs();
         initializeTheta();
-        memcpy(marginals_old,marginals,q*n*sizeof(double));
+        //memcpy(marginals_old,marginals,q*n*sizeof(double));
+        copy(marginals.begin(),marginals.end(), marginals_old.begin());
     }
     
 }
@@ -434,26 +436,31 @@ void BP_Modularity::setResgamma(double in, bool reset) {
         //reset the beliefs from previous gamma.
         initializeBeliefs();
         initializeTheta();
-        memcpy(marginals_old,marginals,q*n*sizeof(double));
+        copy(marginals.begin(),marginals.end(), marginals_old.begin());
     }
 
 }
 
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
-    q = new_q;
+    this->q = new_q;
     
-    free(beliefs);
-    free(beliefs_old);
-    free(marginals);
-    free(marginals_old);
-    free(scratch);
+
     
-    beliefs = (double*) malloc(q*num_edges*sizeof(double));
+    /*beliefs = (double*) malloc(q*num_edges*sizeof(double));
     beliefs_old = (double*) calloc(q*num_edges,sizeof(double));
     marginals = (double*) malloc(q*n*sizeof(double));
     marginals_old = (double*)malloc(q * n* sizeof(double));
-    scratch = (double*) malloc(q*max_degree*sizeof(double));
+    scratch = (double*) malloc(q*max_degree*sizeof(double));*/
+    
+    beliefs.resize(q*num_edges);
+    beliefs_old.clear();
+    beliefs_old.resize(q*num_edges);
+    marginals.resize(q*n);
+    marginals_old.resize(q*n);
+    scratch.resize(q*max_degree);
+    
+    theta.resize(q);
     
     // regenerate the beliefs_offsets
     index_t offset_count = 0;
@@ -461,19 +468,18 @@ void BP_Modularity::setq(double new_q) {
     {
         offset_count += q*neighbor_count[i];
         beliefs_offsets[i+1] = offset_count;
-    }
-    
-    if (!(beliefs&&beliefs_old&&marginals&&marginals_old&&scratch))
-    {
-        fprintf(stderr,"Memory failed to allocate.\n");
-        exit(1);
+        if (!(offset_count <= q*num_edges))
+        {
+            printf("bad\n");
+        }
     }
     
     initializeBeliefs();
     
     initializeTheta();
     
-    memcpy(marginals_old,marginals,q*n*sizeof(double));
+    copy(marginals.begin(),marginals.end(), marginals_old.begin());
+
 }
 
 void BP_Modularity::initializeBeliefs() { 

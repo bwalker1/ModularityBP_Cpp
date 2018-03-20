@@ -27,7 +27,6 @@ class BP_Modularity
 public:
     // initialize with Erdos-Renyi random graph
 	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
-    ~BP_Modularity();
     
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -57,24 +56,24 @@ public:
 private:
     void initializeBeliefs();
     void initializeTheta();
-    void normalize(double *beliefs, index_t i);
+    void normalize(vector<double> beliefs, index_t i);
     
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
     
     // private variables
-    double * beliefs;
-    double * beliefs_old;     // for out-of-place updates
-    size_t * beliefs_offsets;
+    vector<double> beliefs;
+    vector<double> beliefs_old;     // for out-of-place updates
+    vector<size_t> beliefs_offsets;
     
-    index_t * neighbors;
-    index_t * neighbors_reversed;
-    size_t * neighbors_offsets;
+    vector<index_t> neighbors;
+    vector<index_t> neighbors_reversed;
+    vector<size_t> neighbors_offsets;
     
-    double * scratch;
+    vector<double> scratch;
     
-    double * marginals;
-	double * marginals_old;
+    vector<double> marginals;
+	vector<double> marginals_old;
     
     vector<double> theta;
     
@@ -105,7 +104,7 @@ private:
     
     inline index_t n_neighbors(index_t i) { return (index_t) neighbors_offsets[i+1]-neighbors_offsets[i]; }
     
-    void print_neighbors(index_t k) { print_array(neighbors+neighbors_offsets[k],n_neighbors(k));}
+    //void print_neighbors(index_t k) { print_array(neighbors+neighbors_offsets[k],n_neighbors(k));}
     
     default_random_engine rng;
 
