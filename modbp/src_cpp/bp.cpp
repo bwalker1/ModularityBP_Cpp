@@ -220,7 +220,7 @@ long BP_Modularity::run(unsigned long maxIters)
     }
     if (verbose)
         printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
-    return -1;
+    return maxIters+1;
     
     
 }

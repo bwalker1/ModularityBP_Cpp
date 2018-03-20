@@ -39,7 +39,7 @@ class ModularityBP():
             self._bpmod=BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta,
                                       resgamma=resgamma,transform=False)
             # print np.array(self._bpmod.return_marginals())
-            # iters=self._bpmod.run(niter)
+            iters=self._bpmod.run(niter)
             # print np.array(self._bpmod.return_marginals())
         else:
             if self._bpmod.getBeta() != beta:
@@ -49,31 +49,31 @@ class ModularityBP():
             if self._bpmod.getResgamma() != resgamma:
                 self._bpmod.setResgamma(resgamma)
             # print np.array(self._bpmod.return_marginals())
-            # iters=self._bpmod.run(niter)
+            iters=self._bpmod.run(niter)
             # print np.array(self._bpmod.return_marginals())
         
 
-        # # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
-        # # iters = self._bpmod.run(niter)
-        # cmargs=np.array(self._bpmod.return_marginals())
-        #
-        # # cpartition = np.argmax(cmargs, axis=1)
-        # cpartition=self._get_partition(cmargs)
-        #
-        # #assure it is initialized
-        # self.marginals[q]=self.marginals.get(q,{})
-        # self.partitions[q]=self.partitions.get(q,{})
-        # self.niters[q]=self.niters.get(q,{})
-        # # self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
-        #
-        # #set values
-        # self.niters[q][beta]=iters
-        # self.marginals[q][beta]=cmargs
-        # self.partitions[q][beta]=cpartition
-        #
-        # retmod=self._get_retrival_modularity(beta,q,resgamma)
-        # self.retrival_modularities.loc[(q,beta,resgamma),'retrival_modularity']=retmod
-        # self.retrival_modularities.sort_index(inplace=True)
+        # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
+        # iters = self._bpmod.run(niter)
+        cmargs=np.array(self._bpmod.return_marginals())
+
+        # cpartition = np.argmax(cmargs, axis=1)
+        cpartition=self._get_partition(cmargs)
+
+        #assure it is initialized
+        self.marginals[q]=self.marginals.get(q,{})
+        self.partitions[q]=self.partitions.get(q,{})
+        self.niters[q]=self.niters.get(q,{})
+        # self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
+
+        #set values
+        self.niters[q][beta]=iters
+        self.marginals[q][beta]=cmargs
+        self.partitions[q][beta]=cpartition
+
+        retmod=self._get_retrival_modularity(beta,q,resgamma)
+        self.retrival_modularities.loc[(q,beta,resgamma),'retrival_modularity']=retmod
+        self.retrival_modularities.sort_index(inplace=True)
 
     def _get_edgelist(self):
         edgelist=self.graph.get_edgelist()

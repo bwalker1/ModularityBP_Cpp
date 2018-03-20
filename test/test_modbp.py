@@ -166,7 +166,6 @@ def test_fbnetwork():
 
     pd.DataFrame()
     for gam in gammas:
-        print(gam)
         for q in qs:
             bstar = mbpinter.get_bstar(q)
             #         betas=np.linspace(bstar-.25,bstar+.25,10)
