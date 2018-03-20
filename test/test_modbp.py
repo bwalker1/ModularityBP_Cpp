@@ -8,7 +8,7 @@ import seaborn as sbn
 import pandas as pd
 
 def test_detection():
-    n=1000000
+    n=10000
     q=4
     nblocks=q
     cmin = 1

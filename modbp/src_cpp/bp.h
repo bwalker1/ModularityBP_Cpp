@@ -56,7 +56,7 @@ public:
 private:
     void initializeBeliefs();
     void initializeTheta();
-    void normalize(vector<double> beliefs, index_t i);
+    void normalize(vector<double> & beliefs, index_t i);
     
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;

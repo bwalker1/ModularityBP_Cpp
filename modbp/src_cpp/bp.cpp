@@ -351,7 +351,7 @@ void BP_Modularity::step()
     }
 }
 
-void BP_Modularity::normalize(vector<double> beliefs, index_t i)
+void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
 {
     const index_t nn = neighbor_count[i];
     // iterate over all neighbors
