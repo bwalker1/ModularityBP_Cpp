@@ -4,6 +4,8 @@ from time import time
 import numpy as np
 import igraph as ig
 import matplotlib.pyplot as plt
+import seaborn as sbn
+import pandas as pd
 
 def test_detection():
     n=1000000
@@ -112,7 +114,7 @@ def test_modinterface_class():
 
     read = False #was using the same graph everytime for testing.
     if read:
-        print 'loading graph from file'
+        print ('loading graph from file')
         RSBM = modbp.RandomSBMGraph(n, prob_mat, graph=ig.load('RSMB_test.graphml.gz'))
         print ("{:d},{:d}".format(RSBM.n,RSBM.m))
     else:
@@ -124,16 +126,16 @@ def test_modinterface_class():
     mbpinterface.run_modbp(q=2, beta=1.2)
     #mbpinterface.run_modbp(q=2, beta=.2)
     #mbpinterface.run_modbp(q=2, beta=.1)
-    #mbpinterface.run_modbp(q=2, beta=.01)
+    mbpinterface.run_modbp(q=2, beta=.01)
     print ("When run first, %f"%mbpinterface.retrival_modularities[2][1.2])
     #print("")
     mbpinterface = modbp.ModularityBP(randSBM.graph)
     print "Running for beta=0.01"
-    mbpinterface.run_modbp(q=2, beta=0.01)
+    mbpinterface.run_modbp(q=2, beta=0.01,resgamma=.8)
     #mbpinterface.run_modbp(q=2, beta=.1)
     #mbpinterface.run_modbp(q=2, beta=.2)
     print "Running for beta=1.2"
-    mbpinterface.run_modbp(q=2, beta=1.2)
+    mbpinterface.run_modbp(q=2, beta=1.2,resgamma=.8)
     
     print("When run last, %f"%mbpinterface.retrival_modularities[2][1.2])
 
@@ -151,6 +153,29 @@ def test_modinterface_class():
     # print ('modularity: {:.4f}'.format(mbpinterface.retrival_modularities[2][beta]))
     # print 'AMI=',RSBM.get_AMI_with_blocks(mbpinterface.partitions[2][beta])
     # print "accuracy=",RSBM.get_accuracy(mbpinterface.partitions[2][beta])
+
+def test_fbnetwork():
+    fbnet = ig.load("./football.net.graphml.gz")
+    mbpinter = modbp.ModularityBP(fbnet)
+
+    # qs=np.arange(4,15)
+    qs = np.array([7, 8, 9, 10])
+    colors = sbn.cubehelix_palette(n_colors=len(qs))
+    gammas = np.linspace(.5, 1.5, 10)
+    # gammas=np.array([,1.1])
+
+    pd.DataFrame()
+    for gam in gammas:
+        print(gam)
+        for q in qs:
+            bstar = mbpinter.get_bstar(q)
+            #         betas=np.linspace(bstar-.25,bstar+.25,10)
+            betas = np.array([bstar])
+
+            #         betas=np.linspace(0,2.5,100)
+            for beta in betas:
+                mbpinter.run_modbp(q=q, beta=beta, resgamma=gam, niter=500)
+    return 0
 
 def test_generate_graph():
     np.random.seed(1)
@@ -175,6 +200,6 @@ def test_generate_graph():
     print(ml_sbm.layer_sbms[2].graph.vs['block'])
     print(ml_sbm.inter_layer_adj)
 def main():
-    test_modinterface_class()
+    test_fbnetwork()
 if __name__=='__main__':
     main()

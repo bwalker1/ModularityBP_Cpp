@@ -139,6 +139,12 @@ class BP_Modularity(_object):
     def setBeta(self, arg2, reset=True):
         return _bp.BP_Modularity_setBeta(self, arg2, reset)
 
+    def getResgamma(self):
+        return _bp.BP_Modularity_getResgamma(self)
+
+    def setResgamma(self, arg2, reset=True):
+        return _bp.BP_Modularity_setResgamma(self, arg2, reset)
+
     def getq(self):
         return _bp.BP_Modularity_getq(self)
 

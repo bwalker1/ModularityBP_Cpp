@@ -44,6 +44,10 @@ public:
     // accessors
     double getBeta() const { return beta; };
     void setBeta(double in, bool reset=true);
+
+    // accessors
+    double getResgamma() const { return resgamma; };
+    void setResgamma(double in, bool reset=true);
     
     index_t getq() const { return q; };
     void setq(double new_q);

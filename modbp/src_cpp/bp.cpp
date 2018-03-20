@@ -293,7 +293,8 @@ void BP_Modularity::step()
                     scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
-                scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
+                //scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = exp(prefactor*nn*resgamma*theta[s] + scratch[nn*s+idx]);
             }
         }
         
@@ -425,6 +426,17 @@ void BP_Modularity::setBeta(double in, bool reset) {
         memcpy(marginals_old,marginals,q*n*sizeof(double));
     }
     
+}
+
+void BP_Modularity::setResgamma(double in, bool reset) {
+    resgamma = in;
+    if (reset){
+        //reset the beliefs from previous gamma.
+        initializeBeliefs();
+        initializeTheta();
+        memcpy(marginals_old,marginals,q*n*sizeof(double));
+    }
+
 }
 
 void BP_Modularity::setq(double new_q) {

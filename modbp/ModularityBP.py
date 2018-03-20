@@ -6,6 +6,7 @@ from collections import Hashable
 import sklearn.metrics as skm
 from .bp import BP_Modularity,PairVector
 import itertools
+import pandas as pd
 
 
 class ModularityBP():
@@ -17,56 +18,62 @@ class ModularityBP():
         self.graph=graph
         self.n=self.graph.vcount()
         self.m=self.graph.ecount()
-        self.retrival_modularities={}
         self.marginals={} # should we keep these?
         self.partitions={} # max of marginals
         self.niters={}
         self.degrees=np.array(self.graph.degree())
 
+        rm_index=pd.MultiIndex(labels=[[],[],[]],levels=[[],[],[]],names=['q','beta','resgamma'])
+        self.retrival_modularities=pd.DataFrame(index=rm_index,columns=['retrival_modularity'])
+
+
         self.edgelist = self._get_edgelist()
         self._edgelistpv= self._get_edgelistpv()
         self._bpmod=None
 
-    def run_modbp(self,beta,q,niter=100):
-
+    def run_modbp(self,beta,q,niter=100,resgamma=1.0):
         #these doesn't appear to be working.  I don't think the mariginals
         #are resetting correclty for differnt betas .
         if self._bpmod is None:
-            pv=PairVector(self.edgelist)
-            self._bpmod=BP_Modularity(pv, _n=self.n, q=q, beta=beta,transform=False)
+            # pv=PairVector(self.edgelist)
+            self._bpmod=BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta,
+                                      resgamma=resgamma,transform=False)
             # print np.array(self._bpmod.return_marginals())
-            iters=self._bpmod.run(niter)
+            # iters=self._bpmod.run(niter)
             # print np.array(self._bpmod.return_marginals())
         else:
             if self._bpmod.getBeta() != beta:
                 self._bpmod.setBeta(beta)
             if self._bpmod.getq() != q:
                 self._bpmod.setq(q)
+            if self._bpmod.getResgamma() != resgamma:
+                self._bpmod.setResgamma(resgamma)
             # print np.array(self._bpmod.return_marginals())
-            iters=self._bpmod.run(niter)
+            # iters=self._bpmod.run(niter)
             # print np.array(self._bpmod.return_marginals())
         
 
-        # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
-        # iters = self._bpmod.run(niter)
-        cmargs=np.array(self._bpmod.return_marginals())
-
-        # cpartition = np.argmax(cmargs, axis=1)
-        cpartition=self._get_partition(cmargs)
-
-        #assure it is initialized
-        self.marginals[q]=self.marginals.get(q,{})
-        self.partitions[q]=self.partitions.get(q,{})
-        self.niters[q]=self.niters.get(q,{})
-        self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
-
-        #set values
-        self.niters[q][beta]=iters
-        self.marginals[q][beta]=cmargs
-        self.partitions[q][beta]=cpartition
-
-        retmod=self._get_retrival_modularity(beta,q)
-        self.retrival_modularities[q][beta]=retmod
+        # # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
+        # # iters = self._bpmod.run(niter)
+        # cmargs=np.array(self._bpmod.return_marginals())
+        #
+        # # cpartition = np.argmax(cmargs, axis=1)
+        # cpartition=self._get_partition(cmargs)
+        #
+        # #assure it is initialized
+        # self.marginals[q]=self.marginals.get(q,{})
+        # self.partitions[q]=self.partitions.get(q,{})
+        # self.niters[q]=self.niters.get(q,{})
+        # # self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
+        #
+        # #set values
+        # self.niters[q][beta]=iters
+        # self.marginals[q][beta]=cmargs
+        # self.partitions[q][beta]=cpartition
+        #
+        # retmod=self._get_retrival_modularity(beta,q,resgamma)
+        # self.retrival_modularities.loc[(q,beta,resgamma),'retrival_modularity']=retmod
+        # self.retrival_modularities.sort_index(inplace=True)
 
     def _get_edgelist(self):
         edgelist=self.graph.get_edgelist()
@@ -88,7 +95,6 @@ class ModularityBP():
         """
         #thanks to SO 42071597
 
-
         def argmax_breakties(x):
 
             return np.random.choice(np.flatnonzero(np.abs(x-x.max())<np.power(10.0,-4)))
@@ -96,10 +102,10 @@ class ModularityBP():
         return np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
 
     def get_bstar(self,q):
-        c=(2.0*self.graph.ecount())/(self.vcount())
+        c=(2.0*self.graph.ecount())/(self.graph.vcount())
         return np.log(q/(np.sqrt(c)-1)+1)
 
-    def _get_retrival_modularity(self,beta,q):
+    def _get_retrival_modularity(self,beta,q,resgamma=1.0):
         '''
         '''
 
@@ -153,7 +159,7 @@ class ModularityBP():
             #     sumA += np.sum(adj_matrix[cind, cind])
             # else:
             #     sumA += np.sum(adj_matrix[np.ix_(cind, cind)])
-        return (1.0/(2.0*self.m))*(Ahat-(Phat/(2.0*self.m)))
+        return (1.0/(2.0*self.m))*(Ahat-resgamma*(Phat/(2.0*self.m)))
 
 
 
