@@ -50,25 +50,29 @@ class RandomERGraph(RandomGraph):
 class RandomSBMGraph(RandomGraph):
     def __init__(self,n,comm_prob_mat,block_sizes=None,graph=None):
 
+        if block_sizes is None:
+            block_sizes = [int(n / (1.0 * comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0] - 1)]
+            block_sizes += [n - np.sum(block_sizes)]  # make sure it sums to one
+
         if graph is not None:
             self.graph=graph
         else:
-            if block_sizes is None:
-                block_sizes=[int(n/(1.0*comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0]-1)]
-                block_sizes+=[n-np.sum(block_sizes)] #make sure it sums to one
+
             try:
                 comm_prob_mat=comm_prob_mat.tolist()
             except TypeError:
                 pass
-            self.block_sizes=np.array(block_sizes)
-            self.comm_prob_mat=comm_prob_mat
-            self.graph=ig.Graph.SBM(n=n,pref_matrix=comm_prob_mat,block_sizes=list(block_sizes),directed=False,loops=False)
+            self.graph = ig.Graph.SBM(n=n, pref_matrix=comm_prob_mat, block_sizes=list(block_sizes), directed=False,loops=False)
+
+        self.block_sizes=np.array(block_sizes)
+        self.comm_prob_mat=comm_prob_mat
+
 
             #nodes are assigned on bases of block
-            block=[]
-            for i,blk in enumerate(block_sizes):
-                block+=[i for _ in range(blk)]
-            self.graph.vs['block']=block
+        block=[]
+        for i,blk in enumerate(block_sizes):
+            block+=[i for _ in range(blk)]
+        self.graph.vs['block']=block
 
     @property
     def block(self):
@@ -82,6 +86,25 @@ class RandomSBMGraph(RandomGraph):
         :rtype:
         """
         return skm.adjusted_mutual_info_score(labels_pred=labels,labels_true=self.block)
+
+    def get_pin_pout_ratio(self):
+        """
+
+        :return:
+        """
+        totpin=0
+        totpout=0
+        for ei,ej in self.get_edgelist():
+            if self.graph.vs['block'][ei]!=self.graph.vs['block'][ej]:
+                totpout+=1
+            else:
+                totpin+=1
+
+        #total number of out edges
+        pin_possible=np.sum([ bs*(bs-1.0) for bs in self.block_sizes])
+        pout_possible=self.n*(self.n-1.0)-pin_possible #all other possible edges have to be external
+
+        return (totpin/pin_possible)/(totpout/pout_possible)
 
     def get_accuracy(self, labels):
         """
