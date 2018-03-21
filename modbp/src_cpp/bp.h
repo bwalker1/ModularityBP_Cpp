@@ -25,8 +25,8 @@ void print_array(index_t *arr, index_t n);
 class BP_Modularity
 {
 public:
-    // initialize with Erdos-Renyi random graph
-	BP_Modularity(const vector<pair<index_t, index_t> > &edgelist, const index_t _n, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
+    // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections
+	BP_Modularity(const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
     
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -70,25 +70,28 @@ private:
     vector<index_t> neighbors_reversed;
     vector<size_t> neighbors_offsets;
     
+    vector<bool> connection_type;
+    
     vector<double> scratch;
     
     vector<double> marginals;
 	vector<double> marginals_old;
     
-    vector<double> theta;
+    vector< vector<double> > theta;
     
-    index_t n;
+    index_t n, nt;
     int q;
     double beta;
     double resgamma;
     
     bool transform;
-    vector<index_t> isomorphism;
-    vector<index_t> r_isomorphism;
     
     index_t max_degree;
     
-    unsigned long num_edges;
+    // vector containing total number of edges in each layer
+    vector<unsigned long> num_edges;
+    // sum of num_edges
+    unsigned long total_edges;
     
     double change;
     vector<double> changes;
@@ -103,8 +106,6 @@ private:
     bool computed_marginals;
     
     inline index_t n_neighbors(index_t i) { return (index_t) neighbors_offsets[i+1]-neighbors_offsets[i]; }
-    
-    //void print_neighbors(index_t k) { print_array(neighbors+neighbors_offsets[k],n_neighbors(k));}
     
     default_random_engine rng;
 

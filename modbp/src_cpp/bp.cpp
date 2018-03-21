@@ -42,11 +42,8 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform),     order(_n), rng((int)5)
+BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform),     order(_n), rng((int)5)
 {
-    clock_t start = clock();
-    
-    //printf("Constructing graph\n");
     
     scale = exp(beta)-1;
     eps = 1e-8;
@@ -58,7 +55,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     neighbor_offset_map.resize(n);
     num_edges = 0;
     
-    for (auto p : edgelist)
+    for (auto p : intra_edgelist)
     {
         index_t i = p.first;
         index_t j = p.second;
@@ -69,67 +66,6 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     num_edges = 2*edgelist.size();
     prefactor = -(beta)/num_edges;
     
-    //*
-    // perform isomorphic transform of graph to improve memory adjacency properties
-    if (transform)
-    {
-        isomorphism.resize(n);
-        r_isomorphism.resize(n);
-        stack<index_t> to_process;
-        for (index_t i=0;i<n;++i)
-        {
-            to_process.push(i);
-        }
-        unordered_set<index_t> processed;
-        
-        index_t iso_counter = 0;
-        to_process.push(0);
-        while (processed.size() < n)
-        {
-            auto val = to_process.top();
-            to_process.pop();
-            
-            if (!processed.count(val))
-            {
-                r_isomorphism[iso_counter] = val;
-                isomorphism[val] = iso_counter++;
-                processed.insert(val);
-                
-                for (auto neighbor : edges[val])
-                {
-                    if (!processed.count(neighbor))
-                    {
-                        to_process.push(neighbor);
-                    }
-                }
-            }
-        }
-        // apply the isomorphism
-        vector<vector<index_t> > new_edges(n);
-        for (index_t i=0;i<n;++i)
-        {
-            for (int j=0;j<edges[i].size();++j)
-            {
-                assert(0 <= isomorphism[i] && isomorphism[i] < n);
-                new_edges[isomorphism[i]].push_back(isomorphism[edges[i][j]]);
-            }
-            sort(new_edges[isomorphism[i]].begin(),new_edges[isomorphism[i]].end());
-        }
-        edges = new_edges;
-    }
-    //*/
-    
-    /*beliefs = (double*) malloc(2*q*num_edges*sizeof(double));
-    beliefs_old = (double*) calloc(2*q*num_edges,sizeof(double));
-    beliefs_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
-    
-    neighbors = (index_t*) malloc(num_edges*sizeof(index_t));
-    neighbors_reversed = (index_t*) malloc(num_edges*sizeof(index_t));
-    neighbors_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
-    
-    marginals = (double*) malloc(2*q*n*sizeof(double));
-    marginals_old = (double*)malloc(2*q * n* sizeof(double));
-    */
     beliefs.resize(q*num_edges);
     beliefs_old.resize(q*num_edges);
     beliefs_offsets.resize(n+1);
@@ -140,12 +76,6 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
     
     marginals.resize(q*n);
     marginals_old.resize(q*n);
-    
-    /*if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
-    {
-        fprintf(stderr, "ERROR: Failed to allocate memory.\n");
-        exit(1);
-    }*/
     
     // set up offsets for fast access and copy graph structure into neighbors array
     size_t neighbors_offset_count = 0;
@@ -182,18 +112,9 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
         }
     }
     
-    //scratch = (double*) malloc(q*max_degree*sizeof(double));
     scratch.resize(q*max_degree);
-    /*if (!scratch)
-    {
-        fprintf(stderr, "ERROR: Failed to allocate memory.\n");
-        exit(1);
-    }*/
     
-    this->setBeta(beta,true);
-    
-    clock_t finish = clock();
-    //printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
+    setBeta(beta,true);
 }
 
 long BP_Modularity::run(unsigned long maxIters)
@@ -443,15 +364,8 @@ void BP_Modularity::setResgamma(double in, bool reset) {
 
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
-    this->q = new_q;
-    
+    q = new_q;
 
-    
-    /*beliefs = (double*) malloc(q*num_edges*sizeof(double));
-    beliefs_old = (double*) calloc(q*num_edges,sizeof(double));
-    marginals = (double*) malloc(q*n*sizeof(double));
-    marginals_old = (double*)malloc(q * n* sizeof(double));
-    scratch = (double*) malloc(q*max_degree*sizeof(double));*/
     
     beliefs.resize(q*num_edges);
     beliefs_old.clear();
