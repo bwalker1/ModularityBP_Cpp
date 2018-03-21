@@ -42,18 +42,16 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform),     order(_n), rng((int)5)
+BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
 {
-    
-    scale = exp(beta)-1;
     eps = 1e-8;
     computed_marginals = false;
-    // create a random Erdos-Renyi graph and set up the internal variables
+    
     vector<vector<index_t> > edges(n);
     uniform_real_distribution<double> pdist(0,1);
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
-    num_edges = 0;
+    total_edges = 0;
     
     for (auto p : intra_edgelist)
     {
@@ -64,14 +62,14 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &intra_edgelis
     }
     
     num_edges = 2*edgelist.size();
-    prefactor = -(beta)/num_edges;
+    //prefactor = -(beta)/num_edges;
     
-    beliefs.resize(q*num_edges);
-    beliefs_old.resize(q*num_edges);
+    beliefs.resize(q*total_edges);
+    beliefs_old.resize(q*total_edges);
     beliefs_offsets.resize(n+1);
     
-    neighbors.resize(num_edges);
-    neighbors_reversed.resize(num_edges);
+    neighbors.resize(total_edges);
+    neighbors_reversed.resize(total_edges);
     neighbors_offsets.resize(n+1);
     
     marginals.resize(q*n);
@@ -112,9 +110,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &intra_edgelis
         }
     }
     
-    scratch.resize(q*max_degree);
-    
-    setBeta(beta,true);
+    reinit();
 }
 
 long BP_Modularity::run(unsigned long maxIters)
@@ -339,27 +335,13 @@ vector<vector<double> > BP_Modularity::return_marginals() {
 
 void BP_Modularity::setBeta(double in, bool reset) {
     beta = in;
-    scale = exp(beta)-1;
-    prefactor = -(beta)/num_edges;
-    if (reset){
-        //reset the beliefs from previous beta.
-        initializeBeliefs();
-        initializeTheta();
-        //memcpy(marginals_old,marginals,q*n*sizeof(double));
-        copy(marginals.begin(),marginals.end(), marginals_old.begin());
-    }
     
+    reinit(reset,true);
 }
 
 void BP_Modularity::setResgamma(double in, bool reset) {
     resgamma = in;
-    if (reset){
-        //reset the beliefs from previous gamma.
-        initializeBeliefs();
-        initializeTheta();
-        copy(marginals.begin(),marginals.end(), marginals_old.begin());
-    }
-
+    reinit(reset,true);
 }
 
 void BP_Modularity::setq(double new_q) {
@@ -367,9 +349,9 @@ void BP_Modularity::setq(double new_q) {
     q = new_q;
 
     
-    beliefs.resize(q*num_edges);
+    beliefs.resize(q*total_edges);
     beliefs_old.clear();
-    beliefs_old.resize(q*num_edges);
+    beliefs_old.resize(q*total_edges);
     marginals.resize(q*n);
     marginals_old.resize(q*n);
     scratch.resize(q*max_degree);
@@ -382,25 +364,31 @@ void BP_Modularity::setq(double new_q) {
     {
         offset_count += q*neighbor_count[i];
         beliefs_offsets[i+1] = offset_count;
-        if (!(offset_count <= q*num_edges))
+        if (!(offset_count <= q*total_edges))
         {
             printf("bad\n");
         }
     }
     
-    initializeBeliefs();
-    
-    initializeTheta();
-    
-    copy(marginals.begin(),marginals.end(), marginals_old.begin());
+    reinit();
 
+}
+
+void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
+{
+    scale = exp(beta)-1;
+    if (init_beliefs)
+        initializeBeliefs();
+    if (init_theta)
+        initializeTheta();
+    copy(marginals.begin(),marginals.end(), marginals_old.begin());
 }
 
 void BP_Modularity::initializeBeliefs() { 
     // set starting value of beliefs
     // generate values for each state and then normalize
     normal_distribution<double> eps_dist(0,0.1);
-    for (size_t idx = 0;idx<q*num_edges;++idx)
+    for (size_t idx = 0;idx<q*total_edges;++idx)
     {
         double val = eps_dist(rng);
         beliefs[idx] = truncate(1.0/q + val,q);
@@ -412,28 +400,37 @@ void BP_Modularity::initializeBeliefs() {
     }
     
     // zero out old beliefs
-    for (size_t i=0;i<q*num_edges;++i)
+    for (size_t i=0;i<q*total_edges;++i)
     {
         beliefs_old[i] = 0;
     }
 }
 
 void BP_Modularity::initializeTheta() { 
-    // initialize values of theta
-    for (index_t s = 0; s<q;++s)
+    // initialize values of theta for each layer
+    for (index_t t = 0; t < nt; ++t)
     {
-        theta[s] = num_edges/q;
-    }
-    compute_marginals();
-    for (index_t i=0;i<n;++i)
-    {
-        index_t nn = n_neighbors(i);
+        // make sure the size is correct
+        theta[t].resize(q);
         for (index_t s = 0; s<q;++s)
         {
-            theta[s] += nn * marginals[q*i + s];
+            theta[t][s] = beta*resgamma*num_edges[t]/(q*num_edges[t]);
         }
-        
-    };
+        compute_marginals();
+        for (index_t i=0;i<n;++i)
+        {
+            index_t nn = n_neighbors(i);
+            for (index_t s = 0; s<q;++s)
+            {
+                theta[t][s] += nn * marginals[q*i + s];
+            }
+        }
+        // fold in prefactor to theta
+        for (index_t s = 0; s<q;++s)
+        {
+            theta[t][s] *= beta*resgamma/num_edges[t];
+        }
+    }
 }
 
 

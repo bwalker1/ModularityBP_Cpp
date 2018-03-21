@@ -25,8 +25,8 @@ void print_array(index_t *arr, index_t n);
 class BP_Modularity
 {
 public:
-    // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections
-	BP_Modularity(const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
+    // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
+	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
     
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -57,6 +57,7 @@ private:
     void initializeBeliefs();
     void initializeTheta();
     void normalize(vector<double> & beliefs, index_t i);
+    void reinit(bool init_beliefs=true, bool init_theta=true);
     
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
