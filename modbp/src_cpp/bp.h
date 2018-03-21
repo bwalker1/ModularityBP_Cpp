@@ -80,6 +80,8 @@ private:
     
     vector< vector<double> > theta;
     
+    vector<index_t> layer_membership;
+    
     index_t n, nt;
     int q;
     double beta;

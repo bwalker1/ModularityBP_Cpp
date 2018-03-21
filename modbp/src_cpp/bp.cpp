@@ -53,6 +53,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vect
     neighbor_offset_map.resize(n);
     total_edges = 0;
     
+    // TODO: go through all input edges and put them into the data structure along with categorization of their edge type
+    /*
     for (auto p : intra_edgelist)
     {
         index_t i = p.first;
@@ -60,9 +62,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vect
         edges[i].push_back(j);
         edges[j].push_back(i);
     }
-    
+    */
     num_edges = 2*edgelist.size();
-    //prefactor = -(beta)/num_edges;
     
     beliefs.resize(q*total_edges);
     beliefs_old.resize(q*total_edges);
@@ -156,7 +157,7 @@ void BP_Modularity::compute_marginal(index_t i)
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(prefactor*nn*theta[s] + marginals[q*i+s]);
+        marginals[q*i+s] = exp(nn*theta[s] + marginals[q*i+s]);
         Z += marginals[q*i + s];
     }
     // normalize
@@ -175,6 +176,7 @@ void BP_Modularity::step()
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
         index_t i = node_idx;
+        index_t t = layer_membership[i];
         const index_t nn = neighbor_count[i];
         if (nn==0) continue;
         
@@ -224,7 +226,7 @@ void BP_Modularity::step()
                 }
                 // evaluate the rest of the update equation
                 //scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
-                scratch[nn*s+idx] = exp(prefactor*nn*resgamma*theta[s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = exp(nn*theta[t][s] + scratch[nn*s+idx]);
             }
         }
         
