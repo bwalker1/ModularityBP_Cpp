@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double resgamma = 1.0, bool verbose = false, bool transform = false);
+	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false);
     
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -70,6 +70,7 @@ private:
     vector<index_t> neighbors;
     vector<index_t> neighbors_reversed;
     vector<size_t> neighbors_offsets;
+    vector<index_t> neighbors_type;
     
     vector<bool> connection_type;
     
@@ -86,6 +87,7 @@ private:
     int q;
     double beta;
     double resgamma;
+    double omega;
     
     bool transform;
     

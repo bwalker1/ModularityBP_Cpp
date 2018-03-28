@@ -42,28 +42,39 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
+BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
 {
     eps = 1e-8;
     computed_marginals = false;
-    
-    vector<vector<index_t> > edges(n);
+    typedef pair<index_t, bool> ibpair;
+    vector<vector< ibpair > > edges(n);
     uniform_real_distribution<double> pdist(0,1);
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
     total_edges = 0;
     
     // TODO: go through all input edges and put them into the data structure along with categorization of their edge type
-    /*
+    
+    
     for (auto p : intra_edgelist)
     {
         index_t i = p.first;
         index_t j = p.second;
-        edges[i].push_back(j);
-        edges[j].push_back(i);
+        edges[i].push_back(ibpair(j,true));
+        edges[j].push_back(ibpair(i,true));
+        
+        num_edges[layer_membership[i]] += 2;
+        total_edges += 2;
     }
-    */
-    num_edges = 2*edgelist.size();
+    
+    for (auto p : inter_edgelist)
+    {
+        index_t i = p.first;
+        index_t j = p.second;
+        edges[i].push_back(ibpair(j,false));
+        edges[j].push_back(ibpair(i,false));
+        total_edges += 2;
+    }
     
     beliefs.resize(q*total_edges);
     beliefs_old.resize(q*total_edges);
@@ -72,6 +83,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vect
     neighbors.resize(total_edges);
     neighbors_reversed.resize(total_edges);
     neighbors_offsets.resize(n+1);
+    neighbors_type.resize(total_edges);
     
     marginals.resize(q*n);
     marginals_old.resize(q*n);
@@ -98,8 +110,9 @@ BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vect
         for (index_t j=0;j<edges[i].size();++j)
         {
             //assert(neighbor_c < num_edges);
-            neighbors[neighbor_c++] = edges[i][j];
-            neighbor_offset_map[i][edges[i][j]] = j;
+            neighbors_type[neighbor_c] = edges[i][j].second;
+            neighbors[neighbor_c++] = edges[i][j].first;
+            neighbor_offset_map[i][edges[i][j].first] = j;
         }
     }
     neighbor_c = 0;
@@ -107,7 +120,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vect
     {
         for (int j=0;j<edges[i].size();++j)
         {
-            neighbors_reversed[neighbor_c++] = neighbor_offset_map[edges[i][j]][i];
+            neighbors_reversed[neighbor_c++] = neighbor_offset_map[edges[i][j].first][i];
         }
     }
     
@@ -146,6 +159,7 @@ long BP_Modularity::run(unsigned long maxIters)
 void BP_Modularity::compute_marginal(index_t i)
 {
     const index_t nn = neighbor_count[i];
+    index_t t = layer_membership[i];
     // iterate over all states
     double Z = 0;
     for (index_t s = 0; s < q; ++s)
@@ -153,11 +167,22 @@ void BP_Modularity::compute_marginal(index_t i)
         marginals[q*i+s] = 0;
         for (index_t idx2 = 0; idx2<nn; ++idx2)
         {
-            double add = log(1 + scale * (beliefs[beliefs_offsets[i] + nn * s + idx2]));
+            bool type = neighbors_type[neighbors_offsets[i]+idx2];
+            double add;
+            if (type==true)
+            {
+                // intralayer contribution
+                add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+            }
+            else
+            {
+                // interlayer contribution
+                add = beta*omega*(beliefs[beliefs_offsets[i]+nn*s+idx2]);
+            }
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(nn*theta[s] + marginals[q*i+s]);
+        marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
         Z += marginals[q*i + s];
     }
     // normalize
@@ -200,7 +225,7 @@ void BP_Modularity::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            theta[s] += nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+            theta[t][s] += nn * (marginals[q*i + s] - marginals_old[q*i + s]);
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -221,7 +246,18 @@ void BP_Modularity::step()
                 for (index_t idx2 = 0;idx2<nn;++idx2)
                 {
                     if (idx2 == idx) continue;
-                    double add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                    bool type = neighbors_type[neighbors_offsets[i]+idx2];
+                    double add;
+                    if (type==true)
+                    {
+                        // intralayer contribution
+                        add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                    }
+                    else
+                    {
+                        // interlayer contribution
+                        add = beta*omega*(beliefs[beliefs_offsets[i]+nn*s+idx2]);
+                    }
                     scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
