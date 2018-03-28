@@ -42,110 +42,39 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, const index_t _n, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n),theta(_q),n(_n),q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform),     order(_n), rng((int)5)
+BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
 {
-    clock_t start = clock();
-    
-    //printf("Constructing graph\n");
-    
-    scale = exp(beta)-1;
     eps = 1e-8;
     computed_marginals = false;
-    // create a random Erdos-Renyi graph and set up the internal variables
+    
     vector<vector<index_t> > edges(n);
     uniform_real_distribution<double> pdist(0,1);
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
-    num_edges = 0;
+    total_edges = 0;
     
-    for (auto p : edgelist)
+    // TODO: go through all input edges and put them into the data structure along with categorization of their edge type
+    /*
+    for (auto p : intra_edgelist)
     {
         index_t i = p.first;
         index_t j = p.second;
         edges[i].push_back(j);
         edges[j].push_back(i);
     }
-    
-    num_edges = 2*edgelist.size();
-    prefactor = -(beta)/num_edges;
-    
-    //*
-    // perform isomorphic transform of graph to improve memory adjacency properties
-    if (transform)
-    {
-        isomorphism.resize(n);
-        r_isomorphism.resize(n);
-        stack<index_t> to_process;
-        for (index_t i=0;i<n;++i)
-        {
-            to_process.push(i);
-        }
-        unordered_set<index_t> processed;
-        
-        index_t iso_counter = 0;
-        to_process.push(0);
-        while (processed.size() < n)
-        {
-            auto val = to_process.top();
-            to_process.pop();
-            
-            if (!processed.count(val))
-            {
-                r_isomorphism[iso_counter] = val;
-                isomorphism[val] = iso_counter++;
-                processed.insert(val);
-                
-                for (auto neighbor : edges[val])
-                {
-                    if (!processed.count(neighbor))
-                    {
-                        to_process.push(neighbor);
-                    }
-                }
-            }
-        }
-        // apply the isomorphism
-        vector<vector<index_t> > new_edges(n);
-        for (index_t i=0;i<n;++i)
-        {
-            for (int j=0;j<edges[i].size();++j)
-            {
-                assert(0 <= isomorphism[i] && isomorphism[i] < n);
-                new_edges[isomorphism[i]].push_back(isomorphism[edges[i][j]]);
-            }
-            sort(new_edges[isomorphism[i]].begin(),new_edges[isomorphism[i]].end());
-        }
-        edges = new_edges;
-    }
-    //*/
-    
-    /*beliefs = (double*) malloc(2*q*num_edges*sizeof(double));
-    beliefs_old = (double*) calloc(2*q*num_edges,sizeof(double));
-    beliefs_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
-    
-    neighbors = (index_t*) malloc(num_edges*sizeof(index_t));
-    neighbors_reversed = (index_t*) malloc(num_edges*sizeof(index_t));
-    neighbors_offsets = (size_t*) malloc((n+1)*sizeof(size_t));
-    
-    marginals = (double*) malloc(2*q*n*sizeof(double));
-    marginals_old = (double*)malloc(2*q * n* sizeof(double));
     */
-    beliefs.resize(q*num_edges);
-    beliefs_old.resize(q*num_edges);
+    num_edges = 2*edgelist.size();
+    
+    beliefs.resize(q*total_edges);
+    beliefs_old.resize(q*total_edges);
     beliefs_offsets.resize(n+1);
     
-    neighbors.resize(num_edges);
-    neighbors_reversed.resize(num_edges);
+    neighbors.resize(total_edges);
+    neighbors_reversed.resize(total_edges);
     neighbors_offsets.resize(n+1);
     
     marginals.resize(q*n);
     marginals_old.resize(q*n);
-    
-    /*if (!(beliefs&&beliefs_old&&beliefs_offsets&&neighbors&&neighbors_reversed&&neighbors_offsets&&marginals&&marginals_old))
-    {
-        fprintf(stderr, "ERROR: Failed to allocate memory.\n");
-        exit(1);
-    }*/
     
     // set up offsets for fast access and copy graph structure into neighbors array
     size_t neighbors_offset_count = 0;
@@ -182,18 +111,7 @@ BP_Modularity::BP_Modularity(const vector<pair<index_t,index_t> > &edgelist, con
         }
     }
     
-    //scratch = (double*) malloc(q*max_degree*sizeof(double));
-    scratch.resize(q*max_degree);
-    /*if (!scratch)
-    {
-        fprintf(stderr, "ERROR: Failed to allocate memory.\n");
-        exit(1);
-    }*/
-    
-    this->setBeta(beta,true);
-    
-    clock_t finish = clock();
-    //printf("Initialization: %f seconds elapsed.\n",double(finish-start)/double(CLOCKS_PER_SEC));
+    reinit();
 }
 
 long BP_Modularity::run(unsigned long maxIters)
@@ -239,7 +157,7 @@ void BP_Modularity::compute_marginal(index_t i)
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(prefactor*nn*theta[s] + marginals[q*i+s]);
+        marginals[q*i+s] = exp(nn*theta[s] + marginals[q*i+s]);
         Z += marginals[q*i + s];
     }
     // normalize
@@ -258,6 +176,7 @@ void BP_Modularity::step()
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
         index_t i = node_idx;
+        index_t t = layer_membership[i];
         const index_t nn = neighbor_count[i];
         if (nn==0) continue;
         
@@ -307,7 +226,7 @@ void BP_Modularity::step()
                 }
                 // evaluate the rest of the update equation
                 //scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
-                scratch[nn*s+idx] = exp(prefactor*nn*resgamma*theta[s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = exp(nn*theta[t][s] + scratch[nn*s+idx]);
             }
         }
         
@@ -418,44 +337,23 @@ vector<vector<double> > BP_Modularity::return_marginals() {
 
 void BP_Modularity::setBeta(double in, bool reset) {
     beta = in;
-    scale = exp(beta)-1;
-    prefactor = -(beta)/num_edges;
-    if (reset){
-        //reset the beliefs from previous beta.
-        initializeBeliefs();
-        initializeTheta();
-        //memcpy(marginals_old,marginals,q*n*sizeof(double));
-        copy(marginals.begin(),marginals.end(), marginals_old.begin());
-    }
     
+    reinit(reset,true);
 }
 
 void BP_Modularity::setResgamma(double in, bool reset) {
     resgamma = in;
-    if (reset){
-        //reset the beliefs from previous gamma.
-        initializeBeliefs();
-        initializeTheta();
-        copy(marginals.begin(),marginals.end(), marginals_old.begin());
-    }
-
+    reinit(reset,true);
 }
 
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
-    this->q = new_q;
-    
+    q = new_q;
 
     
-    /*beliefs = (double*) malloc(q*num_edges*sizeof(double));
-    beliefs_old = (double*) calloc(q*num_edges,sizeof(double));
-    marginals = (double*) malloc(q*n*sizeof(double));
-    marginals_old = (double*)malloc(q * n* sizeof(double));
-    scratch = (double*) malloc(q*max_degree*sizeof(double));*/
-    
-    beliefs.resize(q*num_edges);
+    beliefs.resize(q*total_edges);
     beliefs_old.clear();
-    beliefs_old.resize(q*num_edges);
+    beliefs_old.resize(q*total_edges);
     marginals.resize(q*n);
     marginals_old.resize(q*n);
     scratch.resize(q*max_degree);
@@ -468,25 +366,31 @@ void BP_Modularity::setq(double new_q) {
     {
         offset_count += q*neighbor_count[i];
         beliefs_offsets[i+1] = offset_count;
-        if (!(offset_count <= q*num_edges))
+        if (!(offset_count <= q*total_edges))
         {
             printf("bad\n");
         }
     }
     
-    initializeBeliefs();
-    
-    initializeTheta();
-    
-    copy(marginals.begin(),marginals.end(), marginals_old.begin());
+    reinit();
 
+}
+
+void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
+{
+    scale = exp(beta)-1;
+    if (init_beliefs)
+        initializeBeliefs();
+    if (init_theta)
+        initializeTheta();
+    copy(marginals.begin(),marginals.end(), marginals_old.begin());
 }
 
 void BP_Modularity::initializeBeliefs() { 
     // set starting value of beliefs
     // generate values for each state and then normalize
     normal_distribution<double> eps_dist(0,0.1);
-    for (size_t idx = 0;idx<q*num_edges;++idx)
+    for (size_t idx = 0;idx<q*total_edges;++idx)
     {
         double val = eps_dist(rng);
         beliefs[idx] = truncate(1.0/q + val,q);
@@ -498,28 +402,37 @@ void BP_Modularity::initializeBeliefs() {
     }
     
     // zero out old beliefs
-    for (size_t i=0;i<q*num_edges;++i)
+    for (size_t i=0;i<q*total_edges;++i)
     {
         beliefs_old[i] = 0;
     }
 }
 
 void BP_Modularity::initializeTheta() { 
-    // initialize values of theta
-    for (index_t s = 0; s<q;++s)
+    // initialize values of theta for each layer
+    for (index_t t = 0; t < nt; ++t)
     {
-        theta[s] = num_edges/q;
-    }
-    compute_marginals();
-    for (index_t i=0;i<n;++i)
-    {
-        index_t nn = n_neighbors(i);
+        // make sure the size is correct
+        theta[t].resize(q);
         for (index_t s = 0; s<q;++s)
         {
-            theta[s] += nn * marginals[q*i + s];
+            theta[t][s] = beta*resgamma*num_edges[t]/(q*num_edges[t]);
         }
-        
-    };
+        compute_marginals();
+        for (index_t i=0;i<n;++i)
+        {
+            index_t nn = n_neighbors(i);
+            for (index_t s = 0; s<q;++s)
+            {
+                theta[t][s] += nn * marginals[q*i + s];
+            }
+        }
+        // fold in prefactor to theta
+        for (index_t s = 0; s<q;++s)
+        {
+            theta[t][s] *= beta*resgamma/num_edges[t];
+        }
+    }
 }
 
 
