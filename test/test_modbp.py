@@ -191,14 +191,14 @@ def test_generate_graph():
     print()
     print(ml_sbm.layer_sbms[0].graph.vs['id'])
     print(ml_sbm.layer_sbms[0].graph.vs['block'])
-    print
+    print()
     print(ml_sbm.layer_sbms[1].graph.vs['id'])
     print(ml_sbm.layer_sbms[1].graph.vs['block'])
-    print
+    print()
     print(ml_sbm.layer_sbms[2].graph.vs['id'])
     print(ml_sbm.layer_sbms[2].graph.vs['block'])
-    print(ml_sbm.inter_layer_adj)
+    
 def main():
-    test_fbnetwork()
+    test_generate_graph()
 if __name__=='__main__':
     main()

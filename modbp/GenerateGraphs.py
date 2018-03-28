@@ -119,9 +119,9 @@ class MultilayerSBM():
 
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None):
         self.layer_sbms=[]
-        self.n=n
+        self.n=n #number of nodes in each layer
         self.nlayers=layers
-        self.transition_prob=.1
+        self.transition_prob=transition_prob
         self.comm_prob_mat=comm_prob_mat
         if block_sizes0 is None:
             block_sizes0 = [int(n / (1.0 * comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0] - 1)]
@@ -135,6 +135,9 @@ class MultilayerSBM():
         for _ in range(layers-1):
             #create the next sbm from the previous one and add it to the list.
             self.layer_sbms.append(self.get_next_sbm(self.layer_sbms[-1]))
+        self.interedges=self.get_interlayer_edgelist()
+        self.intraedges=self.get_intralayer_edgelist()
+
         # self.intra_layer_adj=self._get_intralayer_adj()
         # self.inter_layer_adj=self._get_interlayer_adj()
 
@@ -195,5 +198,44 @@ class MultilayerSBM():
 
         return inter_adj
 
+    def get_interlayer_edgelist(self):
+        """
+        Single list of edges giving the multilayer connections.  For this model \
+        nodes are multiplex an connected to their neighboring slice identities.
 
+        :return:
+        """
 
+        interedges=np.zeros((self.n*(self.nlayers-1),2))
+        offset=0
+        for i in range(self.nlayers-1):
+            cnet=self.layer_sbms[i]
+            cnetnxt=self.layer_sbms[i+1]
+
+            cedge=np.array(zip(range(offset,offset+cnet.n),
+                               range(offset+cnet.n,offset+2*cnet.n)))
+
+            interedges[offset:offset+cnet.n,:]=cedge
+
+            offset+=cnet.n
+        return interedges
+
+    def get_intralayer_edgelist(self):
+        """
+        Single list of edges treating the network as a surpaadjacency format
+
+        :return:
+        """
+        nedges=np.sum([net.m for net in self.layer_sbms])
+        intraedges=np.zeros((nedges,2))
+
+        offset=0
+        m_offset=0 #for indexing
+        for i in np.arange(self.nlayers):
+            c_layernet=self.layer_sbms[i]
+            c_elist=c_layernet.get_edgelist()
+            intraedges[m_offset:m_offset+c_layernet.m,:]=np.array(c_elist)+offset
+            offset+=c_layernet.n
+            m_offset+=c_layernet.m
+
+        return intraedges
