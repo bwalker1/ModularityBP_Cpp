@@ -47,7 +47,11 @@ public:
     // accessors
     double getResgamma() const { return resgamma; };
     void setResgamma(double in, bool reset=true);
-    
+
+    //accessors for omega
+    double getOmega() const { return omega; };
+    void setOmega(double in, bool reset=true);
+
     index_t getq() const { return q; };
     void setq(double new_q);
     

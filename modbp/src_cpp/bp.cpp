@@ -382,6 +382,11 @@ void BP_Modularity::setResgamma(double in, bool reset) {
     reinit(reset,true);
 }
 
+void BP_Modularity::setOmega(double in, bool reset) {
+    omega = in;
+    reinit(reset,true);
+}
+
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
     q = new_q;

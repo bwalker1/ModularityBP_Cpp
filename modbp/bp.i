@@ -2,6 +2,7 @@
 
 %{
 #include "src_cpp/bp.h"
+typedef unsigned long index_t;
 %}
 %include typemaps.i
 %apply double *OUTPUT {double& s}
@@ -12,6 +13,6 @@
 %template() std::pair<unsigned long,unsigned long>;
 %template(PairVector) std::vector< std::pair < unsigned long, unsigned long > >;
 
-#%template(Line) vector < unsigned long >;
+%template(IntArray) std::vector<index_t>;
 %template() std::vector<double>;
 %template(Array) std::vector< std::vector<double> >;

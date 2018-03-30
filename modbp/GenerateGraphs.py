@@ -115,12 +115,71 @@ class RandomSBMGraph(RandomGraph):
         """
         return skm.accuracy_score(labels, self.block)
 
+class MultilayerGraph():
+    """ """
+    def __init__(self,intralayer_edges,interlayer_edges,layer_vec):
+
+        self.n=len(layer_vec)
+        self.interlayer_edges=interlayer_edges
+        self.intralayer_edges=intralayer_edges
+        self.layer_vec=layer_vec
+        self.layers=self._create_layer_graphs()
+        self.nlayers=len(self.layers)
+        self.intradegrees=self.get_intralayer_degrees()
+        self.interdegrees=self.get_interlayer_degrees()
+        self.intra_edge_counts=self.get_layer_edgecounts()
+        self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
+
+    def _create_layer_graphs(self):
+        layers=[]
+        uniq=np.unique(self.layer_vec)
+        for val in uniq:
+            node_inds=np.where(self.layer_vec==val)[0]
+            min_ind=np.min(node_inds)
+            node_inds=set(node_inds) # hash for look up
+            celist=[]
+            #subtract this off so that number of nodes created in igraph is correct
+
+            for ei,ej in self.intralayer_edges:
+                if ei in node_inds or ej in node_inds:
+
+                    celist.append((ei-min_ind,ej-min_ind))
+            layers.append(self._create_graph_from_elist(len(node_inds),celist))
+        return layers
+
+
+    def _create_graph_from_elist(self,n,elist):
+        return ig.Graph(n=n,edges=elist)
+
+    def get_layer_edgecounts(self):
+        ecounts=[]
+        for i in range(self.nlayers):
+            ecounts.append(np.sum(self.get_intralayer_degrees(i)))
+        return np.array(ecounts)
+
+    def get_intralayer_degrees(self, i=None):
+        if i is not None:
+            return np.array(self.layers[i].degree())
+        else:
+            total_degrees=[]
+            for i in range(len(self.layers)):
+                total_degrees.extend(list(self.layers[i].degree()))
+            return np.array(total_degrees)
+
+    def get_interlayer_degrees(self):
+        degrees=np.zeros(self.n)
+        for ei,ej in self.interlayer_edges:
+            degrees[ei]=degrees[ei]+1
+            degrees[ej]=degrees[ej]+1
+        return degrees
+
 class MultilayerSBM():
 
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None):
         self.layer_sbms=[]
-        self.n=n #number of nodes in each layer
+        self.n=n #number of total nodeslayers
         self.nlayers=layers
+        self.N=self.n*self.nlayers
         self.transition_prob=transition_prob
         self.comm_prob_mat=comm_prob_mat
         if block_sizes0 is None:
@@ -137,7 +196,7 @@ class MultilayerSBM():
             self.layer_sbms.append(self.get_next_sbm(self.layer_sbms[-1]))
         self.interedges=self.get_interlayer_edgelist()
         self.intraedges=self.get_intralayer_edgelist()
-
+        self.layer_vec=self.get_node_layer_vec()
         # self.intra_layer_adj=self._get_intralayer_adj()
         # self.inter_layer_adj=self._get_interlayer_adj()
 
@@ -206,7 +265,7 @@ class MultilayerSBM():
         :return:
         """
 
-        interedges=np.zeros((self.n*(self.nlayers-1),2))
+        interedges=np.zeros((self.n*(self.nlayers-1),2),dtype='int')
         offset=0
         for i in range(self.nlayers-1):
             cnet=self.layer_sbms[i]
@@ -220,6 +279,13 @@ class MultilayerSBM():
             offset+=cnet.n
         return interedges
 
+    def get_node_layer_vec(self):
+
+        layers=[]
+        for i,net in enumerate(self.layer_sbms):
+            layers.extend([i for _ in range(net.n)])
+        return np.array(layers)
+
     def get_intralayer_edgelist(self):
         """
         Single list of edges treating the network as a surpaadjacency format
@@ -227,7 +293,7 @@ class MultilayerSBM():
         :return:
         """
         nedges=np.sum([net.m for net in self.layer_sbms])
-        intraedges=np.zeros((nedges,2))
+        intraedges=np.zeros((nedges,2),dtype='int')
 
         offset=0
         m_offset=0 #for indexing

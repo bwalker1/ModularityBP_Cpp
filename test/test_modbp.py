@@ -187,17 +187,23 @@ def test_generate_graph():
     pout = c / (1 + 1.0 / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
     ml_sbm=modbp.MultilayerSBM(n,comm_prob_mat=prob_mat,layers=3,transition_prob=.2)
-    print()
-    print()
-    print(ml_sbm.layer_sbms[0].graph.vs['id'])
-    print(ml_sbm.layer_sbms[0].graph.vs['block'])
-    print()
-    print(ml_sbm.layer_sbms[1].graph.vs['id'])
-    print(ml_sbm.layer_sbms[1].graph.vs['block'])
-    print()
-    print(ml_sbm.layer_sbms[2].graph.vs['id'])
-    print(ml_sbm.layer_sbms[2].graph.vs['block'])
-    
+    # print()
+    # print()
+    # print(ml_sbm.layer_sbms[0].graph.vs['id'])
+    # print(ml_sbm.layer_sbms[0].graph.vs['block'])
+    # print()
+    # print(ml_sbm.layer_sbms[1].graph.vs['id'])
+    # print(ml_sbm.layer_sbms[1].graph.vs['block'])
+    # print()
+    # print(ml_sbm.layer_sbms[2].graph.vs['id'])
+    # print(ml_sbm.layer_sbms[2].graph.vs['block'])
+    #create a multigraph from the MLSBM
+    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec)
+    print([g.vcount() for g in mgraph.layers])
+    mlbp = modbp.ModularityBP(mlgraph=mgraph)
+    mlbp.run_modbp(beta=1, resgamma=1, q=3)
+
+
 def main():
     test_generate_graph()
 if __name__=='__main__':

@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, edgelist, _n, q, beta, resgamma=1.0, verbose=False, transform=False):
-        this = _bp.new_BP_Modularity(edgelist, _n, q, beta, resgamma, verbose, transform)
+    def __init__(self, layer_membership, intra_edgelist, inter_edgelist, _n, _nt, q, beta, omega=1.0, resgamma=1.0, verbose=False, transform=False):
+        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, inter_edgelist, _n, _nt, q, beta, omega, resgamma, verbose, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -142,6 +142,12 @@ class BP_Modularity(_object):
 
     def setResgamma(self, arg2, reset=True):
         return _bp.BP_Modularity_setResgamma(self, arg2, reset)
+
+    def getOmega(self):
+        return _bp.BP_Modularity_getOmega(self)
+
+    def setOmega(self, arg2, reset=True):
+        return _bp.BP_Modularity_setOmega(self, arg2, reset)
 
     def getq(self):
         return _bp.BP_Modularity_getq(self)
@@ -335,6 +341,119 @@ class PairVector(_object):
     __del__ = lambda self: None
 PairVector_swigregister = _bp.PairVector_swigregister
 PairVector_swigregister(PairVector)
+
+class IntArray(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, IntArray, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, IntArray, name)
+    __repr__ = _swig_repr
+
+    def iterator(self):
+        return _bp.IntArray_iterator(self)
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        return _bp.IntArray___nonzero__(self)
+
+    def __bool__(self):
+        return _bp.IntArray___bool__(self)
+
+    def __len__(self):
+        return _bp.IntArray___len__(self)
+
+    def __getslice__(self, i, j):
+        return _bp.IntArray___getslice__(self, i, j)
+
+    def __setslice__(self, *args):
+        return _bp.IntArray___setslice__(self, *args)
+
+    def __delslice__(self, i, j):
+        return _bp.IntArray___delslice__(self, i, j)
+
+    def __delitem__(self, *args):
+        return _bp.IntArray___delitem__(self, *args)
+
+    def __getitem__(self, *args):
+        return _bp.IntArray___getitem__(self, *args)
+
+    def __setitem__(self, *args):
+        return _bp.IntArray___setitem__(self, *args)
+
+    def pop(self):
+        return _bp.IntArray_pop(self)
+
+    def append(self, x):
+        return _bp.IntArray_append(self, x)
+
+    def empty(self):
+        return _bp.IntArray_empty(self)
+
+    def size(self):
+        return _bp.IntArray_size(self)
+
+    def swap(self, v):
+        return _bp.IntArray_swap(self, v)
+
+    def begin(self):
+        return _bp.IntArray_begin(self)
+
+    def end(self):
+        return _bp.IntArray_end(self)
+
+    def rbegin(self):
+        return _bp.IntArray_rbegin(self)
+
+    def rend(self):
+        return _bp.IntArray_rend(self)
+
+    def clear(self):
+        return _bp.IntArray_clear(self)
+
+    def get_allocator(self):
+        return _bp.IntArray_get_allocator(self)
+
+    def pop_back(self):
+        return _bp.IntArray_pop_back(self)
+
+    def erase(self, *args):
+        return _bp.IntArray_erase(self, *args)
+
+    def __init__(self, *args):
+        this = _bp.new_IntArray(*args)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+
+    def push_back(self, x):
+        return _bp.IntArray_push_back(self, x)
+
+    def front(self):
+        return _bp.IntArray_front(self)
+
+    def back(self):
+        return _bp.IntArray_back(self)
+
+    def assign(self, n, x):
+        return _bp.IntArray_assign(self, n, x)
+
+    def resize(self, *args):
+        return _bp.IntArray_resize(self, *args)
+
+    def insert(self, *args):
+        return _bp.IntArray_insert(self, *args)
+
+    def reserve(self, n):
+        return _bp.IntArray_reserve(self, n)
+
+    def capacity(self):
+        return _bp.IntArray_capacity(self)
+    __swig_destroy__ = _bp.delete_IntArray
+    __del__ = lambda self: None
+IntArray_swigregister = _bp.IntArray_swigregister
+IntArray_swigregister(IntArray)
 
 class Array(_object):
     __swig_setmethods__ = {}
