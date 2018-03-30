@@ -53,7 +53,7 @@ class ModularityBP():
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       resgamma=resgamma,omega=omega,transform=False)
-            # iters=self._bpmod.run(niter)
+            iters=self._bpmod.run(niter)
         else:
             if self._bpmod.getBeta() != beta:
                 self._bpmod.setBeta(beta)
@@ -64,7 +64,7 @@ class ModularityBP():
             if self._bpmod.getOmega() != omega:
                 self._bpmod.setOmega(omega)
 
-            # iters=self._bpmod.run(niter)
+            iters=self._bpmod.run(niter)
 
 
         # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
