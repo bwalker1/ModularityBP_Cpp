@@ -42,7 +42,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  neighbor_count(_n), theta(_nt),n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
 {
     eps = 1e-8;
     computed_marginals = false;
@@ -115,6 +115,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& layer_membership, const vect
             neighbor_offset_map[i][edges[i][j].first] = j;
         }
     }
+    scratch.resize(max_degree*q);
     neighbor_c = 0;
     for (int i=0;i<n;++i)
     {
@@ -256,7 +257,8 @@ void BP_Modularity::step()
                     else
                     {
                         // interlayer contribution
-                        add = beta*omega*(beliefs[beliefs_offsets[i]+nn*s+idx2]);
+                        //add = beta*omega*(beliefs[beliefs_offsets[i]+nn*s+idx2]);
+                        add = 0;
                     }
                     scratch[nn*s+idx] += add;
                 }
@@ -459,6 +461,9 @@ void BP_Modularity::initializeTheta() {
         {
             theta[t][s] = beta*resgamma*num_edges[t]/(q*num_edges[t]);
         }
+    }
+    for (index_t t = 0; t < nt; ++t)
+    {
         compute_marginals();
         for (index_t i=0;i<n;++i)
         {
