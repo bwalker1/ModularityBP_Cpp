@@ -117,7 +117,7 @@ class RandomSBMGraph(RandomGraph):
 
 class MultilayerGraph():
     """ """
-    def __init__(self,intralayer_edges,interlayer_edges,layer_vec):
+    def __init__(self,intralayer_edges,interlayer_edges,layer_vec,comm_vec=None):
 
         self.n=len(layer_vec)
         self.interlayer_edges=interlayer_edges
@@ -129,7 +129,8 @@ class MultilayerGraph():
         self.interdegrees=self.get_interlayer_degrees()
         self.intra_edge_counts=self.get_layer_edgecounts()
         self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
-
+        if comm_vec is not None:
+            self.comm_vec=comm_vec #for known community labels of nodes
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -172,6 +173,12 @@ class MultilayerGraph():
             degrees[ei]=degrees[ei]+1
             degrees[ej]=degrees[ej]+1
         return degrees
+
+    def get_AMI_with_communities(self,labels):
+        if self.comm_vec is None:
+            raise ValueError("Must provide communities lables for Multilayer Graph")
+        return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels)
+
 
 class MultilayerSBM():
 
@@ -270,10 +277,8 @@ class MultilayerSBM():
         for i in range(self.nlayers-1):
             cnet=self.layer_sbms[i]
             cnetnxt=self.layer_sbms[i+1]
-
             cedge=np.array(zip(range(offset,offset+cnet.n),
                                range(offset+cnet.n,offset+2*cnet.n)))
-
             interedges[offset:offset+cnet.n,:]=cedge
 
             offset+=cnet.n
@@ -303,5 +308,16 @@ class MultilayerSBM():
             intraedges[m_offset:m_offset+c_layernet.m,:]=np.array(c_elist)+offset
             offset+=c_layernet.n
             m_offset+=c_layernet.m
-
         return intraedges
+
+    def get_all_layers_block(self):
+        """
+        returns a single vector with block id for each node across all of the layers
+        :return:
+        """
+        merged_blocks=[]
+        for layer in self.layer_sbms:
+            merged_blocks+=layer.graph.vs['block']
+        return np.array(merged_blocks)
+
+
