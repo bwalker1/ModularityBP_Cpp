@@ -28,7 +28,7 @@ def test_detection():
     ys = np.empty(nsamples)
     count = 0
     for cin in np.arange(cmin,cmax,step):
-		cout = 1;
+		cout = 1
 		c = (cin + cout)
 		beta = np.log(q/(np.sqrt(c)-1) + 1)
 		pin = cin/(n/q);

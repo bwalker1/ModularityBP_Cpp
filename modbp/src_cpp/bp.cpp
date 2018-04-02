@@ -170,7 +170,7 @@ void BP_Modularity::compute_marginal(index_t i)
         {
             bool type = neighbors_type[neighbors_offsets[i]+idx2];
             double add;
-            if (type==true)
+            if (true || type==true)
             {
                 // intralayer contribution
                 add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
@@ -184,12 +184,14 @@ void BP_Modularity::compute_marginal(index_t i)
         }
         // evaluate the rest of the update equation
         marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
+
         Z += marginals[q*i + s];
     }
     // normalize
     for (index_t s = 0; s < q; ++s)
     {
         marginals[q*i + s] /= Z;
+
     }
 }
 
@@ -226,7 +228,7 @@ void BP_Modularity::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            theta[t][s] += nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+            theta[t][s] += beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -459,12 +461,16 @@ void BP_Modularity::initializeTheta() {
         theta[t].resize(q);
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] = beta*resgamma*num_edges[t]/(q*num_edges[t]);
+            theta[t][s] = beta*resgamma/(q);
         }
     }
     for (index_t t = 0; t < nt; ++t)
     {
         compute_marginals();
+        for (index_t s=0;s<q;++s)
+        {
+            theta[t][s]=0;
+        }
         for (index_t i=0;i<n;++i)
         {
             index_t nn = n_neighbors(i);
