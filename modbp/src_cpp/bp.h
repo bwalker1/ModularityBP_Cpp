@@ -106,7 +106,7 @@ private:
     vector<double> changes;
     vector<index_t> order;
     
-    double scale;
+    double scale, scaleOmega;
     double prefactor;
     
     double eps;

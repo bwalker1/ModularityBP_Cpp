@@ -259,8 +259,7 @@ void BP_Modularity::step()
                     else
                     {
                         // interlayer contribution
-                        //add = beta*omega*(beliefs[beliefs_offsets[i]+nn*s+idx2]);
-                        add = 0;
+                        add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
                     }
                     scratch[nn*s+idx] += add;
                 }
@@ -424,6 +423,7 @@ void BP_Modularity::setq(double new_q) {
 void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
 {
     scale = exp(beta)-1;
+    scale = exp(beta*omega)-1;
     if (init_beliefs)
         initializeBeliefs();
     if (init_theta)
@@ -486,10 +486,3 @@ void BP_Modularity::initializeTheta() {
         }
     }
 }
-
-
-
-
-
-
-
