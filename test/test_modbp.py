@@ -178,16 +178,15 @@ def test_fbnetwork():
 
 def test_generate_graph():
     np.random.seed(1)
-    n = 24
+    n = 30
+    nlayers = 3
     q = 3
     nblocks = q
-    c = 3.0
-    ep = .1
+    c = 5.0
+    ep = .001
     pin = c / (1.0 + ep) / (n * 1.0 / q)
     pout = c / (1 + 1.0 / ep) / (n * 1.0 / q)
-    prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
-    ml_sbm=modbp.MultilayerSBM(n,comm_prob_mat=prob_mat,layers=3,transition_prob=.2)
-    # print()
+    prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout    # print()
     # print()
     # print(ml_sbm.layer_sbms[0].graph.vs['id'])
     # print(ml_sbm.layer_sbms[0].graph.vs['block'])
@@ -198,11 +197,12 @@ def test_generate_graph():
     # print(ml_sbm.layer_sbms[2].graph.vs['id'])
     # print(ml_sbm.layer_sbms[2].graph.vs['block'])
     #create a multigraph from the MLSBM
+    ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=.2)
     mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec)
     print([g.vcount() for g in mgraph.layers])
     mlbp = modbp.ModularityBP(mlgraph=mgraph)
     mlbp.run_modbp(beta=1, resgamma=1, q=3)
-
+    print('stop')
 
 def main():
     test_generate_graph()

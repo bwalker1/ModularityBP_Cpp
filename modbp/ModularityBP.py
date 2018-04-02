@@ -53,7 +53,6 @@ class ModularityBP():
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       resgamma=resgamma,omega=omega,transform=False)
-            iters=self._bpmod.run(niter)
         else:
             if self._bpmod.getBeta() != beta:
                 self._bpmod.setBeta(beta)
@@ -64,7 +63,7 @@ class ModularityBP():
             if self._bpmod.getOmega() != omega:
                 self._bpmod.setOmega(omega)
 
-            iters=self._bpmod.run(niter)
+        iters=self._bpmod.run(niter)
 
 
         # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
@@ -109,6 +108,7 @@ class ModularityBP():
         :return:
         """
         #thanks to SO 42071597
+
         def argmax_breakties(x):
             return np.random.choice(np.flatnonzero(np.abs(x-x.max())<np.power(10.0,-4)))
 
@@ -137,8 +137,8 @@ class ModularityBP():
         Chat = 0
 
         #For Ahat and Chat we simply iterate over the edges and count internal ones
-        Ahat=np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.intralayer_edges,axis=0)
-        Chat=np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.interlayer_edges,axis=0)
+        Ahat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.intralayer_edges,axis=1))
+        Chat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.interlayer_edges,axis=1))
         #TODO make this work for weighted edges
 
         # We calculate Phat a little differently since it requires degrees of all members of each group
@@ -154,15 +154,15 @@ class ModularityBP():
             com_inddict[k] = np.array(val)
 
         Phat=0
+        degrees=self.graph.get_intralayer_degrees() #get all degrees
         for i in range(self.nlayers):
-            c_layer_inds=set(np.where(self.graph.layer_vec==i)[0])
-            cdegrees=self.graph.get_intralayer_degrees(i)
+            c_layer_inds=np.where(self.graph.layer_vec==i)[0]
             #TODO for weighted network this should be the edge strengths
             for com in allcoms:
                 cind = com_inddict[com]
                 # get only the inds in this layer
-                cind=cind[cind in c_layer_inds]
-                cdeg=cdegrees[cind]#
+                cind=cind[np.isin(cind,c_layer_inds)]
+                cdeg=degrees[cind]#
                 if cind.shape[0]==1:
                     continue #contribution is 0
                 else:
