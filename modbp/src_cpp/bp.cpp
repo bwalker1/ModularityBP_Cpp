@@ -170,7 +170,7 @@ void BP_Modularity::compute_marginal(index_t i)
         {
             bool type = neighbors_type[neighbors_offsets[i]+idx2];
             double add;
-            if (true || type==true)
+            if (type==true)
             {
                 // intralayer contribution
                 add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
