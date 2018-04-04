@@ -178,7 +178,7 @@ void BP_Modularity::compute_marginal(index_t i)
             else
             {
                 // interlayer contribution
-                add = beta*omega*(beliefs[beliefs_offsets[i]+nn*s+idx2]);
+                add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
             }
             marginals[q*i+s] += add;
         }
