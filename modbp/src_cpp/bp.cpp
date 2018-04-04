@@ -402,8 +402,6 @@ void BP_Modularity::setq(double new_q) {
     marginals_old.resize(q*n);
     scratch.resize(q*max_degree);
     
-//    theta.resize(q);  I don't think this is correct anymore.
-    
     // regenerate the beliefs_offsets
     index_t offset_count = 0;
     for (index_t i = 0; i<n;++i)
@@ -455,6 +453,7 @@ void BP_Modularity::initializeBeliefs() {
 
 void BP_Modularity::initializeTheta() { 
     // initialize values of theta for each layer
+    theta.resize(nt);
     for (index_t t = 0; t < nt; ++t)
     {
         // make sure the size is correct
