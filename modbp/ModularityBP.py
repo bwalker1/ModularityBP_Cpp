@@ -17,12 +17,15 @@ class ModularityBP():
 
     def __init__(self,mlgraph=None,interlayer_edgelist=None,intralayer_edgelist=None,layer_vec=None):
 
-        assert not (mlgraph is None) or not (interlayer_edgelist is None and intralayer_edgelist is None and layer_vec is None)
+        assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
         if mlgraph is not None:
             self.graph=mlgraph
         else:
+            if interlayer_edgelist is None:
+                interlayer_edgelist=np.array([])
             self.graph = MultilayerGraph(interlayer_edgelist,interlayer_edgelist,layer_vec)
+
         self.n=self.graph.n
         self.nlayers=self.graph.nlayers
         self.totaledgeweight=self.graph.totaledgeweight
@@ -52,7 +55,8 @@ class ModularityBP():
                                         intra_edgelist=self._intraedgelistpv,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
-                                      resgamma=resgamma,omega=omega,transform=False)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=True)
+
         else:
             if self._bpmod.getBeta() != beta:
                 self._bpmod.setBeta(beta)
@@ -115,7 +119,7 @@ class ModularityBP():
         return np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
 
     def get_bstar(self,q):
-        c=(2.0*self.graph.ecount())/(self.graph.vcount())
+        c=(2.0*self.totaledgeweight/(self.n))
         return np.log(q/(np.sqrt(c)-1)+1)
 
     def _get_retrival_modularity(self,beta,q,resgamma=1.0,omega=1.0):
@@ -137,8 +141,14 @@ class ModularityBP():
         Chat = 0
 
         #For Ahat and Chat we simply iterate over the edges and count internal ones
-        Ahat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.intralayer_edges,axis=1))
-        Chat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.interlayer_edges,axis=1))
+        if self.intralayer_edges.shape[0]>0:
+            Ahat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.intralayer_edges,axis=1))
+        else:
+            Ahat=0
+        if self.interlayer_edges.shape[0]>0:
+            Chat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.interlayer_edges,axis=1))
+        else:
+            Chat=0
         #TODO make this work for weighted edges
 
         # We calculate Phat a little differently since it requires degrees of all members of each group

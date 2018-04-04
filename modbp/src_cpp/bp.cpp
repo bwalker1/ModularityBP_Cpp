@@ -402,7 +402,7 @@ void BP_Modularity::setq(double new_q) {
     marginals_old.resize(q*n);
     scratch.resize(q*max_degree);
     
-    theta.resize(q);
+//    theta.resize(q);  I don't think this is correct anymore.
     
     // regenerate the beliefs_offsets
     index_t offset_count = 0;
@@ -423,7 +423,7 @@ void BP_Modularity::setq(double new_q) {
 void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
 {
     scale = exp(beta)-1;
-    scale = exp(beta*omega)-1;
+    scaleOmega = exp(beta*omega)-1;
     if (init_beliefs)
         initializeBeliefs();
     if (init_theta)
@@ -464,13 +464,15 @@ void BP_Modularity::initializeTheta() {
             theta[t][s] = beta*resgamma/(q);
         }
     }
+
     for (index_t t = 0; t < nt; ++t)
     {
-        compute_marginals();
+        compute_marginals(); //does this need to happen for each layer?
         for (index_t s=0;s<q;++s)
         {
             theta[t][s]=0;
         }
+
         for (index_t i=0;i<n;++i)
         {
             index_t nn = n_neighbors(i);
@@ -482,7 +484,7 @@ void BP_Modularity::initializeTheta() {
         // fold in prefactor to theta
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] *= beta*resgamma/num_edges[t];
+            theta[t][s] *= (beta*resgamma/num_edges[t]);
         }
     }
 }
