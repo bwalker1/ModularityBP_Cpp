@@ -184,14 +184,14 @@ void BP_Modularity::compute_marginal(index_t i)
         }
         // evaluate the rest of the update equation
         marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
-
+        
         Z += marginals[q*i + s];
     }
     // normalize
     for (index_t s = 0; s < q; ++s)
     {
         marginals[q*i + s] /= Z;
-
+        
     }
 }
 
@@ -228,14 +228,12 @@ void BP_Modularity::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            theta[t][s] += beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+            theta[t][s] += -beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
         }
         
         // update our record of what our incoming beliefs were for future comparison
-        //memcpy(beliefs_old+beliefs_offsets[i], beliefs+beliefs_offsets[i], q*nn*sizeof(double));
         copy(beliefs.begin()+beliefs_offsets[i],beliefs.begin()+beliefs_offsets[i]+q*nn,beliefs_old.begin()+beliefs_offsets[i]);
         // do the same for marginals
-        //memcpy(marginals_old + q*i, marginals + q * i, q * sizeof(double));
         copy(marginals.begin() + q*i, marginals.begin() + q*i + q, marginals_old.begin() + q*i);
         
         // iterate over all states
@@ -264,7 +262,6 @@ void BP_Modularity::step()
                     scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
-                //scratch[nn*s+idx] = exp(prefactor*nn*theta[s] + scratch[nn*s+idx]);
                 scratch[nn*s+idx] = exp(nn*theta[t][s] + scratch[nn*s+idx]);
             }
         }
@@ -307,6 +304,8 @@ void BP_Modularity::step()
             }
         }
     }
+    // for debug purposes, check the quality of theta
+    double norm = 0;
 }
 
 void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
@@ -393,7 +392,7 @@ void BP_Modularity::setOmega(double in, bool reset) {
 void BP_Modularity::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
     q = new_q;
-
+    
     
     beliefs.resize(q*total_edges);
     beliefs_old.clear();
@@ -408,14 +407,10 @@ void BP_Modularity::setq(double new_q) {
     {
         offset_count += q*neighbor_count[i];
         beliefs_offsets[i+1] = offset_count;
-        if (!(offset_count <= q*total_edges))
-        {
-            printf("bad\n");
-        }
     }
     
     reinit();
-
+    
 }
 
 void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
@@ -461,29 +456,33 @@ void BP_Modularity::initializeTheta() {
         for (index_t s = 0; s<q;++s)
         {
             theta[t][s] = beta*resgamma/(q);
+            //theta[t][s] = 0;
         }
     }
-
+    
+    compute_marginals();
     for (index_t t = 0; t < nt; ++t)
     {
-        compute_marginals(); //does this need to happen for each layer?
         for (index_t s=0;s<q;++s)
         {
             theta[t][s]=0;
         }
-
-        for (index_t i=0;i<n;++i)
+    }
+    for (index_t i=0;i<n;++i)
+    {
+        index_t t = layer_membership[i];
+        index_t nn = neighbor_count[i];
+        for (index_t s = 0; s<q;++s)
         {
-            index_t nn = n_neighbors(i);
-            for (index_t s = 0; s<q;++s)
-            {
-                theta[t][s] += nn * marginals[q*i + s];
-            }
+            theta[t][s] += nn * marginals[q*i + s];
         }
+    }
+    for (index_t t = 0; t < nt; ++t)
+    {
         // fold in prefactor to theta
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] *= (beta*resgamma/num_edges[t]);
+            theta[t][s] *= -(beta*resgamma/num_edges[t]);
         }
     }
 }

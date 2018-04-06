@@ -189,12 +189,12 @@ def get_partition_matrix(partion,layer_vec):
 
 def test_generate_graph():
     # np.random.seed(1)
-    n = 100
+    n = 1000
     q = 2
     nlayers=1
     nblocks = q
-    c = 3
-    ep = .1
+    c = 10
+    ep = .01
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout    # print()
@@ -214,9 +214,12 @@ def test_generate_graph():
     mlbp = modbp.ModularityBP(mlgraph=mgraph)
 
     bstar=mlbp.get_bstar(q=q)
-    for beta in np.linspace(.8,2,15):
-        mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=100,omega=0)
-        print("AMI beta:{:.2f} =  {:.3f}".format(beta,mgraph.get_AMI_with_communities(mlbp.partitions[q][beta])))
+    beta = bstar
+    mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=100,omega=0)
+    print("AMI beta:{:.2f} =  {:.3f}".format(beta,mgraph.get_AMI_with_communities(mlbp.partitions[q][beta])))
+    #for beta in np.linspace(1.5,2,15):
+        #mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=100,omega=0)
+        #print("AMI beta:{:.2f} =  {:.3f}".format(beta,mgraph.get_AMI_with_communities(mlbp.partitions[q][beta])))
     # pmat=get_partition_matrix(mlbp.partitions[3][1],mlbp.layer_vec)
 
 def test_modbp_interface():
@@ -241,7 +244,7 @@ def test_modbp_interface():
 
     # plt.close()
     # f, a = plt.subplots(1, 1, figsize=(7, 7))
-    betas = np.linspace(0, 2, 20)
+    betas = np.linspace(1.5,2,10)
     amis = []
     niters = []
     for beta in betas:
