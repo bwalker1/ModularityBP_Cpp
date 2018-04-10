@@ -37,10 +37,12 @@ class ModularityBP():
         self.marginals={} # should we keep these?
         self.partitions={} # max of marginals
         self.niters={}
+        self.nruns=0 #how many times has the BP algorithm been run.  Also serves as index for outputs
 
-
-        rm_index=pd.MultiIndex(labels=[[],[],[],[]],levels=[[],[],[],[]],names=['q','beta','resgamma','omega'])
-        self.retrival_modularities=pd.DataFrame(index=rm_index,columns=['retrival_modularity'])
+        #make single index
+        # rm_index=pd.MultiIndex(labels=[[],[],[],[]],levels=[[],[],[],[]],names=['q','beta','resgamma','omega'])
+        self.retrival_modularities=pd.DataFrame(columns=['q','beta','resgamma','omega',
+                                                         'retrival_modularity','niters'],dtype=float)
 
 
         self._intraedgelistpv= self._get_edgelistpv()
@@ -48,17 +50,17 @@ class ModularityBP():
 
         self._bpmod=None
 
-    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0):
+    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
 
         if self._bpmod is None:
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
                                         intra_edgelist=self._intraedgelistpv,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
-                                      resgamma=resgamma,omega=omega,transform=False,verbose=True)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=False)
 
         else:
-            if self._bpmod.getBeta() != beta:
+            if self._bpmod.getBeta() != beta or reset:
                 self._bpmod.setBeta(beta)
             if self._bpmod.getq() != q:
                 self._bpmod.setq(q)
@@ -66,6 +68,7 @@ class ModularityBP():
                 self._bpmod.setResgamma(resgamma)
             if self._bpmod.getOmega() != omega:
                 self._bpmod.setOmega(omega)
+
 
         iters=self._bpmod.run(niter)
 
@@ -78,19 +81,34 @@ class ModularityBP():
         cpartition=self._get_partition(cmargs)
 
         #assure it is initialized
-        self.marginals[q]=self.marginals.get(q,{})
-        self.partitions[q]=self.partitions.get(q,{})
-        self.niters[q]=self.niters.get(q,{})
+        # self.marginals[q]=self.marginals.get(q,{})
+        # self.partitions[q]=self.partitions.get(q,{})
+        # self.niters[q]=self.niters.get(q,{})
         # self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
 
         #set values
-        self.niters[q][beta]=iters
-        self.marginals[q][beta]=cmargs
-        self.partitions[q][beta]=cpartition
+        self.marginals[self.nruns]=cmargs
+        self.partitions[self.nruns]=cpartition
+        self.retrival_modularities.loc[self.nruns, 'q'] = q
+        self.retrival_modularities.loc[self.nruns, 'beta'] = beta
+        self.retrival_modularities.loc[self.nruns, 'niters'] = iters
+        self.retrival_modularities.loc[self.nruns, 'omega'] = omega
+        self.retrival_modularities.loc[self.nruns, 'resgamma'] = resgamma
 
-        retmod=self._get_retrival_modularity(beta,q,resgamma,omega)
-        self.retrival_modularities.loc[(q,beta,resgamma,omega),'retrival_modularity']=retmod
-        self.retrival_modularities.sort_index(inplace=True)
+        retmod=self._get_retrival_modularity(self.nruns)
+        self.retrival_modularities.loc[self.nruns,'retrival_modularity']=retmod
+
+        if self.graph.comm_vec is not None:
+            self.retrival_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_with_communities(cpartition)
+            self.retrival_modularities.loc[self.nruns,'Accuracy']=self.graph.get_accuracy_with_communities(cpartition)
+
+
+        # self.retrival_modularities.loc[(q,beta,resgamma,omega),'retrival_modularity']=retmod
+        # self.retrival_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
+        # self.retrival_modularities.loc[(q,beta,resgamma,omega),'AMI']=self.graph.get_AMI_with_communities(cpartition)
+        # self.retrival_modularities.sort_index(inplace=True)
+
+        self.nruns+=1
 
     def _get_edgelist(self):
         edgelist=self.graph.get_edgelist()
@@ -122,15 +140,15 @@ class ModularityBP():
         c=(2.0*self.totaledgeweight/(self.n))
         return np.log(q/(np.sqrt(c)-1)+1)
 
-    def _get_retrival_modularity(self,beta,q,resgamma=1.0,omega=1.0):
+    def _get_retrival_modularity(self,nrun=None):
         '''
         '''
+        if nrun is None:
+            nrun=self.nruns #get last one
 
-        try:
-            cpartition=self.partitions[q][beta]
-        except KeyError:
-            self.run_modbp(beta,q)
-            cpartition=self.partitions[q][beta]
+        resgamma,omega=self.retrival_modularities.loc[nrun,['resgamma','omega']]
+        cpartition = self.partitions[nrun] #must have already been run
+
 
         #we sort indices into alike
         com_inddict = {}
@@ -140,13 +158,19 @@ class ModularityBP():
         Ahat = 0
         Chat = 0
 
+        def part_equal(x):
+            if cpartition[x[0]]==cpartition[x[1]]:
+                return 1
+            else:
+                return 0
+
         #For Ahat and Chat we simply iterate over the edges and count internal ones
         if self.intralayer_edges.shape[0]>0:
-            Ahat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.intralayer_edges,axis=1))
+            Ahat=2*np.sum(np.apply_along_axis(func1d=part_equal, arr=self.intralayer_edges,axis=1))
         else:
             Ahat=0
         if self.interlayer_edges.shape[0]>0:
-            Chat=np.sum(np.apply_along_axis(func1d=lambda x: 1 if cpartition[x[0]]==cpartition[x[1]] else 0 , arr=self.interlayer_edges,axis=1))
+            Chat=2*np.sum(np.apply_along_axis(func1d=part_equal , arr=self.interlayer_edges,axis=1))
         else:
             Chat=0
         #TODO make this work for weighted edges

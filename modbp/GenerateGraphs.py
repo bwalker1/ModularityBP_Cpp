@@ -3,6 +3,7 @@ import numpy as np
 import scipy.stats as stats
 import sklearn.metrics as skm
 import igraph as ig
+import itertools  as it
 
 
 class RandomGraph():
@@ -131,6 +132,7 @@ class MultilayerGraph():
         self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
         if comm_vec is not None:
             self.comm_vec=comm_vec #for known community labels of nodes
+
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -179,6 +181,23 @@ class MultilayerGraph():
             raise ValueError("Must provide communities lables for Multilayer Graph")
         return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels)
 
+    def get_accuracy_with_communities(self,labels,permute=True):
+        if self.comm_vec is None:
+            raise ValueError("Must provide communities lables for Multilayer Graph")
+
+        if permute:
+            vals=np.unique(labels)
+            all_acc=[]
+            ncoms=float(len(np.unique(self.comm_vec)))
+            for perm in it.permutations(vals):
+                cdict=dict(zip(vals,perm))
+                mappedlabels=list(map(lambda x : cdict[x],labels))
+                acc=skm.accuracy_score(y_pred=mappedlabels,y_true=self.comm_vec,normalize=False)
+                acc=(acc-self.n/ncoms)/(self.n-self.n/ncoms)
+                all_acc.append(acc)
+            return np.max(all_acc) #return value with highest accuracy
+        else:
+            return skm.accuracy_score(y_true=self.comm_vec,y_pred=labels)
 
 class MultilayerSBM():
 
