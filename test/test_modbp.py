@@ -198,16 +198,7 @@ def test_generate_graph():
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout    # print()
-    # print()
-    # print(ml_sbm.layer_sbms[0].graph.vs['id'])
-    # print(ml_sbm.layer_sbms[0].graph.vs['block'])
-    # print()
-    # print(ml_sbm.layer_sbms[1].graph.vs['id'])
-    # print(ml_sbm.layer_sbms[1].graph.vs['block'])
-    # print()
-    # print(ml_sbm.layer_sbms[2].graph.vs['id'])
-    # print(ml_sbm.layer_sbms[2].graph.vs['block'])
-    #create a multigraph from the MLSBM
+
     ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=0)
     mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,comm_vec=ml_sbm.get_all_layers_block())
 
@@ -215,46 +206,40 @@ def test_generate_graph():
 
     bstar=mlbp.get_bstar(q=q)
     beta = bstar
-    mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=100,omega=0)
-    print("AMI beta:{:.2f} =  {:.3f}".format(beta,mgraph.get_AMI_with_communities(mlbp.partitions[q][beta])))
+    mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=500,omega=0)
+
     #for beta in np.linspace(1.5,2,15):
         #mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=100,omega=0)
         #print("AMI beta:{:.2f} =  {:.3f}".format(beta,mgraph.get_AMI_with_communities(mlbp.partitions[q][beta])))
     # pmat=get_partition_matrix(mlbp.partitions[3][1],mlbp.layer_vec)
 
 def test_modbp_interface():
-    n = 1000
+    # confirmt that it is still working on the single layer case
+    n = 100
     q = 2
+    nlayers = 2
     nblocks = q
-    c = 3
-    ep = .2
+    c = 10
+    ep = .1
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
-    prob_mat = np.identity(q) * pin + (np.ones((q, q)) - np.identity(q)) * pout
-    g = ig.load('working2com_graph.graphml.gz')
-    randsbm = modbp.RandomSBMGraph(n=g.vcount(), graph=g, comm_prob_mat=prob_mat)
-    edgepv = modbp.bp.PairVector(np.array(randsbm.get_edgelist()))
-    interlist = modbp.bp.PairVector(np.array([]))
-    layervec = modbp.bp.IntArray([0 for _ in range(n)])
-    mbinter = modbp.bp.BP_Modularity(_n=n, resgamma=1.0, _nt=1,
-                                     inter_edgelist=interlist,
-                                     intra_edgelist=edgepv,
-                                     layer_membership=layervec, beta=.9,
-                                     q=2)
+    prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
+    ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=0)
+    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,
+                                   comm_vec=ml_sbm.get_all_layers_block())
+    mlbp = modbp.ModularityBP(mlgraph=mgraph)
+    bstar = mlbp.get_bstar(q=q)
+    # mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=1000,omega=0)
+    # betas = np.linspace(0, 3, 50)
+    betas=[ bstar ]
+    ntrials = 1
+    for i, beta in enumerate(betas):
+        if i % 10 == 0: print("{:d}/{:d}".format(i, len(betas)))
+        for trial in range(ntrials):
+            mlbp.run_modbp(q=2, beta=beta, omega=0, niter=500, reset=True)
 
-    # plt.close()
-    # f, a = plt.subplots(1, 1, figsize=(7, 7))
-    betas = np.linspace(1.5,2,10)
-    amis = []
-    niters = []
-    for beta in betas:
-        mbinter.setBeta(beta, reset=True)
-        citer = mbinter.run(maxIters=100)
-        cpart = np.argmax(np.array(mbinter.return_marginals()), axis=1)
-        amis.append(randsbm.get_AMI_with_blocks(cpart))
-    # a.plot(betas, amis)
-    # plt.show()
+
 def main():
-    test_generate_graph()
+    test_modbp_interface()
 if __name__=='__main__':
     main()

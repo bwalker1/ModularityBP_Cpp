@@ -191,7 +191,8 @@ class MultilayerGraph():
             cinds=np.where(self.layer_vec==lay_val)[0]
             la_amis.append(len(cinds)/(1.0*self.n)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],
                                                                      labels_pred=self.comm_vec[cinds]))
-        return np.mean(la_amis) #take the average weighted by number of nodes in each layer
+
+        return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         
     def get_accuracy_with_communities(self,labels,permute=True):
         if self.comm_vec is None:
@@ -233,10 +234,10 @@ class MultilayerGraph():
                     c_n=float(len(clabs)) #size of current layer
                     acc=(acc-c_n/ncoms)/(c_n-c_n/ncoms)
                     all_acc.append(acc)
-                la_amis.append( len(cinds)*np.max(all_acc) )
+                la_amis.append( (len(cinds)/(1.0*self.n))*np.max(all_acc) )
             else:
-                la_amis.append(len(cinds)*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
-        return 1.0 / self.n * np.mean(la_amis)
+                la_amis.append( (len(cinds)/(1.0*self.n))*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
+        return np.sum(la_amis)
 class MultilayerSBM():
 
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None):
