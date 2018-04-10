@@ -3,6 +3,7 @@ import numpy as np
 import scipy.stats as stats
 import sklearn.metrics as skm
 import igraph as ig
+import itertools  as it
 
 
 class RandomGraph():
@@ -131,6 +132,7 @@ class MultilayerGraph():
         self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
         if comm_vec is not None:
             self.comm_vec=comm_vec #for known community labels of nodes
+
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -179,7 +181,62 @@ class MultilayerGraph():
             raise ValueError("Must provide communities lables for Multilayer Graph")
         return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels)
 
+    def get_AMI_layer_avg_with_communities(self,labels):
+        if self.comm_vec is None:
+            raise ValueError("Must provide communities lables for Multilayer Graph")
 
+        la_amis=[]
+        lay_vals=np.unique(self.layer_vec)
+        for lay_val in lay_vals:
+            cinds=np.where(self.layer_vec==lay_val)[0]
+            la_amis.append(len(cinds)/(1.0*self.n)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],
+                                                                     labels_pred=self.comm_vec[cinds]))
+        return np.mean(la_amis) #take the average weighted by number of nodes in each layer
+        
+    def get_accuracy_with_communities(self,labels,permute=True):
+        if self.comm_vec is None:
+            raise ValueError("Must provide communities lables for Multilayer Graph")
+
+        if permute:
+            vals=np.unique(labels)
+            all_acc=[]
+            ncoms=float(len(np.unique(self.comm_vec)))
+            for perm in it.permutations(vals):
+                cdict=dict(zip(vals,perm))
+                mappedlabels=list(map(lambda x : cdict[x],labels))
+                acc=skm.accuracy_score(y_pred=mappedlabels,y_true=self.comm_vec,normalize=False)
+                acc=(acc-self.n/ncoms)/(self.n-self.n/ncoms)
+                all_acc.append(acc)
+            return np.max(all_acc) #return value with highest accuracy
+        else:
+            return skm.accuracy_score(y_true=self.comm_vec,y_pred=labels)
+
+    def get_accuracy_layer_averaged_with_communities(self,labels,permute=True):
+        if self.comm_vec is None:
+            raise ValueError("Must provide communities lables for Multilayer Graph")
+
+        la_amis = []
+        lay_vals = np.unique(self.layer_vec)
+        for lay_val in lay_vals:
+            cinds = np.where(self.layer_vec == lay_val)[0]
+
+            clabs=labels[cinds]
+            ctrue=self.comm_vec[cinds]
+            if permute:
+                vals=np.unique(clabs)
+                all_acc=[]
+                ncoms=float(len(np.unique(ctrue)))
+                for perm in it.permutations(vals):
+                    cdict=dict(zip(vals,perm))
+                    mappedlabels=list(map(lambda x : cdict[x],clabs))
+                    acc=skm.accuracy_score(y_pred=mappedlabels,y_true=ctrue,normalize=False)
+                    c_n=float(len(clabs)) #size of current layer
+                    acc=(acc-c_n/ncoms)/(c_n-c_n/ncoms)
+                    all_acc.append(acc)
+                la_amis.append( len(cinds)*np.max(all_acc) )
+            else:
+                la_amis.append(len(cinds)*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
+        return 1.0 / self.n * np.mean(la_amis)
 class MultilayerSBM():
 
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None):
