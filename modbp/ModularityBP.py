@@ -41,8 +41,8 @@ class ModularityBP():
 
         #make single index
         # rm_index=pd.MultiIndex(labels=[[],[],[],[]],levels=[[],[],[],[]],names=['q','beta','resgamma','omega'])
-        self.retrival_modularities=pd.DataFrame(columns=['q','beta','resgamma','omega',
-                                                         'retrival_modularity','niters'],dtype=float)
+        self.retrieval_modularities=pd.DataFrame(columns=['q','beta','resgamma','omega',
+                                                         'retrieval_modularity','niters'],dtype=float)
 
 
         self._intraedgelistpv= self._get_edgelistpv()
@@ -84,29 +84,36 @@ class ModularityBP():
         # self.marginals[q]=self.marginals.get(q,{})
         # self.partitions[q]=self.partitions.get(q,{})
         # self.niters[q]=self.niters.get(q,{})
-        # self.retrival_modularities[q]=self.retrival_modularities.get(q,{})
+        # self.retrieval_modularities[q]=self.retrieval_modularities.get(q,{})
 
         #set values
         self.marginals[self.nruns]=cmargs
         self.partitions[self.nruns]=cpartition
-        self.retrival_modularities.loc[self.nruns, 'q'] = q
-        self.retrival_modularities.loc[self.nruns, 'beta'] = beta
-        self.retrival_modularities.loc[self.nruns, 'niters'] = iters
-        self.retrival_modularities.loc[self.nruns, 'omega'] = omega
-        self.retrival_modularities.loc[self.nruns, 'resgamma'] = resgamma
+        self.retrieval_modularities.loc[self.nruns, 'q'] = q
+        self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
+        self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
+        self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
+        self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
 
-        retmod=self._get_retrival_modularity(self.nruns)
-        self.retrival_modularities.loc[self.nruns,'retrival_modularity']=retmod
+        retmod=self._get_retrieval_modularity(self.nruns)
+        self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
+        _,cnts=np.unique(cpartition,return_counts=True)
+
+        self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
 
         if self.graph.comm_vec is not None:
-            self.retrival_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
-            self.retrival_modularities.loc[self.nruns,'Accuracy']=self.graph.get_accuracy_layer_averaged_with_communities(cpartition)
+            self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
+            self.retrieval_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_with_communities(cpartition)
+
+            self.retrieval_modularities.loc[self.nruns,'Accuracy_layer_avg']=self.graph.get_accuracy_layer_averaged_with_communities(cpartition)
+
+            self.retrieval_modularities.loc[self.nruns, 'Accuracy'] = self.graph.get_accuracy_with_communities(cpartition)
 
 
-        # self.retrival_modularities.loc[(q,beta,resgamma,omega),'retrival_modularity']=retmod
-        # self.retrival_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
-        # self.retrival_modularities.loc[(q,beta,resgamma,omega),'AMI']=self.graph.get_AMI_with_communities(cpartition)
-        # self.retrival_modularities.sort_index(inplace=True)
+        # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'retrieval_modularity']=retmod
+        # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
+        # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'AMI']=self.graph.get_AMI_with_communities(cpartition)
+        # self.retrieval_modularities.sort_index(inplace=True)
 
         self.nruns+=1
 
@@ -132,7 +139,7 @@ class ModularityBP():
         #thanks to SO 42071597
 
         def argmax_breakties(x):
-            return np.random.choice(np.flatnonzero(np.abs(x-x.max())<np.power(10.0,-4)))
+            return np.random.choice(np.flatnonzero(np.abs(x-x.max())<np.power(10.0,-6)))
 
         return np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
 
@@ -140,13 +147,13 @@ class ModularityBP():
         c=(2.0*self.totaledgeweight/(self.n))
         return np.log(q/(np.sqrt(c)-1)+1)
 
-    def _get_retrival_modularity(self,nrun=None):
+    def _get_retrieval_modularity(self,nrun=None):
         '''
         '''
         if nrun is None:
             nrun=self.nruns #get last one
 
-        resgamma,omega=self.retrival_modularities.loc[nrun,['resgamma','omega']]
+        resgamma,omega=self.retrieval_modularities.loc[nrun,['resgamma','omega']]
         cpartition = self.partitions[nrun] #must have already been run
 
 
