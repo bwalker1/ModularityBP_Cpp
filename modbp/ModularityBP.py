@@ -144,7 +144,12 @@ class ModularityBP():
         return np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
 
     def get_bstar(self,q):
-        c=(2.0*self.totaledgeweight/(self.n))
+        #c is supposed to be the average excess degree
+        degrees=self.graph.intradegrees + self.graph.interdegrees
+        d_avg=np.mean(degrees)
+        d2=np.mean(np.power(degrees,2.0))
+        c= d2/d_avg - 1
+        #c=(2.0*self.totaledgeweight/(self.n))
         return np.log(q/(np.sqrt(c)-1)+1)
 
     def _get_retrieval_modularity(self,nrun=None):
