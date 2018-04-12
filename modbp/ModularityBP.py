@@ -37,6 +37,8 @@ class ModularityBP():
         self.marginals={} # should we keep these?
         self.partitions={} # max of marginals
         self.niters={}
+        self.group_maps={} #
+        self.group_distances={}
         self.nruns=0 #how many times has the BP algorithm been run.  Also serves as index for outputs
 
         #make single index
@@ -94,12 +96,14 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
         self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
         self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
+        self._get_community_distances(self.nruns) #sets values in method
 
         retmod=self._get_retrieval_modularity(self.nruns)
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
         _,cnts=np.unique(cpartition,return_counts=True)
 
         self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
+        self.retrieval_modularities.loc[self.nruns,'qstar']=self._get_true_number_of_communities(self.nruns)
 
         if self.graph.comm_vec is not None:
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
@@ -216,9 +220,64 @@ class ModularityBP():
                     Phat+=(np.sum(cPmat)/(2.0*self.graph.intra_edge_counts[i]))
 
 
-
         return (1.0/(2.0*self.totaledgeweight))*( Ahat-resgamma*Phat+omega*Chat)
 
+    def _get_community_distances(self,ind,thresh=np.power(10.0,-10)):
+        """
+        Here we calculate the average distance between the mariginals of each of the \
+        communities as defined by:
+
+        :math:`d_{l,k}=\\frac{1}{N}\\sum_{i}(\\psi_{i}^{l}-\\psi_{i}^{k})^2` \
+
+        We also identify communities that are close enough to be considered a single community\
+        i.e. their distance is below the threshhold
+
+        :return:
+        """
+
+        try:
+            cmarginal = self.marginals[ind]
+        except KeyError:
+            raise KeyError("Cannot find partition with index {}".format(ind))
+
+        q=cmarginal.shape[1]
+
+        distmat=np.zeros((q,q))
+
+        # everyone starts out in their own group initially.
+        # We merge sets together every time pairwise distance is less.
+        groups=dict(zip(range(q),[{i} for i in range(q)]))
+
+
+
+        for k,l in itertools.combinations(range(q),2):
+            dist_kl=np.mean(np.power(cmarginal[:,k]-cmarginal[:,l],2.0))
+
+            distmat[k,l]=dist_kl
+            distmat[l,k]=dist_kl
+
+            if dist_kl <=thresh:
+                comb=groups[l].union(groups[k])
+                groups[k]=comb
+                groups[l]=comb
+
+        self.group_maps[ind]=groups
+        self.group_distances[ind]=distmat
+
+    def _get_true_number_of_communities(self,ind):
+        """
+
+        :param ind:
+        :return:
+        """
+
+        if ind not in self.group_maps.keys():
+            self._get_community_distances(ind)
+
+        groupmap=self.group_maps[ind]
+
+        #create set of sets and take len.  Frozenset is immutable
+        return len(set([frozenset(s) for s in groupmap.values()]))
 
 
 
