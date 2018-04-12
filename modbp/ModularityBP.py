@@ -15,16 +15,24 @@ class ModularityBP():
     This is python interface class for the mulitlayer modularity BP
     """
 
-    def __init__(self,mlgraph=None,interlayer_edgelist=None,intralayer_edgelist=None,layer_vec=None):
+    def __init__(self,mlgraph=None,interlayer_edgelist=None,intralayer_edgelist=None,layer_vec=None,accuracy_off=False):
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
+
         if mlgraph is not None:
-            self.graph=mlgraph
+            # this is just a single layer igraph. We create a mlgraph with empty interlayer edges
+            if hasattr(mlgraph, 'get_edgelist'):
+                self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
+                                              interlayer_edges=np.zeros((0,2),dtype='int'),
+                                              layer_vec=[0 for _ in range(mlgraph.vcount())])
+            else:
+                self.graph=mlgraph
         else:
             if interlayer_edgelist is None:
-                interlayer_edgelist=np.array([])
-            self.graph = MultilayerGraph(interlayer_edgelist,interlayer_edgelist,layer_vec)
+                interlayer_edgelist=np.zeros((0,2),dtype='int')
+            self.graph = MultilayerGraph(intralayer_edges=intralayer_edgelist,
+                                         interlayer_edges=interlayer_edgelist,layer_vec=layer_vec)
 
         self.n=self.graph.n
         self.nlayers=self.graph.nlayers
@@ -33,7 +41,7 @@ class ModularityBP():
         self.interlayer_edges=self.graph.interlayer_edges
         self.layer_vec=self.graph.layer_vec
         self._layer_vec_ia=IntArray(self.layer_vec)
-
+        self.accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
         self.marginals={} # should we keep these?
         self.partitions={} # max of marginals
         self.niters={}
@@ -109,9 +117,10 @@ class ModularityBP():
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
             self.retrieval_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_with_communities(cpartition)
 
-            self.retrieval_modularities.loc[self.nruns,'Accuracy_layer_avg']=self.graph.get_accuracy_layer_averaged_with_communities(cpartition)
+            if not self.accuracy_off:
+                self.retrieval_modularities.loc[self.nruns,'Accuracy_layer_avg']=self.graph.get_accuracy_layer_averaged_with_communities(cpartition)
 
-            self.retrieval_modularities.loc[self.nruns, 'Accuracy'] = self.graph.get_accuracy_with_communities(cpartition)
+                self.retrieval_modularities.loc[self.nruns, 'Accuracy'] = self.graph.get_accuracy_with_communities(cpartition)
 
 
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'retrieval_modularity']=retmod
@@ -222,7 +231,7 @@ class ModularityBP():
 
         return (1.0/(2.0*self.totaledgeweight))*( Ahat-resgamma*Phat+omega*Chat)
 
-    def _get_community_distances(self,ind,thresh=np.power(10.0,-10)):
+    def _get_community_distances(self,ind,thresh=np.power(10.0,-3)):
         """
         Here we calculate the average distance between the mariginals of each of the \
         communities as defined by:

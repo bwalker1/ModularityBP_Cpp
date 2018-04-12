@@ -130,8 +130,8 @@ class MultilayerGraph():
         self.interdegrees=self.get_interlayer_degrees()
         self.intra_edge_counts=self.get_layer_edgecounts()
         self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
-        if comm_vec is not None:
-            self.comm_vec=comm_vec #for known community labels of nodes
+
+        self.comm_vec=comm_vec #for known community labels of nodes
 
     def _create_layer_graphs(self):
         layers=[]
@@ -238,6 +238,7 @@ class MultilayerGraph():
             else:
                 la_amis.append( (len(cinds)/(1.0*self.n))*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
         return np.sum(la_amis)
+
 class MultilayerSBM():
 
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None):
