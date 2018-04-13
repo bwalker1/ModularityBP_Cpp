@@ -339,18 +339,55 @@ void BP_Modularity::compute_marginals()
 
 
 double BP_Modularity::compute_bethe_free_energy()
-{   //TODO
-    // - 1/(b*beta) ( sum_i {log Z_i} - sum_{i,j \in E} log Z_{ij} + beta/4m \sum_i theta^2 )
+{
+    // - 1/(n*beta) ( sum_i {log Z_i} - sum_{i,j \in E} log Z_{ij} + beta/4m \sum_s theta_s^2 )
+    if (nt > 1)
+    {
+        fprintf(stderr,"Implementation Error: BFE not implemented for multilayer networks\n");
+        exit(1);
+    }
     double bfe=0.0;
+    for (index_t i = 0; i < n; ++i)
+    {
+        double Zi = 0;
+        for (index_t s = 0; s < q; ++s)
+        {
+            Zi += marginals[q*i+s];
+        }
+        bfe += log(Zi);
+        
+        index_t nn = neighbor_count[i];
+        for (index_t j = 0; j<nn;++j)
+        {
+            double Zij = 0;
+            for (index_t s=0; s<q; ++s)
+            {
+                Zij += beliefs[beliefs_offsets[i] + nn*s + j];
+            }
+            bfe -= log(Zij);
+        }
+    }
+    double temp = 0;
+    for (index_t s=0; s<q; ++s)
+    {
+        double temp2 = theta[0][s];
+        temp += temp2*temp2;
+    }
+    bfe += beta/(2*num_edges[0])*temp;
+    bfe /= (n*beta);
     return bfe;
 }
 
 double BP_Modularity::compute_factorized_free_energy()
 {
-    //TODO
     //Calculate the bethe free energy of the factorized state ( each node uniform on all communities)
     //log(1-1/q-exp(beta))
-    double bffe=0.0;
+    if (nt > 1)
+    {
+        fprintf(stderr,"Implementation Error: BFE not implemented for multilayer networks\n");
+        exit(1);
+    }
+    double bffe=log(1-1.0/q - exp(beta));
     return bffe;
 }
 
