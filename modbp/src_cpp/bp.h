@@ -55,6 +55,8 @@ public:
     index_t getq() const { return q; };
     void setq(double new_q);
     
+    void set_compute_bfe(const bool b) { compute_bfe = b; }
+    
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
 private:
@@ -62,6 +64,8 @@ private:
     void initializeTheta();
     void normalize(vector<double> & beliefs, index_t i);
     void reinit(bool init_beliefs=true, bool init_theta=true);
+    
+    void compute_marginals(bool do_bfe_contribution);
     
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
@@ -97,6 +101,9 @@ private:
     
     index_t max_degree;
     
+    double bfe;
+    bool compute_bfe;
+    
     // vector containing total number of edges in each layer
     vector<unsigned long> num_edges;
     // sum of num_edges
@@ -118,7 +125,7 @@ private:
     
     default_random_engine rng;
 
-	void compute_marginal(index_t i);
+	void compute_marginal(index_t i, bool do_bfe_contribution = false);
     
     bool verbose;
 };

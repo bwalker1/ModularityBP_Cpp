@@ -126,6 +126,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     }
     
     reinit();
+    
+    compute_bfe = false;
 }
 
 long BP_Modularity::run(unsigned long maxIters)
@@ -157,7 +159,7 @@ long BP_Modularity::run(unsigned long maxIters)
     
 }
 
-void BP_Modularity::compute_marginal(index_t i)
+void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
 {
     const index_t nn = neighbor_count[i];
     index_t t = layer_membership[i];
@@ -187,6 +189,10 @@ void BP_Modularity::compute_marginal(index_t i)
         
         Z += marginals[q*i + s];
     }
+    if (do_bfe_contribution)
+    {
+        bfe += log(Z);
+    }
     // normalize
     for (index_t s = 0; s < q; ++s)
     {
@@ -199,6 +205,11 @@ void BP_Modularity::step()
 {
     changed = false;
     change = 0;
+    
+    if (compute_bfe)
+    {
+        bfe = 0.0;
+    }
     
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
@@ -275,6 +286,10 @@ void BP_Modularity::step()
             {
                 sum += scratch[nn*s+idx];
             }
+            if (compute_bfe)
+            {
+                bfe -= log(sum);
+            }
             if (sum > 0)
             {
                 for (size_t s = 0; s < q;++s)
@@ -304,8 +319,22 @@ void BP_Modularity::step()
             }
         }
     }
-    // for debug purposes, check the quality of theta
-    double norm = 0;
+    if (compute_bfe)
+    {
+        compute_marginals(true);
+        
+        for (index_t t=0;t<nt;++t)
+        {
+            double temp = 0;
+            for (index_t s=0;s<q;++s)
+            {
+                double temp2 = theta[t][s];
+                temp += temp2*temp2;
+            }
+            bfe += beta/(2*num_edges[t]) * temp;
+        }
+        bfe /= (beta*n);
+    }
 }
 
 void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
@@ -329,9 +358,14 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
 
 void BP_Modularity::compute_marginals()
 {
+    compute_marginals(false);
+}
+
+void BP_Modularity::compute_marginals(bool do_bfe_contribution)
+{
     for (index_t i = 0; i < n; ++i)
     {
-        compute_marginal(i);
+        compute_marginal(i,do_bfe_contribution);
     }
 }
 
@@ -341,40 +375,12 @@ void BP_Modularity::compute_marginals()
 double BP_Modularity::compute_bethe_free_energy()
 {
     // - 1/(n*beta) ( sum_i {log Z_i} - sum_{i,j \in E} log Z_{ij} + beta/4m \sum_s theta_s^2 )
-    if (nt > 1)
+    if (compute_bfe == false)
     {
-        fprintf(stderr,"Implementation Error: BFE not implemented for multilayer networks\n");
-        exit(1);
+        compute_bfe = true;
+        step();
+        compute_bfe = false;
     }
-    double bfe=0.0;
-    for (index_t i = 0; i < n; ++i)
-    {
-        double Zi = 0;
-        for (index_t s = 0; s < q; ++s)
-        {
-            Zi += marginals[q*i+s];
-        }
-        bfe += log(Zi);
-        
-        index_t nn = neighbor_count[i];
-        for (index_t j = 0; j<nn;++j)
-        {
-            double Zij = 0;
-            for (index_t s=0; s<q; ++s)
-            {
-                Zij += beliefs[beliefs_offsets[i] + nn*s + j];
-            }
-            bfe -= log(Zij);
-        }
-    }
-    double temp = 0;
-    for (index_t s=0; s<q; ++s)
-    {
-        double temp2 = theta[0][s];
-        temp += temp2*temp2;
-    }
-    bfe += beta/(2*num_edges[0])*temp;
-    bfe /= (n*beta);
     return bfe;
 }
 
@@ -382,11 +388,6 @@ double BP_Modularity::compute_factorized_free_energy()
 {
     //Calculate the bethe free energy of the factorized state ( each node uniform on all communities)
     //log(1-1/q-exp(beta))
-    if (nt > 1)
-    {
-        fprintf(stderr,"Implementation Error: BFE not implemented for multilayer networks\n");
-        exit(1);
-    }
     double bffe=log(1-1.0/q - exp(beta));
     return bffe;
 }
