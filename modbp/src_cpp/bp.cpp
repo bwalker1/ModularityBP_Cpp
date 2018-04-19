@@ -549,7 +549,7 @@ double BP_Modularity::compute_bstar()
 {
     // compute c - decide on the right way
     // the simple average degree
-    double c = accumulate(num_edges.begin(), num_edges.end(), 0.0);
+    double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
     
     // bisection/newton hybrid method
     double xl=0, xr=1;
