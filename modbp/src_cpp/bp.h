@@ -59,6 +59,8 @@ public:
     
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
+    
+    double compute_bstar();
 private:
     void initializeBeliefs();
     void initializeTheta();

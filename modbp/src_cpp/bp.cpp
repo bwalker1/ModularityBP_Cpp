@@ -524,3 +524,94 @@ void BP_Modularity::initializeTheta() {
         }
     }
 }
+
+double s(double beta, double omega, double q, double c)
+{
+    double eb = exp(beta);
+    double ewb = exp(omega*beta);
+    
+    double temp1 = ((eb-1)/(eb-1+q));
+    double temp2 = ((ewb-1)/(ewb-1+q));
+    return c*temp1*temp1 + 2*temp2*temp2;
+}
+
+double sp(double beta, double omega, double q, double c)
+{
+    double eb = exp(beta);
+    double ewb = exp(omega*beta);
+    
+    double temp1 = eb - 1 + q;
+    double temp2 = ewb- 1 + q;
+    return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
+}
+
+double BP_Modularity::compute_bstar()
+{
+    // compute c - decide on the right way
+    double c = 3;
+    
+    // bisection/newton hybrid method
+    double xl=0, xr=1;
+    double xn;
+    
+    // find bounding interval
+    while (s(xr,omega,q,c) < 1)
+    {
+        xr *= 2;
+    }
+    
+    // start newton's from midpoint
+    xn = (xl+xr)/2;
+    double yn = s(xn,omega,q,c);
+    double ypn = sp(xn,omega,q,c);
+    
+    int maxiters = 100;
+    for (int iters=0;iters<maxiters;)
+    {
+        // try a newton step
+        
+        xn -= (yn - 1)/ypn;
+        yn = s(xn,omega,q,c);
+        ypn = sp(xn,omega,q,c);
+        
+        // check if this is in our bounding interval
+        if (xl < xn && xn < xr)
+        {
+            // narrow our interval using newton point
+            if (yn > 1)
+            {
+                xr = xn;
+            }
+            else
+            {
+                xl = xn;
+            }
+        }
+        else
+        {
+            // narrow our interval using bisection
+            double xc = (xl + xr)/2;
+            if (s(xc,omega,q,c)>1)
+            {
+                xr = xc;
+            }
+            else
+            {
+                xl = xc;
+            }
+            
+            // restart newton's at the new midpoint
+            xn = (xl + xr)/2;
+            yn = s(xn,omega,q,c);
+            ypn = sp(xn,omega,q,c);
+        }
+        
+        // check for convergence
+        if (xr - xl < 1e-6)
+        {
+            return (xl + xr)/2;
+        }
+    }
+    
+    return (xl+xr)/2;
+}

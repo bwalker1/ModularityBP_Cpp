@@ -18,19 +18,15 @@
 using namespace std;
 
 int main(int argc, const char * argv[]) {
-    index_t n = 1e5;
-    /*BP_Modularity bp(n,3.0/n,4,1);
+    index_t n = 0;
     
+    int q = 5;
+    double omega = 1;
+    //BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false);
+    BP_Modularity bp(vector<index_t>(),vector<pair<index_t,index_t> >(),vector<pair<index_t,index_t> >(), n,1,q,1,omega,1.0,false,false);
+    printf("Starting computation\n");
     clock_t start = clock();
-    bp.run();
-    clock_t finish = clock();
-    //bp.print_marginals(100);
-    printf("%f seconds elapsed.\n",double(finish-start)/CLOCKS_PER_SEC);
-
-#ifdef _WIN32
-	printf("Press any key to exit.\n");
-	unsigned char in;
-	scanf("%c", &in);
-#endif
-*/
+    printf("%f\n",bp.compute_bstar());
+    clock_t finish = clock()-start;
+    printf("%f seconds elapsed\n",double(finish)/double(CLOCKS_PER_SEC));
 }
