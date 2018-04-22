@@ -33,6 +33,7 @@ if __name__ == "__main__":
     accuracy = 0.0
     
     for trial in xrange(ntrials):
+        print trial
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,comm_vec=ml_sbm.get_all_layers_block())
         mlbp = modbp.ModularityBP(mlgraph=mgraph)
