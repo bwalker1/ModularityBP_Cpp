@@ -240,7 +240,7 @@ def test_modbp_interface():
 
 
 def main():
-    test_fbnetwork()
+    test_modbp_interface()
 
 if __name__=='__main__':
     main()

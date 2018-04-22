@@ -453,6 +453,10 @@ void BP_Modularity::setq(double new_q) {
 
 void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
 {
+    if (beta==0)
+    {
+        beta = compute_bstar();
+    }
     scale = exp(beta)-1;
     scaleOmega = exp(beta*omega)-1;
     if (init_beliefs)
@@ -547,9 +551,31 @@ double sp(double beta, double omega, double q, double c)
 
 double BP_Modularity::compute_bstar()
 {
+    // currently this assumes multiplex graph
+    
     // compute c - decide on the right way
     // the simple average degree
     double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
+    
+    // compute the excess degree
+    double d2 = 0;
+    double d = 0;
+    for (int i=0;i<n;++i)
+    {
+        double nn = neighbor_count[i];
+        if (layer_membership[i] == 0)
+        {
+            nn -= 1;
+        }
+        if (layer_membership[i] == nt-1)
+        {
+            nn -= 1;
+        }
+        
+        d2 += nn*nn;
+        d += nn;
+    }
+    c = d2/d - 1;
     
     // bisection/newton hybrid method
     double xl=0, xr=1;
