@@ -413,7 +413,6 @@ vector<vector<double> > BP_Modularity::return_marginals() {
 
 void BP_Modularity::setBeta(double in, bool reset) {
     beta = in;
-    
     reinit(reset,true);
 }
 

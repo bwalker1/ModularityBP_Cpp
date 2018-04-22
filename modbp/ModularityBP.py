@@ -78,6 +78,10 @@ class ModularityBP():
                 self._bpmod.setResgamma(resgamma)
             if self._bpmod.getOmega() != omega:
                 self._bpmod.setOmega(omega)
+                
+        # in case c++ class calculated b*
+        if beta==0:
+            beta = self._bpmod.getBeta();
 
 
         iters=self._bpmod.run(niter)
