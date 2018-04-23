@@ -21,6 +21,7 @@ if __name__ == "__main__":
     ep = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     omega = float(sys.argv[8])
+    gamma = float(sys.argv[9])
     
     nblocks = q
     
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,comm_vec=ml_sbm.get_all_layers_block())
         mlbp = modbp.ModularityBP(mlgraph=mgraph)
-        mlbp.run_modbp(q=q, beta=0, omega=omega, niter=500, reset=True)
+        mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=500, reset=True)
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']
     
     accuracy /= ntrials
