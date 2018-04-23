@@ -43,6 +43,6 @@ if __name__ == "__main__":
     
     accuracy /= ntrials
     
-    f = open("{:s}/data/eps{:f}eta{:f}.dat".format(expanduser("~"),ep,eta),"wb")
-    f.write("{:f} {:f} {:f}\n".format(ep,eta,accuracy))
+    f = open("{:s}/data/eps{:f}eta{:f}gamma{:f}omega{:f}.dat".format(expanduser("~"),ep,eta,gamma,omega),"wb")
+    f.write("{:f} {:f} {:f} {:f} {:f}\n".format(ep,eta,gamma,omega,accuracy))
     f.close()
