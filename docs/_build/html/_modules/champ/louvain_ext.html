@@ -1,0 +1,1579 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>champ.louvain_ext &mdash; CHAMP 1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="CHAMP 1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> CHAMP
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">CHAMP (Convex Hull of Admissible Modularity Partitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/intro.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/running.html">Running CHAMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/plotting2.html">Visualizing Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/louvain_ext.html">Louvain Parallel Extension</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CHAMP</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>champ.louvain_ext</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for champ.louvain_ext</h1><div class="highlight"><pre>
+<span></span><span class="c1">#Py 2/3 Compatibility</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span> <span class="c1"># use // to specify int div.</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">iteritems</span><span class="p">,</span><span class="n">iterkeys</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">lmap</span>
+
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Pool</span><span class="p">,</span><span class="n">cpu_count</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">.champ_functions</span> <span class="k">import</span> <span class="n">get_intersection</span>
+<span class="kn">from</span> <span class="nn">.champ_functions</span> <span class="k">import</span> <span class="n">create_coefarray_from_partitions</span>
+<span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">mlines</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patheffects</span> <span class="k">as</span> <span class="nn">path_effects</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">rc</span>
+<span class="kn">import</span> <span class="nn">igraph</span> <span class="k">as</span> <span class="nn">ig</span>
+<span class="kn">import</span> <span class="nn">louvain</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cpickle</span> <span class="k">as</span> <span class="nn">pickle</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">pickle</span>
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">terminating</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Context manager to handle appropriate shutdown of processes</span>
+<span class="sd">    :param obj: obj to open</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">obj</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Extension of Traag&#39;s implementation of louvain in python to use multiprocessing \</span>
+<span class="sd">and allow for randomization.  Defines PartitionEnsemble a class for storage of \</span>
+<span class="sd">partitions and coefficients as well as dominant domains.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="PartitionEnsemble"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble">[docs]</a><span class="k">class</span> <span class="nc">PartitionEnsemble</span><span class="p">():</span>
+
+    <span class="sd">&#39;&#39;&#39;Group of partitions of a graph stored in membership vector format</span>
+
+
+
+<span class="sd">    The attribute for each partition is stored in an array and can be indexed</span>
+
+<span class="sd">    :cvar graph: The graph associated with this PartitionEnsemble.  Each ensemble \</span>
+<span class="sd">    can only have a single graph and the nodes on the graph must be orded the same as \</span>
+<span class="sd">    each of the membership vectors.</span>
+<span class="sd">    :type graph: igraph.Graph</span>
+
+<span class="sd">    :cvar partitions:  of membership vectors for each partition.  If h5py is set this is a dummy \</span>
+<span class="sd">    variable that allows access to the file, but never actually hold the array of parititons.</span>
+<span class="sd">    :type partitions:  np.array</span>
+<span class="sd">    :cvar int_edges:  Number of edges internal to the communities</span>
+<span class="sd">    :type int_edges:  list</span>
+
+<span class="sd">    :cvar exp_edges:  Number of expected edges (based on configuration model)</span>
+<span class="sd">    :type exp_edges:  list</span>
+
+<span class="sd">    :cvar resoltions:  If partitions were idenitfied with Louvain, what resolution \</span>
+<span class="sd">    were they identified at (otherwise None)</span>
+<span class="sd">    :type resolutions: list</span>
+
+<span class="sd">    :cvar orig_mods:  Modularity of partition at the resolution it was identified at \</span>
+<span class="sd">    if Louvain was used (otherwise None).</span>
+<span class="sd">    :type orig_mods: list</span>
+
+<span class="sd">    :cvar numparts: number of partitions</span>
+<span class="sd">    :type numparts: int</span>
+<span class="sd">    :cvar ind2doms: Maps index of dominant partitions to boundary points of their dominant \</span>
+<span class="sd">    domains</span>
+<span class="sd">    :type ind2doms: dict</span>
+<span class="sd">    :cvar ncoms: List with number of communities for each partition</span>
+<span class="sd">    :type numcoms: list</span>
+<span class="sd">    :cvar min_com_size: How many nodes must be in a community for it to count towards the number \</span>
+<span class="sd">    of communities.  This eliminates very small or unstable communities.  Default is 5</span>
+<span class="sd">    :type min_com_size: int</span>
+<span class="sd">    :cvar unique_partition_indices: The indices of the paritions that represent unique coefficients.  This will be a \</span>
+<span class="sd">    subset of all the partitions.</span>
+<span class="sd">    :cvar hdf5_file: Current hdf5_file.  If not None, this serves as the default location for loading and writing \</span>
+<span class="sd">    partitions to, as well as the default location for saving.</span>
+<span class="sd">    :type hdf5_file: str</span>
+<span class="sd">    :type unique_partition_indices: np.array</span>
+<span class="sd">    :cvar twin_partitions:  We define twin partitions as those that have the same coefficients, but are actually \</span>
+<span class="sd">    different partitions.  This and the unique_partition_indices are only calculated on demand which can take some time.</span>
+<span class="sd">    :type twi_partitions: list of np.arrays</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">listofparts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;unnamed_graph&#39;</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">min_com_size</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numcoms</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="o">=</span><span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_com_size</span><span class="o">=</span><span class="n">min_com_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxpt</span><span class="o">=</span><span class="n">maxpt</span>
+        <span class="c1">#some private variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_partitions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_coeff_indices</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_partition_indices</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_twin_partitions</span><span class="o">=</span><span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">listofparts</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_partitions</span><span class="p">(</span><span class="n">listofparts</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxpt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+
+
+    <span class="k">def</span> <span class="nf">get_adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calc adjacency representation if it exists</span>
+
+<span class="sd">        :return: self.adjacency</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;weight&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_attributes</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_adjacency</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;GET_ADJACENCY_BOTH&quot;</span><span class="p">,</span>
+                                                    <span class="n">attribute</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get_adjacency</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;GET_ADJACENCY_BOTH&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjacency</span>
+
+    <span class="k">def</span> <span class="nf">calc_internal_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">memvec</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Uses igraph Vertex Clustering representation to calculate internal edges.  see \</span>
+<span class="sd">        :meth:`louvain_ext.get_expected_edges`</span>
+
+<span class="sd">        :param memvec: membership vector for which to calculate the internal edges.</span>
+<span class="sd">        :type memvec: list</span>
+
+<span class="sd">        :return:</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># if &quot;weight&quot; in self.graph.edge_attributes():</span>
+        <span class="c1">#     adj=self.graph.get_adjacency(attribute=&#39;weight&#39;)</span>
+        <span class="n">partobj</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">VertexClustering</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">membership</span><span class="o">=</span><span class="n">memvec</span><span class="p">)</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="s2">&quot;weight&quot;</span> <span class="k">if</span> <span class="s2">&quot;weight&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_attributes</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">get_sum_internal_edges</span><span class="p">(</span><span class="n">partobj</span><span class="o">=</span><span class="n">partobj</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calc_expected_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memvec</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Uses igraph Vertex Clustering representation to calculate expected edges.  see \</span>
+<span class="sd">        :meth:`louvain_ext.get_expected_edges`</span>
+
+<span class="sd">        :param memvec: membership vector for which to calculate the expected edges</span>
+<span class="sd">        :type memvec: list</span>
+<span class="sd">        :return: expected edges under null</span>
+<span class="sd">        :rtype: float</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># adj = self.graph.as_adjacency()</span>
+        <span class="c1"># m=np.sum(adj)</span>
+        <span class="c1"># exp_adj = np.outer(self.graph.degree())</span>
+
+        <span class="c1">#create temporary VC object</span>
+        <span class="n">partobj</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">VertexClustering</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span><span class="n">membership</span><span class="o">=</span><span class="n">memvec</span><span class="p">)</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="s2">&quot;weight&quot;</span> <span class="k">if</span> <span class="s2">&quot;weight&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_attributes</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">get_expected_edges</span><span class="p">(</span><span class="n">partobj</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        List of paritions in the PartitionEnsemble object can be indexed directly</span>
+
+<span class="sd">        :param item: index of partition for direct access</span>
+<span class="sd">        :type item: int</span>
+<span class="sd">        :return: self.partitions[item]</span>
+<span class="sd">        :rtype:  membership vector of community for partition</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+
+    <span class="k">class</span> <span class="nc">_PartitionOnFile</span><span class="p">():</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="o">=</span><span class="n">file</span>
+
+        <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">openfile</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span>  <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="c1">#h5py has some controls on what can be used as a slice object.</span>
+                    <span class="k">return</span>  <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+
+
+        <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">openfile</span><span class="p">:</span>
+                <span class="k">return</span>  <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> partitions saved on </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Type/value of partitions is defined at time of access. If the PartitionEnsemble\</span>
+<span class="sd">        has an associated hdf5 file (PartitionEnsemble.hdf5_file), then partitions will be \</span>
+<span class="sd">        read and added to on the file, and not as an object in memory.&#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">return</span> <span class="n">PartitionEnsemble</span><span class="o">.</span><span class="n">_PartitionOnFile</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partitions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hdf5_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Default location for saving/loading PartitionEnsemble if hdf5 format is used.  When this is set\</span>
+<span class="sd">        it will automatically resave the PartitionEnsemble into the file specified.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span>
+
+    <span class="nd">@hdf5_file</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">hdf5_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set new value for hdf5_file and automatically save to this file.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="o">=</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">_check_lengths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        check all state variables for equal length.  Will use length of partitions stored \</span>
+<span class="sd">        in the hdf5 file if this is set for the PartitionEnsemble.  Otherwise just uses \</span>
+<span class="sd">        internal lists.</span>
+
+<span class="sd">        :return: boolean indicating states varaible lengths are equal</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">openfile</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+
+    <span class="k">def</span> <span class="nf">_combine_partitions_hdf5_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">otherfile</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">otherfile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;PartitionEnsemble does not have hdf5 file currently defined&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">myfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">otherfile</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_2_add</span><span class="p">:</span>
+
+                <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">,</span> <span class="s1">&#39;resolutions&#39;</span><span class="p">,</span> <span class="s1">&#39;orig_mods&#39;</span><span class="p">,</span> <span class="s2">&quot;int_edges&quot;</span><span class="p">,</span> <span class="s1">&#39;exp_edges&#39;</span><span class="p">]:</span>
+                    <span class="n">cshape</span><span class="o">=</span><span class="n">myfile</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="n">oshape</span><span class="o">=</span><span class="n">file_2_add</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+
+                    <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">cshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">oshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">cshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">oshape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                    <span class="n">myfile</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">newshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">newshape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                    <span class="n">myfile</span><span class="p">[</span><span class="n">attribute</span><span class="p">][</span><span class="n">cshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">newshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">cshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">newshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">=</span><span class="n">file_2_add</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_append_partitions_hdf5_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">partitions</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">        :param partitions: list of partitions (in dictionary) to add to the PartitionEnsemble.</span>
+
+<span class="sd">        :type partitions: dict</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">openfile</span><span class="p">:</span>
+            <span class="c1">#Resize all of the arrays in the file</span>
+            <span class="n">orig_shape</span><span class="o">=</span><span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">,</span><span class="s1">&#39;resolutions&#39;</span><span class="p">,</span><span class="s1">&#39;orig_mods&#39;</span><span class="p">,</span><span class="s2">&quot;int_edges&quot;</span><span class="p">,</span><span class="s1">&#39;exp_edges&#39;</span><span class="p">]:</span>
+                <span class="n">cshape</span><span class="o">=</span><span class="n">openfile</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cshape</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span> <span class="p">(</span><span class="n">cshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">partitions</span><span class="p">),)</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="n">attribute</span><span class="p">]</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="n">cshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">partitions</span><span class="p">),</span> <span class="n">cshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">partitions</span><span class="p">):</span>
+
+                <span class="n">cind</span><span class="o">=</span><span class="n">orig_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">i</span>
+
+                <span class="c1">#We store these on the file</span>
+                <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">])</span>
+
+                <span class="c1">#We leave the new partitions only in the file.  Everything else is updated \</span>
+                <span class="c1"># in both the PartitionEnsemble and the file</span>
+
+                <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;resolutions&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;resolutions&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+
+
+                <span class="k">if</span> <span class="s1">&#39;int_edges&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;int_edges&#39;</span><span class="p">])</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;int_edges&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;int_edges&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cint_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_internal_edges</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">,</span><span class="n">cint_edges</span><span class="p">)</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;int_edges&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">cint_edges</span>
+
+                <span class="k">if</span> <span class="s1">&#39;exp_edges&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;exp_edges&#39;</span><span class="p">])</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;exp_edges&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;exp_edges&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cexp_edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_expected_edges</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">,</span><span class="n">cexp_edges</span><span class="p">)</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;exp_edges&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">cexp_edges</span>
+
+                <span class="k">if</span> <span class="s2">&quot;orig_mod&quot;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;orig_mod&#39;</span><span class="p">])</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;orig_mods&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;orig_mod&#39;</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># calculated original modularity from orig resolution</span>
+                    <span class="n">corigmod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">,</span><span class="n">corigmod</span><span class="p">)</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;orig_mods&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="n">corigmod</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;orig_mods&#39;</span><span class="p">][</span><span class="n">cind</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="o">=</span><span class="n">openfile</span><span class="p">[</span><span class="s1">&#39;_partitions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_lengths</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="PartitionEnsemble.add_partitions"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.add_partitions">[docs]</a>    <span class="k">def</span> <span class="nf">add_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">partitions</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Add additional partitions to the PartitionEnsemble object. Also adds the number of \</span>
+<span class="sd">        communities for each.  In the case where PartitionEnsemble was openned from a file, we \</span>
+<span class="sd">        just appended these and the other values onto each of the files.  Partitions are not kept \</span>
+<span class="sd">        in object, however the other partitions values are.</span>
+
+<span class="sd">        :param partitions: list of partitions to add to the PartitionEnsemble</span>
+<span class="sd">        :type partitions: dict,list</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">#wrap in list.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">partitions</span><span class="p">,</span><span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">partitions</span><span class="o">=</span><span class="p">[</span><span class="n">partitions</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># essential same as below, but everything is written to file and partitions \</span>
+            <span class="c1">#aren&#39;t kept in object memory</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append_partitions_hdf5_file</span><span class="p">(</span><span class="n">partitions</span><span class="p">)</span>
+
+
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">:</span>
+
+                <span class="c1">#This must be present</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_partitions</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_partitions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_partitions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_partitions</span><span class="p">,[</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;int_edges&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;int_edges&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cint_edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_internal_edges</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">,</span><span class="n">cint_edges</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s1">&#39;exp_edges&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;exp_edges&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cexp_edges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calc_expected_edges</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">,</span><span class="n">cexp_edges</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s2">&quot;orig_mod&quot;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">,</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;orig_mod&#39;</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1">#calculated original modularity from orig resolution</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+
+
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">numcoms</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numcoms</span><span class="p">,</span><span class="n">get_number_of_communities</span><span class="p">(</span><span class="n">part</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">],</span>
+                                                              <span class="n">min_com_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_com_size</span><span class="p">))</span>
+
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_lengths</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">)</span>
+            <span class="c1">#update the pruned set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_CHAMP</span><span class="p">(</span><span class="n">maxpt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxpt</span><span class="p">)</span></div>
+
+
+
+    <span class="k">def</span> <span class="nf">get_partition_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ind</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get dictionary representation of partitions with the following keys:</span>
+
+<span class="sd">            &#39;partition&#39;,&#39;resolution&#39;,&#39;orig_mod&#39;,&#39;int_edges&#39;,&#39;exp_edges&#39;</span>
+
+<span class="sd">        :param ind: optional indices of partitions to return.  if not supplied all partitions will be returned.</span>
+<span class="sd">        :type ind: int, list</span>
+<span class="sd">        :return: list of dictionaries</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">ind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ind</span><span class="p">,</span><span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+                <span class="n">ind</span><span class="o">=</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1">#return all of the partitions</span>
+            <span class="n">ind</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">))</span>
+
+        <span class="n">outdicts</span><span class="o">=</span><span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ind</span><span class="p">:</span>
+            <span class="n">cdict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;partition&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                   <span class="s2">&quot;int_edges&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                   <span class="s2">&quot;exp_edges&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                   <span class="s2">&quot;resolution&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                   <span class="s2">&quot;orig_mod&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span>
+            <span class="n">outdicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cdict</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outdicts</span>
+
+<div class="viewcode-block" id="PartitionEnsemble.merge_ensemble"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.merge_ensemble">[docs]</a>    <span class="k">def</span> <span class="nf">merge_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">otherEnsemble</span><span class="p">,</span><span class="n">new</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Combine to PartitionEnsembles.  Checks for concordance in the number of vertices. \</span>
+<span class="sd">        Assumes that internal ordering on the graph nodes for each is the same.</span>
+
+<span class="sd">        :param otherEnsemble: otherEnsemble to merge</span>
+<span class="sd">        :param new: create a new PartitionEnsemble object? Otherwise partitions will be loaded into \</span>
+<span class="sd">        the one of the original partition ensemble objects (the one with more partitions in the first place).</span>
+<span class="sd">        :type new: bool</span>
+<span class="sd">        :return:  PartitionEnsemble reference with merged set of partitions</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vcount</span><span class="p">()</span><span class="o">==</span><span class="n">otherEnsemble</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vcount</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;PartitionEnsemble graph vertex counts do not match&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
+            <span class="n">bothpartitions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_partition_dictionary</span><span class="p">()</span><span class="o">+</span><span class="n">otherEnsemble</span><span class="o">.</span><span class="n">get_partition_dictionary</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">PartitionEnsemble</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span><span class="n">listofparts</span><span class="o">=</span><span class="n">bothpartitions</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="o">&lt;</span><span class="n">otherEnsemble</span><span class="o">.</span><span class="n">numparts</span><span class="p">:</span>
+                <span class="c1">#reverse order of merging</span>
+                <span class="k">return</span> <span class="n">otherEnsemble</span><span class="o">.</span><span class="n">merge_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">otherEnsemble</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1">#merge the second hdf5_file onto the other and then reopen it to</span>
+                    <span class="c1">#reload everything.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_combine_partitions_hdf5_files</span><span class="p">(</span><span class="n">otherEnsemble</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="bp">self</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_partitions</span><span class="p">(</span><span class="n">otherEnsemble</span><span class="o">.</span><span class="n">get_partition_dictionary</span><span class="p">())</span>
+                    <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">get_coefficient_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create array of coefficents for each partition.</span>
+
+<span class="sd">        :return: np.array with coefficents for each of the partions</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">outlist</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]]])</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="p">):</span>
+            <span class="n">outlist</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">outlist</span><span class="p">,[[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">int_edges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">exp_edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outlist</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unique_coeff_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_coeff_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_coeff_indices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_unique_coeff_indices</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_coeff_indices</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unique_partition_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_partition_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_twin_partitions</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_uniq_partition_indices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_unique_twins_and_partition_indices</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uniq_partition_indices</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">twin_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        We define twin partitions as those that have the same coefficients but are different partitions.\</span>
+<span class="sd">        To find these we look for the diffence in the partitions with the same coefficients.</span>
+
+<span class="sd">        :return: List of groups of the indices of partitions that have the same coefficient but \</span>
+<span class="sd">        are non-identical.</span>
+<span class="sd">        :rtype: list of list (possibly empty if no twins)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_twin_partitions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_twin_partitions</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_uniq_partition_indices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_unique_twins_and_partition_indices</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_twin_partitions</span>
+
+
+
+
+
+    <span class="k">def</span> <span class="nf">get_unique_coeff_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Get the indices for the partitions with unique coefficient \</span>
+<span class="sd">         :math:`\\hat{A}=\\sum_{ij}A_{ij}` \</span>
+<span class="sd">         :math:`\\hat{P}=\\sum_{ij}P_{ij}`</span>
+
+<span class="sd">         Note that for each replicated partition we return the index of one (the earliest in the list) \</span>
+<span class="sd">         the replicated</span>
+
+<span class="sd">        :return: the indices of unique coeficients</span>
+<span class="sd">        :rtype: np.array</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">_</span><span class="p">,</span><span class="n">indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_coefficient_array</span><span class="p">(),</span><span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">indices</span>
+
+    <span class="k">def</span> <span class="nf">_reindex_part_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">part_array</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;we renumber partitions labels to ensure that each goes from number 0,1,2,...</span>
+<span class="sd">        in order to compare.</span>
+
+<span class="sd">        :param part_array:</span>
+<span class="sd">        :type part_array:</span>
+<span class="sd">        :return: relabeled array</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">out_array</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">part_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">part_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">clabdict</span><span class="o">=</span><span class="p">{}</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">part_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="c1">#Use len of cdict as value</span>
+                <span class="n">clabdict</span><span class="p">[</span><span class="n">part_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span><span class="o">=</span><span class="n">clabdict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">part_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span><span class="nb">len</span><span class="p">(</span><span class="n">clabdict</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">part_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">out_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">clabdict</span><span class="p">[</span><span class="n">part_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">out_array</span>
+
+
+    <span class="k">def</span> <span class="nf">_get_unique_twins_and_partition_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reindex</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the (possibly empty) list of twin partitions and the list of unique partitions.</span>
+
+<span class="sd">        :param reindex: if True, will reindex partitions that it is comparing to ensure they are unique under \</span>
+<span class="sd">        permutation.</span>
+<span class="sd">        :return: list of twin partition (can be empty), list of indicies of unique partitions.</span>
+<span class="sd">        :rtype: list,np.array</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">uniq</span><span class="p">,</span><span class="n">index</span><span class="p">,</span><span class="n">reverse</span><span class="p">,</span><span class="n">counts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_coefficient_array</span><span class="p">(),</span>
+                                            <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                            <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">ind2keep</span><span class="o">=</span><span class="n">index</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">counts</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">twin_inds</span><span class="o">=</span><span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">counts</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1">#we have to load the partitions and compare them to each other</span>
+            <span class="n">revinds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">reverse</span><span class="o">==</span><span class="n">ind</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">parts2comp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">reverse</span><span class="o">==</span><span class="n">ind</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">reindex</span><span class="p">:</span>
+                <span class="n">reindexed_parts2comp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reindex_part_array</span><span class="p">(</span><span class="n">parts2comp</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reindexed_parts2comp</span><span class="o">=</span><span class="n">parts2comp</span>
+
+            <span class="c1">#here curpart inds is which of of this current group of partitions are unique</span>
+            <span class="n">_</span><span class="p">,</span><span class="n">curpart_inds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">reindexed_parts2comp</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1">#len of curpart_inds determines how many of the current ind group get added to</span>
+            <span class="c1">#the ind2keep.  should always be at least one.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curpart_inds</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#matching partitions with different coeffs</span>
+                <span class="n">twin_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">revinds</span><span class="p">[</span><span class="n">curpart_inds</span><span class="p">])</span>
+            <span class="n">ind2keep</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ind2keep</span><span class="p">,</span><span class="n">revinds</span><span class="p">[</span><span class="n">curpart_inds</span><span class="p">])</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">ind2keep</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="n">twin_inds</span><span class="p">,</span><span class="n">ind2keep</span>
+
+<div class="viewcode-block" id="PartitionEnsemble.get_unique_partition_indices"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.get_unique_partition_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_unique_partition_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">reindex</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">       This returns the indices for the partitions who are unique.  This could be larger than the</span>
+<span class="sd">       indices for the unique coeficient since multiple partitions can give rise to the same coefficient. \</span>
+<span class="sd">       In practice this has been very rare.  This function can take sometime for larger network with many \</span>
+<span class="sd">       partitions since it reindex the partitions labels to ensure they aren&#39;t permutations of each other.</span>
+
+<span class="sd">       :param reindex: if True, will reindex partitions that it is comparing to ensure they are unique under \</span>
+<span class="sd">       permutation.</span>
+<span class="sd">       :return: list of twin partition (can be empty), list of indicies of unique partitions.</span>
+<span class="sd">       :rtype: list,np.array</span>
+<span class="sd">       &#39;&#39;&#39;</span>
+        <span class="n">_</span><span class="p">,</span><span class="n">uniq_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_unique_twins_and_partition_indices</span><span class="p">(</span><span class="n">reindex</span><span class="o">=</span><span class="n">reindex</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">uniq_inds</span></div>
+
+
+
+<div class="viewcode-block" id="PartitionEnsemble.apply_CHAMP"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.apply_CHAMP">[docs]</a>    <span class="k">def</span> <span class="nf">apply_CHAMP</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Apply CHAMP to the partition ensemble.</span>
+
+<span class="sd">        :param maxpt: maximum domain threshhold for included partition.  I.e \</span>
+<span class="sd">        partitions with a domain greater than maxpt will not be included in pruned \</span>
+<span class="sd">        set</span>
+<span class="sd">        :type maxpt: int</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="o">=</span><span class="n">get_intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_coefficient_array</span><span class="p">(),</span><span class="n">max_pt</span><span class="o">=</span><span class="n">maxpt</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_CHAMP_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the indices of the partitions that form the pruned set after application of \</span>
+<span class="sd">        CHAMP</span>
+
+<span class="sd">        :return: list of indices of partitions that are included in the prune set \</span>
+<span class="sd">        sorted by their domains of dominance</span>
+<span class="sd">        :rtype: list</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">inds</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="o">.</span><span class="n">keys</span><span class="p">(),[</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="c1">#asscending sort by last value of domain</span>
+        <span class="n">inds</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1">#retreive index</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">ind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_CHAMP_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39;Return the subset of partitions that form the outer envelop.</span>
+<span class="sd">        :return: List of partitions in membership vector form of the paritions</span>
+<span class="sd">        :rtype: list</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_CHAMP_indices</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inds</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_write_graph_to_hd5f_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">file</span><span class="p">,</span><span class="n">compress</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Write the internal graph to hd5f file saving the edge lists, the edge properties, and the \</span>
+<span class="sd">        vertex properties all as subgroups.  We only save the edges, and the vertex and node attributes</span>
+
+<span class="sd">        :param file: openned h5py.File</span>
+<span class="sd">        :type file: h5py.File</span>
+<span class="sd">        :return: reference to the File</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># write over previous if exists.</span>
+        <span class="k">if</span> <span class="s1">&#39;graph&#39;</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">del</span> <span class="n">file</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span>
+
+        <span class="n">grph</span><span class="o">=</span><span class="n">file</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;graph&quot;</span><span class="p">)</span>
+
+        <span class="n">grph</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()))</span>
+        <span class="c1">#save edge list as graph.ecount x 2 numpy array</span>
+        <span class="n">grph</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;edge_list&quot;</span><span class="p">,</span>
+                            <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span><span class="o">.</span><span class="n">tuple</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">]),</span><span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span><span class="n">compression_opts</span><span class="o">=</span><span class="n">compress</span><span class="p">)</span>
+
+        <span class="n">edge_atts</span><span class="o">=</span><span class="n">grph</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;edge_attributes&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">edge_attributes</span><span class="p">():</span>
+
+            <span class="n">edge_atts</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">attrib</span><span class="p">,</span>
+                                     <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="n">attrib</span><span class="p">]),</span><span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span><span class="n">compression_opts</span><span class="o">=</span><span class="n">compress</span><span class="p">)</span>
+
+        <span class="n">node_atts</span><span class="o">=</span><span class="n">grph</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;node_attributes&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vertex_attributes</span><span class="p">():</span>
+            <span class="n">node_atts</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">attrib</span><span class="p">,</span>
+                                     <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">attrib</span><span class="p">]),</span><span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span><span class="n">compression_opts</span><span class="o">=</span><span class="n">compress</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file</span>
+
+    <span class="k">def</span> <span class="nf">_read_graph_from_hd5f_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">file</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Load self.graph from hd5f file.  Sets self.graph as new igraph created from edge list \</span>
+<span class="sd">        and attributes stored in the file.</span>
+
+<span class="sd">        :param file: Opened hd5f file that contains the edge list, edge attributes, and \</span>
+<span class="sd">        node attributes stored in the hierarchy as PartitionEnsemble._write_graph_to_hd5f_file.</span>
+
+<span class="sd">        :type file: h5py.File</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+
+
+        <span class="n">grph</span><span class="o">=</span><span class="n">file</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">]</span>
+        <span class="n">directed</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">grph</span><span class="p">[</span><span class="s1">&#39;directed&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">=</span><span class="n">ig</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span><span class="o">.</span><span class="n">TupleList</span><span class="p">(</span><span class="n">grph</span><span class="p">[</span><span class="s1">&#39;edge_list&#39;</span><span class="p">],</span><span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">grph</span><span class="p">[</span><span class="s1">&#39;edge_attributes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="n">attrib</span><span class="p">]</span><span class="o">=</span><span class="n">grph</span><span class="p">[</span><span class="s1">&#39;edge_attributes&#39;</span><span class="p">][</span><span class="n">attrib</span><span class="p">][:]</span>
+        <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">grph</span><span class="p">[</span><span class="s1">&#39;node_attributes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">attrib</span><span class="p">]</span> <span class="o">=</span> <span class="n">grph</span><span class="p">[</span><span class="s1">&#39;node_attributes&#39;</span><span class="p">][</span><span class="n">attrib</span><span class="p">][:]</span>
+
+
+<div class="viewcode-block" id="PartitionEnsemble.save"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="nb">dir</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span><span class="n">hdf5</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">compress</span><span class="o">=</span><span class="mi">9</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Use pickle or h5py to store representation of PartitionEnsemble in compressed file.  When called \</span>
+<span class="sd">        if object has an assocated hdf5_file, this is the default file written to.  Otherwise objected \</span>
+<span class="sd">        is stored using pickle.</span>
+
+<span class="sd">        :param filename: name of file to write to.  Default is created from name of ParititonEnsemble\: \</span>
+<span class="sd">            &quot;%s_PartEnsemble_%d&quot; %(self.name,self.numparts)</span>
+<span class="sd">        :param hdf5: save the PartitionEnsemble object as a hdf5 file.  This is \</span>
+<span class="sd">        very useful for larger partition sets, especially when you only need to work \</span>
+<span class="sd">        with the optimal subset.  If object has hdf5_file attribute saved \</span>
+<span class="sd">        this becomes the default</span>
+<span class="sd">        :type hdf5: bool</span>
+<span class="sd">        :param compress: Level of compression for partitions in hdf5 file.  With less compression, files take \</span>
+<span class="sd">        longer to write but take up more space.  9 is default.</span>
+<span class="sd">        :type compress: int [0,9]</span>
+<span class="sd">        :param dir: directory to save graph in.  relative or absolute path.  default is working dir.</span>
+<span class="sd">        :type dir: str</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">hdf5</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">hdf5</span> <span class="ow">is</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hdf5</span> <span class="ow">is</span> <span class="kc">True</span>
+
+
+
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hdf5</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_PartEnsemble_</span><span class="si">%d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_PartEnsemble_</span><span class="si">%d</span><span class="s2">.gz&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hdf5</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">):</span>
+                    <span class="c1">#store dictionary type object as its own group</span>
+                    <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="s1">&#39;graph&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_write_graph_to_hd5f_file</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span><span class="n">compress</span><span class="o">=</span><span class="n">compress</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">indgrp</span><span class="o">=</span><span class="n">outfile</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">dom</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                            <span class="n">indgrp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">),</span><span class="n">data</span><span class="o">=</span><span class="n">dom</span><span class="p">,</span><span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span><span class="n">compression_opts</span><span class="o">=</span><span class="n">compress</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+                        <span class="n">outfile</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="s2">&quot;__len__&quot;</span><span class="p">):</span>
+                        <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+                        <span class="c1">#1D array don&#39;t have a second shape index (ie np.array.shape[1] can throw \</span>
+                        <span class="c1">#IndexError</span>
+                        <span class="n">cshape</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                        <span class="n">cshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+                        <span class="n">cshape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">cshape</span><span class="p">)</span>
+
+                        <span class="n">cdset</span> <span class="o">=</span> <span class="n">outfile</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">maxshape</span><span class="o">=</span><span class="n">cshape</span><span class="p">,</span>
+                                                       <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span><span class="n">compression_opts</span><span class="o">=</span><span class="n">compress</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="ow">not</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="c1">#Single value attributes</span>
+                            <span class="n">cdset</span> <span class="o">=</span> <span class="n">outfile</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="o">=</span><span class="n">filename</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">filename</span><span class="p">),</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fh</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PartitionEnsemble.save_graph"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.save_graph">[docs]</a>    <span class="k">def</span> <span class="nf">save_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="nb">dir</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Save a copy of the graph with each of the optimal partitions stored as vertex attributes \</span>
+<span class="sd">        in graphml compressed format.  Each partition is attribute names part_gamma where gamma is \</span>
+<span class="sd">        the beginning of the partitions domain of dominance</span>
+
+<span class="sd">        :param filename: name of file to write out to.  Default is self.name.graphml.gz or \</span>
+<span class="sd">        :type filename: str</span>
+<span class="sd">        :param dir: directory to save graph in.  relative or absolute path.  default is working dir.</span>
+<span class="sd">        :type dir: str</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">#TODO add other graph formats for saving.</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s2">&quot;.graphml.gz&quot;</span>
+        <span class="n">outgraph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1">#Add the CHAMP partitions to the outgraph</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_CHAMP_indices</span><span class="p">():</span>
+            <span class="n">part_name</span><span class="o">=</span><span class="s2">&quot;part_</span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="p">[</span><span class="n">ind</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">outgraph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">part_name</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+
+        <span class="n">outgraph</span><span class="o">.</span><span class="n">write_graphmlz</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">filename</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="PartitionEnsemble.open"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Loads pickled PartitionEnsemble from file.</span>
+
+<span class="sd">        :param file:  filename of pickled PartitionEnsemble Object</span>
+
+<span class="sd">        :return: writes over current instance and returns the reference</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">#try openning it as an hd5file</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_read_graph_from_hd5f_file</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">infile</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">key</span><span class="o">!=</span><span class="s1">&#39;graph&#39;</span> <span class="ow">and</span> <span class="n">key</span><span class="o">!=</span><span class="s1">&#39;_partitions&#39;</span><span class="p">:</span>
+                        <span class="c1">#get domain indices recreate ind2dom dict</span>
+                        <span class="k">if</span> <span class="n">key</span><span class="o">==</span><span class="s1">&#39;ind2doms&#39;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="o">=</span><span class="p">{}</span>
+                            <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">infile</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ind</span><span class="p">)]</span><span class="o">=</span><span class="n">infile</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ind</span><span class="p">][:]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">infile</span><span class="p">[</span><span class="n">key</span><span class="p">][:]</span>
+                            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">infile</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="c1">#store this for accessing partitions</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_file</span><span class="o">=</span><span class="n">filename</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">opened</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+
+            <span class="n">openedparts</span><span class="o">=</span><span class="n">opened</span><span class="o">.</span><span class="n">get_partition_dictionary</span><span class="p">()</span>
+
+            <span class="c1">#construct and return</span>
+            <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opened</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span><span class="n">listofparts</span><span class="o">=</span><span class="n">openedparts</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_sub_tex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+        <span class="n">new_str</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;\$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="n">new_str</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\\\</span><span class="s2">ge&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;=&quot;</span><span class="p">,</span> <span class="n">new_str</span><span class="p">)</span>
+        <span class="n">new_str</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">new_str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_str</span>
+
+    <span class="k">def</span> <span class="nf">_remove_tex_legend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">legend</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">legend</span><span class="o">.</span><span class="n">get_texts</span><span class="p">():</span>
+            <span class="n">text</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sub_tex</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">get_text</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">legend</span>
+
+    <span class="k">def</span> <span class="nf">_remove_tex_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axes</span><span class="p">):</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sub_tex</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">get_title</span><span class="p">()))</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sub_tex</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">get_xlabel</span><span class="p">()))</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sub_tex</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">get_ylabel</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">axes</span>
+
+<div class="viewcode-block" id="PartitionEnsemble.plot_modularity_mapping"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.PartitionEnsemble.plot_modularity_mapping">[docs]</a>    <span class="k">def</span> <span class="nf">plot_modularity_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">downsample</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span><span class="n">champ_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">no_tex</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">        Plot a scatter of the original modularity vs gamma with the modularity envelope super imposed. \</span>
+<span class="sd">        Along with communities vs :math:`\\gamma` on a twin axis.  If no orig_mod values are stored in the \</span>
+<span class="sd">        ensemble, just the modularity envelope is plotted.  Depending on the backend used to render plot \</span>
+<span class="sd">        the latex in the labels can cause error.  If you are getting RunTime errors when showing or saving \</span>
+<span class="sd">        the plot, try setting no_tex=True</span>
+
+<span class="sd">        :param ax: axes to draw the figure on.</span>
+<span class="sd">        :type ax: matplotlib.Axes</span>
+<span class="sd">        :param champ_only: Only plot the modularity envelop represented by the CHAMP identified subset.</span>
+<span class="sd">        :type champ_only: bool</span>
+<span class="sd">        :param downsample: for large number of runs, we down sample the scatter for the number of communities \</span>
+<span class="sd">        and the original partition set.  Default is 2000 randomly selected partitions.</span>
+<span class="sd">        :type downsample: int</span>
+<span class="sd">        :param legend: Add legend to the figure.  Default is true</span>
+<span class="sd">        :type legend: bool</span>
+<span class="sd">        :param no_tex: Use latex in the legends.  Default is true.  If error is thrown on plotting try setting \</span>
+<span class="sd">        this to false.</span>
+<span class="sd">        :type no_tex: bool</span>
+<span class="sd">        :return: axes drawn upon</span>
+<span class="sd">        :rtype: matplotlib.Axes</span>
+
+
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">no_tex</span><span class="p">:</span>
+            <span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span><span class="n">usetex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span><span class="n">usetex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+
+        <span class="c1"># check for downsampling and subset indices</span>
+        <span class="k">if</span> <span class="n">downsample</span> <span class="ow">and</span> <span class="n">downsample</span><span class="o">&lt;=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">):</span>
+            <span class="n">rand_ind</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">)),</span><span class="n">size</span><span class="o">=</span><span class="n">downsample</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rand_ind</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">))</span>
+
+        <span class="n">allgams</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">resolutions</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">rand_ind</span><span class="p">]</span>
+        <span class="n">allcoms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">numcoms</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">rand_ind</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">champ_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="p">:</span>
+
+
+            <span class="n">allmods</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_mods</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">rand_ind</span><span class="p">]</span>
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">allmods</span><span class="p">)</span> <span class="o">-</span> <span class="mi">100</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">allmods</span><span class="p">)</span> <span class="o">+</span> <span class="mi">100</span><span class="p">])</span>
+            <span class="n">mk1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">allgams</span><span class="p">,</span> <span class="n">allmods</span><span class="p">,</span>
+                             <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=.</span><span class="mi">6</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                             <span class="n">label</span><span class="o">=</span><span class="s2">&quot;modularity&quot;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1">#take the x-coord of first point in each domain</span>
+
+        <span class="c1">#Get lists for the champ subset</span>
+        <span class="n">champ_inds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_CHAMP_indices</span><span class="p">()</span>
+
+        <span class="c1"># take the x-coord of first point in each domain</span>
+        <span class="n">gammas</span><span class="o">=</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="p">[</span><span class="n">ind</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">champ_inds</span>  <span class="p">]</span>
+        <span class="c1"># take the y-coord of first point in each domain</span>
+        <span class="n">mods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="p">[</span><span class="n">ind</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">champ_inds</span><span class="p">]</span>
+
+        <span class="n">champ_coms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">numcoms</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">champ_inds</span><span class="p">]</span>
+
+
+
+        <span class="n">mk5</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">mods</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">mk5</span> <span class="o">=</span> <span class="n">mlines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">mk2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">mods</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="c1">#     ax.scatter(gamma_ins,orig_mods,marker=&#39;x&#39;,color=&#39;red&#39;)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;modularity&quot;</span><span class="p">)</span>
+
+
+
+        <span class="n">a2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+        <span class="n">a2</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+        <span class="c1">#     a2.scatter(allgammas,allcoms,marker=&quot;^&quot;,color=&quot;#fe9600&quot;,alpha=1,label=r&#39;\# communities ($\ge 5$ nodes)&#39;,zorder=1)</span>
+
+        <span class="n">sct2</span> <span class="o">=</span> <span class="n">a2</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">allgams</span><span class="p">,</span> <span class="n">allcoms</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#91AEC1&quot;</span><span class="p">,</span>
+                          <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;\# communities ($\ge </span><span class="si">%d</span><span class="s1">$ nodes)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_com_size</span><span class="p">),</span>
+                          <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#     sct2.set_path_effects([path_effects.SimplePatchShadow(alpha=.5),path_effects.Normal()])</span>
+
+        <span class="c1"># fake for legend with larger marker size</span>
+        <span class="n">mk3</span> <span class="o">=</span> <span class="n">a2</span><span class="o">.</span><span class="n">scatter</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#91AEC1&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                         <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;\# communities ($\ge </span><span class="si">%d</span><span class="s1">$)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_com_size</span><span class="p">),</span>
+                         <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                         <span class="n">s</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+
+
+        <span class="n">stp</span> <span class="o">=</span> <span class="n">a2</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">champ_coms</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#004F2D&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span>
+                      <span class="n">path_effects</span><span class="o">=</span><span class="p">[</span><span class="n">path_effects</span><span class="o">.</span><span class="n">SimpleLineShadow</span><span class="p">(</span><span class="n">alpha</span><span class="o">=.</span><span class="mi">5</span><span class="p">),</span> <span class="n">path_effects</span><span class="o">.</span><span class="n">Normal</span><span class="p">()])</span>
+        <span class="c1">#     stp.set_path_effects([patheffects.Stroke(linewidth=1, foreground=&#39;black&#39;),</span>
+        <span class="c1">#                     patheffects.Normal()])</span>
+
+        <span class="c1"># for legend</span>
+        <span class="n">mk4</span> <span class="o">=</span> <span class="n">mlines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#004F2D&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                            <span class="n">path_effects</span><span class="o">=</span><span class="p">[</span><span class="n">path_effects</span><span class="o">.</span><span class="n">SimpleLineShadow</span><span class="p">(</span><span class="n">alpha</span><span class="o">=.</span><span class="mi">5</span><span class="p">),</span> <span class="n">path_effects</span><span class="o">.</span><span class="n">Normal</span><span class="p">()])</span>
+
+
+        <span class="n">a2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\# communities ($\ge 5$ nodes)&quot;</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_zorder</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">get_zorder</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># put ax in front of ax2</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">patch</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># hide the &#39;canvas&#39;</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">allgams</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">mk1</span><span class="p">,</span> <span class="n">mk3</span><span class="p">,</span> <span class="n">mk2</span><span class="p">,</span> <span class="n">mk4</span><span class="p">,</span> <span class="n">mk5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="s1">&#39;modularity&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\# communities ($\ge </span><span class="si">%d</span><span class="s1"> $ nodes)&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_com_size</span><span class="p">),</span> <span class="s2">&quot;transitions,$\gamma$&quot;</span><span class="p">,</span>
+                           <span class="sa">r</span><span class="s2">&quot;\# communities ($\ge </span><span class="si">%d</span><span class="s2">$ nodes) optimal&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_com_size</span><span class="p">),</span> <span class="s2">&quot;convex hull of $Q(\gamma)$&quot;</span><span class="p">],</span>
+                          <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">.</span><span class="mi">87</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                          <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            <span class="n">l</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">l</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">set_ec</span><span class="p">(</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>
+            <span class="n">l</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">no_tex</span><span class="p">:</span>
+                <span class="n">l</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_tex_legend</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">no_tex</span><span class="p">:</span> <span class="c1">#clean up the tex the axes</span>
+            <span class="n">a2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_tex_axes</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_tex_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ax</span></div></div>
+
+            
+
+
+<span class="k">class</span> <span class="nc">MultiLayerPartitionEnsemble</span><span class="p">():</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    MultilayerPartitionEnsemble.  Similar to louvain_ext.PartitionEnsemble except that \</span>
+<span class="sd">    multigraphs are stored as supradjacency format (igraph does&#39;t have a good multigraph \</span>
+<span class="sd">    representation).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">adj_A</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">adj_P</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">adj_C</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">partitions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">coef_array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;unnamed_multilayer_ensemble&quot;</span><span class="p">):</span>
+        <span class="k">raise</span>  <span class="bp">NotImplemented</span> <span class="p">(</span><span class="s2">&quot;work in progress&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adj_A</span><span class="o">=</span><span class="n">adj_A</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adj_C</span><span class="o">=</span><span class="n">adj_C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adj_P</span><span class="o">=</span><span class="n">adj_P</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="o">=</span><span class="n">partitions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxpt</span><span class="o">=</span><span class="n">maxpt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="o">=</span><span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">coef_array</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">partitions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coef_array</span><span class="o">=</span><span class="n">create_coefarray_from_partitions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj_A</span><span class="p">,</span>
+                                                             <span class="bp">self</span><span class="o">.</span><span class="n">adj_P</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">adj_C</span><span class="p">,</span><span class="n">nprocesses</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">apply_CHAMP</span><span class="p">(</span><span class="n">maxpt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxpt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">apply_CHAMP</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Apply champ internally to the coefficent array.</span>
+
+<span class="sd">        :param maxpt: Cut off value for inclusion of domains in both the :math:`\\gamma` and :math:`\\omega` axes.</span>
+<span class="sd">        :type maxpt: (float,float)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">maxpt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">maxpt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxpt</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef_array</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">create_coefarray_from_partitions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">adj_A</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">adj_P</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">adj_C</span><span class="p">,</span><span class="n">nprocesses</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ind2doms</span><span class="o">=</span><span class="n">get_intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef_array</span><span class="p">,</span><span class="n">maxpt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">reset_min_com_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">new_min_size</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Result the minimum community size used to define the total number of communities for each partition \</span>
+<span class="sd">        Goes back through and recalculates community sizes for each partition.</span>
+
+<span class="sd">        :param new_min_size: new minimum size of communities</span>
+<span class="sd">        :type new_min_size: int</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partitions</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">numcoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">get_number_of_communities</span><span class="p">(</span><span class="n">part</span><span class="p">,</span><span class="n">new_min_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Use pickle to dump representation to compressed file</span>
+
+<span class="sd">        :param filename:</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_MultiPartEnsemble_</span><span class="si">%d</span><span class="s2">.gz&quot;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">numparts</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fh</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Loads pickled PartitionEnsemble from file.</span>
+
+<span class="sd">        :param file:  filename of pickled PartitionEnsemble Object</span>
+<span class="sd">        :return: writes over current instance and returns the reference</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">opened</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+
+        <span class="c1">#construct and return</span>
+        <span class="k">return</span> <span class="n">MultiLayerPartitionEnsemble</span><span class="p">(</span><span class="n">opened</span><span class="o">.</span><span class="n">adj_A</span><span class="p">,</span><span class="n">opened</span><span class="o">.</span><span class="n">adj_P</span><span class="p">,</span><span class="n">opened</span><span class="o">.</span><span class="n">adj_C</span><span class="p">,</span>
+                                           <span class="n">partitions</span><span class="o">=</span><span class="n">opened</span><span class="o">.</span><span class="n">partitions</span><span class="p">,</span><span class="n">coef_array</span><span class="o">=</span><span class="n">opened</span><span class="o">.</span><span class="n">coef_array</span><span class="p">,</span>
+                                           <span class="n">maxpt</span><span class="o">=</span><span class="n">opened</span><span class="o">.</span><span class="n">maxpt</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="n">opened</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<span class="c1">##### STATIC METHODS ######</span>
+
+<span class="k">def</span> <span class="nf">get_sum_internal_edges</span><span class="p">(</span><span class="n">partobj</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">       Get the count(strength) of edges that are internal to community:</span>
+
+<span class="sd">       :math:`\\hat{A}=\\sum_{ij}{A_{ij}\\delta(c_i,c_j)}`</span>
+
+<span class="sd">       :param partobj:</span>
+<span class="sd">       :type partobj: igraph.VertexClustering</span>
+<span class="sd">       :param weight: True uses &#39;weight&#39; attribute of edges</span>
+<span class="sd">       :return: float</span>
+<span class="sd">       &#39;&#39;&#39;</span>
+    <span class="n">sumA</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">subg</span> <span class="ow">in</span> <span class="n">partobj</span><span class="o">.</span><span class="n">subgraphs</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">weight</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">sumA</span><span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">subg</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="n">weight</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sumA</span><span class="o">+=</span> <span class="n">subg</span><span class="o">.</span><span class="n">ecount</span><span class="p">()</span>
+    <span class="k">return</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">sumA</span>
+
+<span class="k">def</span> <span class="nf">get_number_of_communities</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span><span class="n">min_com_size</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    :param partition: list with community assignments (labels must be of hashable type \</span>
+<span class="sd">    e.g. int,string, etc...).</span>
+<span class="sd">    :type partition: list</span>
+<span class="sd">    :param min_com_size: Minimum size to include community in the total number of communities (default is 0)</span>
+<span class="sd">    :type min_com_size: int</span>
+<span class="sd">    :return: number of communities</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">count_dict</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">partition</span><span class="p">:</span>
+        <span class="n">count_dict</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">=</span><span class="n">count_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+
+    <span class="n">tot_coms</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">count_dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="n">min_com_size</span><span class="p">:</span>
+            <span class="n">tot_coms</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">tot_coms</span>
+
+<span class="k">def</span> <span class="nf">get_expected_edges</span><span class="p">(</span><span class="n">partobj</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Get the expected internal edges under configuration models</span>
+
+<span class="sd">    :math:`\\hat{P}=\\sum_{ij}{\\frac{k_ik_j}{2m}\\delta(c_i,c_j)}`</span>
+
+<span class="sd">    :param partobj:</span>
+<span class="sd">    :type partobj: igraph.VertexClustering</span>
+<span class="sd">    :param weight: True uses &#39;weight&#39; attribute of edges</span>
+<span class="sd">    :return: float</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">weight</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">ecount</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">m</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">es</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
+    <span class="n">kk</span><span class="o">=</span><span class="mi">0</span>
+    <span class="c1">#Hashing this upfront is alot faster (factor of 10).</span>
+    <span class="k">if</span> <span class="n">weight</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">strengths</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">strengths</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">strength</span><span class="p">(</span><span class="n">partobj</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">,</span><span class="n">weights</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">subg</span> <span class="ow">in</span> <span class="n">partobj</span><span class="o">.</span><span class="n">subgraphs</span><span class="p">():</span>
+        <span class="c1"># since node ordering on subgraph doesn&#39;t match main graph, get vert id&#39;s in original graph</span>
+        <span class="c1"># verts=map(lambda x: int(re.search(&quot;(?&lt;=n)\d+&quot;, x[&#39;id&#39;]).group()),subg.vs) #you have to get full weight from original graph</span>
+        <span class="c1"># svec=partobj.graph.strength(verts,weights=&#39;weight&#39;) #i think is what is slow</span>
+
+        <span class="n">svec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lmap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span><span class="n">strengths</span><span class="p">[</span><span class="n">x</span><span class="p">],</span><span class="n">subg</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]))</span>
+        <span class="c1"># svec=subg.strength(subg.vs,weights=&#39;weight&#39;)</span>
+        <span class="n">kk</span><span class="o">+=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">svec</span><span class="p">,</span> <span class="n">svec</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">kk</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">rev_perm</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the reverse of a permuation vector</span>
+
+<span class="sd">    :param perm: permutation vector</span>
+<span class="sd">    :type perm: list</span>
+<span class="sd">    :return: reverse of permutation</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">rperm</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perm</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
+        <span class="n">rperm</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="n">i</span>
+    <span class="k">return</span> <span class="n">rperm</span>
+
+<span class="k">def</span> <span class="nf">get_orig_ordered_mem_vec</span><span class="p">(</span><span class="n">rev_order</span><span class="p">,</span> <span class="n">membership</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Rearrange community membership vector according to permutation</span>
+
+<span class="sd">    Used to realign community vector output after node permutation.</span>
+
+<span class="sd">    :param rev_order: new indices of each nodes</span>
+<span class="sd">    :param membership: community membership vector to be rearranged</span>
+<span class="sd">    :return: rearranged membership vector.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">new_member</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rev_order</span><span class="p">))]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rev_order</span><span class="p">):</span>
+        <span class="n">new_member</span><span class="p">[</span><span class="n">val</span><span class="p">]</span><span class="o">=</span><span class="n">membership</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">assert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_member</span><span class="p">)</span> <span class="c1">#Something didn&#39;t get switched</span>
+
+    <span class="k">return</span> <span class="n">new_member</span>
+
+<span class="k">def</span> <span class="nf">run_louvain</span><span class="p">(</span><span class="n">gfile</span><span class="p">,</span><span class="n">gamma</span><span class="p">,</span><span class="n">nruns</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">node_subset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">output_dictionary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Call the louvain method for a given graph file.</span>
+
+<span class="sd">    This takes as input a graph file (instead of the graph object) to avoid duplicating</span>
+<span class="sd">    references in the context of parallelization.  To allow for flexibility, it allows for</span>
+<span class="sd">    subsetting of the nodes each time.</span>
+
+<span class="sd">    :param gfile: igraph file.  Must be GraphMlz (todo: other extensions)</span>
+<span class="sd">    :param node_subset: Subeset of nodes to keep (either the indices or list of attributes)</span>
+<span class="sd">    :param gamma: resolution parameter to run louvain</span>
+<span class="sd">    :param nruns: number of runs to conduct</span>
+<span class="sd">    :param weight: optional name of weight attribute for the edges if network is weighted.</span>
+<span class="sd">    :param output_dictionary: Boolean - output a dictionary representation without attached graph.</span>
+<span class="sd">    :return: list of partition objects</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">()</span> <span class="c1">#reset seed for each process</span>
+
+    <span class="c1">#Load the graph from the file</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">Read_GraphMLz</span><span class="p">(</span><span class="n">gfile</span><span class="p">)</span>
+    <span class="c1">#have to have a node identifier to handle permutations.</span>
+
+
+    <span class="c1">#Found it easier to load graph from file each time than pass graph object among process</span>
+    <span class="c1">#This means you do have to filter out shared nodes and realign graphs.</span>
+    <span class="c1"># Can avoid for g1 by passing None</span>
+
+    <span class="c1">#</span>
+    <span class="k">if</span> <span class="n">node_subset</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># subset is index of vertices to keep</span>
+        <span class="k">if</span> <span class="n">attribute</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">gdel</span><span class="o">=</span><span class="n">node_subset</span>
+        <span class="c1"># check to keep nodes with given attribute</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gdel</span><span class="o">=</span><span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">attribute</span><span class="p">])</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_subset</span><span class="p">]</span>
+
+        <span class="c1">#delete from graph</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">delete_vertices</span><span class="p">(</span><span class="n">gdel</span><span class="p">)</span>
+
+
+    <span class="n">outparts</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nruns</span><span class="p">):</span>
+        <span class="n">rand_perm</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">vcount</span><span class="p">()))</span>
+        <span class="n">rperm</span> <span class="o">=</span> <span class="n">rev_perm</span><span class="p">(</span><span class="n">rand_perm</span><span class="p">)</span>
+        <span class="n">gr</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">permute_vertices</span><span class="p">(</span><span class="n">rand_perm</span><span class="p">)</span> <span class="c1">#This is just a labelling switch.  internal properties maintined.</span>
+        <span class="n">rp</span> <span class="o">=</span> <span class="n">louvain</span><span class="o">.</span><span class="n">find_partition</span><span class="p">(</span><span class="n">gr</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;RBConfiguration&#39;</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>  <span class="n">resolution_parameter</span><span class="o">=</span><span class="n">gamma</span><span class="p">)</span>
+
+        <span class="c1">#store the coefficients in return object.</span>
+        <span class="n">A</span><span class="o">=</span><span class="n">get_sum_internal_edges</span><span class="p">(</span><span class="n">rp</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">P</span><span class="o">=</span><span class="n">get_expected_edges</span><span class="p">(</span><span class="n">rp</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+
+        <span class="n">outparts</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;partition&#39;</span><span class="p">:</span> <span class="n">get_orig_ordered_mem_vec</span><span class="p">(</span><span class="n">rperm</span><span class="p">,</span> <span class="n">rp</span><span class="o">.</span><span class="n">membership</span><span class="p">),</span>
+                         <span class="s1">&#39;resolution&#39;</span><span class="p">:</span><span class="n">gamma</span><span class="p">,</span>
+                         <span class="s1">&#39;orig_mod&#39;</span><span class="p">:</span> <span class="n">rp</span><span class="o">.</span><span class="n">quality</span><span class="p">,</span>
+                         <span class="s1">&#39;int_edges&#39;</span><span class="p">:</span><span class="n">A</span><span class="p">,</span>
+                         <span class="s1">&#39;exp_edges&#39;</span><span class="p">:</span><span class="n">P</span><span class="p">})</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_dictionary</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PartitionEnsemble</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">g</span><span class="p">,</span><span class="n">listofparts</span><span class="o">=</span><span class="n">outparts</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">outparts</span>
+    <span class="k">return</span> <span class="n">part_ensemble</span>
+
+
+
+
+
+<span class="k">def</span> <span class="nf">_run_louvain_parallel</span><span class="p">(</span><span class="n">gfile_gamma_nruns_weight_subset_attribute_progress</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parallel wrapper with single argument input for calling :meth:`louvain_ext.run_louvain`</span>
+
+<span class="sd">    :param gfile_att_2_id_dict_shared_gamma_runs_weight: tuple or list of arguments to supply</span>
+<span class="sd">    :returns: PartitionEnsemble of graph stored in gfile</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#unpack</span>
+    <span class="n">gfile</span><span class="p">,</span><span class="n">gamma</span><span class="p">,</span><span class="n">nruns</span><span class="p">,</span><span class="n">weight</span><span class="p">,</span><span class="n">node_subset</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">progress</span><span class="o">=</span><span class="n">gfile_gamma_nruns_weight_subset_attribute_progress</span>
+    <span class="n">t</span><span class="o">=</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">outparts</span><span class="o">=</span><span class="n">run_louvain</span><span class="p">(</span><span class="n">gfile</span><span class="p">,</span><span class="n">gamma</span><span class="p">,</span><span class="n">nruns</span><span class="o">=</span><span class="n">nruns</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span><span class="n">node_subset</span><span class="o">=</span><span class="n">node_subset</span><span class="p">,</span><span class="n">attribute</span><span class="o">=</span><span class="n">attribute</span><span class="p">,</span><span class="n">output_dictionary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">progress</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">progress</span><span class="o">%</span><span class="mi">100</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run </span><span class="si">%d</span><span class="s2"> at gamma = </span><span class="si">%.3f</span><span class="s2">.  Return time: </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">progress</span><span class="p">,</span><span class="n">gamma</span><span class="p">,</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">outparts</span>
+<div class="viewcode-block" id="parallel_louvain"><a class="viewcode-back" href="../../_static/louvain_ext.html#champ.parallel_louvain">[docs]</a><span class="k">def</span> <span class="nf">parallel_louvain</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">fin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">numruns</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">numprocesses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">node_subset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Generates arguments for parallel function call of louvain on graph</span>
+
+<span class="sd">    :param graph: igraph object to run Louvain on</span>
+<span class="sd">    :param start: beginning of range of resolution parameter :math:`\\gamma` . Default is 0.</span>
+<span class="sd">    :param fin: end of range of resolution parameter :math:`\\gamma`.  Default is 1.</span>
+<span class="sd">    :param numruns: number of intervals to divide resolution parameter, :math:`\\gamma` range into</span>
+<span class="sd">    :param maxpt: Cutoff off resolution for domains when applying CHAMP. Default is None</span>
+<span class="sd">    :type maxpt: int</span>
+<span class="sd">    :param numprocesses: the number of processes to spawn.  Default is number of CPUs.</span>
+<span class="sd">    :param weight: If True will use &#39;weight&#39; attribute of edges in runnning Louvain and calculating modularity.</span>
+<span class="sd">    :param node_subset:  Optionally list of indices or attributes of nodes to keep while partitioning</span>
+<span class="sd">    :param attribute: Which attribute to filter on if node_subset is supplied.  If None, node subset is assumed \</span>
+<span class="sd">     to be node indices.</span>
+<span class="sd">    :param progress:  Print progress in parallel execution</span>
+<span class="sd">    :return: PartitionEnsemble of all partitions identified.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">parallel_args</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">if</span> <span class="n">numprocesses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">numprocesses</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">()</span>
+
+
+    <span class="n">tempf</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+    <span class="n">graphfile</span><span class="o">=</span><span class="n">tempf</span><span class="o">.</span><span class="n">name</span>
+    <span class="c1">#filter before calling parallel</span>
+    <span class="k">if</span> <span class="n">node_subset</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># subset is index of vertices to keep</span>
+        <span class="k">if</span> <span class="n">attribute</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gdel</span> <span class="o">=</span> <span class="n">node_subset</span>
+        <span class="c1"># check to keep nodes with given attribute</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gdel</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">attribute</span><span class="p">])</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_subset</span><span class="p">]</span>
+
+        <span class="c1"># delete from graph</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">delete_vertices</span><span class="p">(</span><span class="n">gdel</span><span class="p">)</span>
+
+    <span class="n">graph</span><span class="o">.</span><span class="n">write_graphmlz</span><span class="p">(</span><span class="n">graphfile</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numruns</span><span class="p">):</span>
+        <span class="n">prognum</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">progress</span> <span class="k">else</span> <span class="n">i</span>
+        <span class="n">curg</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">((</span><span class="n">fin</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">numruns</span><span class="p">))</span> <span class="o">*</span> <span class="n">i</span>
+        <span class="n">parallel_args</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">graphfile</span> <span class="p">,</span><span class="n">curg</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,</span><span class="n">prognum</span><span class="p">))</span>
+
+
+    <span class="c1">#use a context manager so pools properly shut down</span>
+
+    <span class="k">with</span> <span class="n">terminating</span><span class="p">(</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">numprocesses</span><span class="p">))</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+        <span class="n">parts_list_of_list</span><span class="o">=</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_run_louvain_parallel</span><span class="p">,</span> <span class="n">parallel_args</span> <span class="p">)</span>
+
+
+    <span class="n">all_part_dicts</span><span class="o">=</span><span class="p">[</span><span class="n">pt</span> <span class="k">for</span> <span class="n">partrun</span> <span class="ow">in</span> <span class="n">parts_list_of_list</span> <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">partrun</span><span class="p">]</span>
+
+    <span class="n">outensemble</span><span class="o">=</span><span class="n">PartitionEnsemble</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span><span class="n">listofparts</span><span class="o">=</span><span class="n">all_part_dicts</span><span class="p">,</span><span class="n">maxpt</span><span class="o">=</span><span class="n">maxpt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">outensemble</span></div>
+
+
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">return</span>
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, William Weir.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

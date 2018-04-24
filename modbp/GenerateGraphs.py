@@ -1,6 +1,4 @@
-import random
 import numpy as np
-import scipy.stats as stats
 import sklearn.metrics as skm
 import igraph as ig
 import itertools  as it
@@ -123,13 +121,13 @@ class MultilayerGraph():
         self.n=len(layer_vec)
         self.interlayer_edges=interlayer_edges
         self.intralayer_edges=intralayer_edges
-        self.layer_vec=layer_vec
+        self.layer_vec=np.array(layer_vec)
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)
         self.intradegrees=self.get_intralayer_degrees()
         self.interdegrees=self.get_interlayer_degrees()
         self.intra_edge_counts=self.get_layer_edgecounts()
-        self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
+        self.totaledgeweight=np.sum(self.interdegrees)/2.0+np.sum(self.intradegrees)/2.0
 
         self.comm_vec=comm_vec #for known community labels of nodes
 

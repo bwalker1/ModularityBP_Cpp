@@ -176,16 +176,25 @@ def test_fbnetwork():
                 mbpinter.run_modbp(q=q, beta=beta, resgamma=gam, niter=500)
     return 0
 
-def get_partition_matrix(partion,layer_vec):
-    #assumes partiton in same ordering for each layer
-    vals=np.unique(layer_vec)
-    nodeperlayer=len(layer_vec)/len(vals)
-    com_matrix=np.zeros((nodeperlayer,len(vals)))
-    for i,val in enumerate(vals):
-        cind=np.where(layer_vec==val)[0]
-        ccoms=partion[cind]
-        nodeperlayer[:,i]=ccoms
-    return com_matrix
+def test_retmod_calculation():
+    n=1000
+    q=2
+    nblocks=q
+    c=3
+    ep=.2
+    pin=c/(1.0+ep*(q-1.0))/(n*1.0/q)
+    pout=c/(1+(q-1.0)/ep)/(n*1.0/q)
+    prob_mat = np.identity(q) * pin + (np.ones((q, q)) - np.identity(q)) * pout
+    print prob_mat
+
+    g=ig.load('notworking2com_graph.graphml.gz')
+    randSBM=modbp.RandomSBMGraph(n,prob_mat,graph=g)
+    mbpinterface=modbp.ModularityBP(randSBM.graph)
+    mbpinterface.run_modbp(beta=.01,q=2,niter=500)
+    vc=ig.VertexClustering(graph=g,membership=mbpinterface.partitions[0])
+    print("ig VC modularity: {:.7f}".format(vc.modularity))
+    print("calculated modularity : {:.7f}".format(mbpinterface.retrieval_modularities['retrieval_modularity'][0]))
+
 
 def test_generate_graph():
     # np.random.seed(1)
@@ -200,13 +209,14 @@ def test_generate_graph():
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout    # print()
 
     ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=0)
-    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,comm_vec=ml_sbm.get_all_layers_block())
+    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,                  comm_vec=ml_sbm.get_all_layers_block())
 
     mlbp = modbp.ModularityBP(mlgraph=mgraph)
 
     bstar=mlbp.get_bstar(q=q)
     beta = bstar
     mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=500,omega=0)
+
 
     #for beta in np.linspace(1.5,2,15):
         #mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=100,omega=0)
@@ -240,7 +250,7 @@ def test_modbp_interface():
 
 
 def main():
-    test_modbp_interface()
+    test_retmod_calculation()
 
 if __name__=='__main__':
     main()

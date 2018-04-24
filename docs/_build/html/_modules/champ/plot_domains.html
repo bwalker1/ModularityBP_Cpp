@@ -1,0 +1,476 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>champ.plot_domains &mdash; CHAMP 1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="CHAMP 1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> CHAMP
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">CHAMP (Convex Hull of Admissible Modularity Partitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/intro.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/running.html">Running CHAMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/plotting2.html">Visualizing Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../_static/louvain_ext.html">Louvain Parallel Extension</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CHAMP</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>champ.plot_domains</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for champ.plot_domains</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">matplotlib.cm</span> <span class="k">as</span> <span class="nn">cm</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patch</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib.path</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">adjusted_mutual_info_score</span><span class="p">,</span><span class="n">normalized_mutual_info_score</span>
+<span class="kn">from</span> <span class="nn">.champ_functions</span> <span class="k">import</span> <span class="n">create_halfspaces_from_array</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">iteritems</span><span class="p">,</span><span class="n">iterkeys</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">lmap</span>
+
+<div class="viewcode-block" id="plot_line_coefficients"><a class="viewcode-back" href="../../_static/plotting2.html#champ.plot_line_coefficients">[docs]</a><span class="k">def</span> <span class="nf">plot_line_coefficients</span><span class="p">(</span><span class="n">coef_array</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plot an array of coefficients (lines) in 2D plane.  Each line is drawn from \</span>
+<span class="sd">     y-intercept to x-intercept.</span>
+
+<span class="sd">    :param coef_array: :math:`N\\times 2` array of coefficients representing lines.</span>
+<span class="sd">    :type coef_array: np.array</span>
+<span class="sd">    :param ax: optional matplotlib ax to draw the figure on.</span>
+<span class="sd">    :type ax: matplotlib.Axes</span>
+<span class="sd">    :param colors: optional list of colors (or single color) to draw lines</span>
+<span class="sd">    :type colors: [list,string]</span>
+<span class="sd">    :return: matplotlib ax on which the plot is draw</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">halfspaces</span><span class="o">=</span><span class="n">create_halfspaces_from_array</span><span class="p">(</span><span class="n">coef_array</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">plot_line_halfspaces</span><span class="p">(</span><span class="n">halfspaces</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+<span class="k">def</span> <span class="nf">plot_line_halfspaces</span><span class="p">(</span><span class="n">halfspaces</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plot a list of halfspaces (lines) in 2D plane.  Each line is drawn from y-intercept to x-intercept.</span>
+
+<span class="sd">    :param halfspaces: list of halfspaces</span>
+<span class="sd">    :param ax: optional matplotlib ax to draw the figure on</span>
+<span class="sd">    :param cols: optional list of colors (or single color) to draw lines</span>
+<span class="sd">    :param labels: Include labels of axes.  Either True or tuple of strings</span>
+<span class="sd">    :type labels:bool,(xlabel,ylabel)</span>
+<span class="sd">    :return: matplotlib ax on which the plot is draw</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">colors</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">cnorm</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">halfspaces</span><span class="p">))</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;Set1&quot;</span><span class="p">)</span>
+        <span class="n">pal</span><span class="o">=</span><span class="n">lmap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">cmap</span><span class="p">(</span><span class="n">cnorm</span><span class="p">(</span><span class="n">i</span><span class="p">)),</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">halfspaces</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">hs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">halfspaces</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>  <span class="c1"># must match length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">pal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">colors</span> <span class="o">==</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">colors</span>
+
+        <span class="n">A</span><span class="o">=-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">hs</span><span class="o">.</span><span class="n">offset</span><span class="o">/</span><span class="n">hs</span><span class="o">.</span><span class="n">normal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">B</span><span class="o">=-</span><span class="mf">1.0</span><span class="o">*</span><span class="n">hs</span><span class="o">.</span><span class="n">offset</span><span class="o">/</span><span class="n">hs</span><span class="o">.</span><span class="n">normal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">A</span><span class="p">],[</span><span class="n">B</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="n">c</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Modularity&quot;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+
+    <span class="k">return</span> <span class="n">ax</span>
+
+
+<div class="viewcode-block" id="plot_2d_domains"><a class="viewcode-back" href="../../_static/plotting2.html#champ.plot_2d_domains">[docs]</a><span class="k">def</span> <span class="nf">plot_2d_domains</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">widths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    :param ind_2_domains:</span>
+<span class="sd">    :param ax:</span>
+<span class="sd">    :param col:</span>
+<span class="sd">    :param close:</span>
+<span class="sd">    :param widths:</span>
+<span class="sd">    :param label:</span>
+<span class="sd">    :return:</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">ax</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">widths</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">))</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">cnorm</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">))</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;Set1&quot;</span><span class="p">)</span>
+        <span class="n">colors</span><span class="o">=</span><span class="n">lmap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">cmap</span><span class="p">(</span><span class="n">cnorm</span><span class="p">(</span><span class="n">i</span><span class="p">)),</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">)))</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">ind_pts</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">iteritems</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">)):</span>
+        <span class="n">ind</span><span class="p">,</span><span class="n">pts</span><span class="o">=</span><span class="n">ind_pts</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="s2">&quot;__iter__&quot;</span> <span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1">#must match length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">col</span><span class="o">==</span><span class="kc">None</span> <span class="k">else</span> <span class="n">col</span>
+        <span class="n">polypts</span><span class="o">=</span><span class="p">[(</span><span class="n">pt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">pt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">pts</span><span class="p">]</span>
+        <span class="n">polypts</span><span class="o">+=</span><span class="p">[(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])]</span>
+        <span class="n">polycodes</span><span class="o">=</span><span class="p">[</span><span class="n">Path</span><span class="o">.</span><span class="n">MOVETO</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="n">Path</span><span class="o">.</span><span class="n">LINETO</span><span class="p">]</span> <span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">polypts</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span><span class="p">[</span><span class="n">Path</span><span class="o">.</span><span class="n">CLOSEPOLY</span><span class="p">]</span>
+        <span class="n">polypath</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">polypts</span><span class="p">,</span><span class="n">polycodes</span><span class="p">)</span>
+        <span class="n">polypatch</span> <span class="o">=</span> <span class="n">patch</span><span class="o">.</span><span class="n">PathPatch</span><span class="p">(</span><span class="n">polypath</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">alpha</span><span class="o">=.</span><span class="mi">75</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">polypatch</span><span class="p">)</span>
+        <span class="n">xcrds</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>  <span class="n">pts</span> <span class="p">]</span>
+        <span class="n">ycrds</span> <span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pts</span> <span class="p">]</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xcrds</span><span class="p">,</span> <span class="n">ycrds</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+        <span class="c1"># for i,x in enumerate(xcrds):</span>
+        <span class="c1">#     jitter=np.random.uniform(-1,1)/10</span>
+        <span class="c1">#     ax.text(x+jitter,ycrds[i]+jitter,i)</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+
+
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="plot_single_layer_modularity_domains"><a class="viewcode-back" href="../../_static/plotting2.html#champ.plot_single_layer_modularity_domains">[docs]</a><span class="k">def</span> <span class="nf">plot_single_layer_modularity_domains</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plot the piece-wise linear curve for CHAMP of single layer partitions</span>
+
+<span class="sd">    :param ind_2_domains: dictionary mapping partition index to domain of dominance</span>
+<span class="sd">    :type ind_2_domains: { ind: [ np.array(gam_0x, gam_0y), np.array(gam_1x, gam_1y)  ] ,...}</span>
+<span class="sd">    :param ax: Matplotlib Axes object to draw the graph on</span>
+<span class="sd">    :param colors: Either a single color or list of colors with same length as number of domains</span>
+<span class="sd">    :return: ax  Reference to the ax on which plot is drawn.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">ax</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">colors</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">cnorm</span><span class="o">=</span><span class="n">mcolors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">))</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;Set1&quot;</span><span class="p">)</span>
+        <span class="n">pal</span><span class="o">=</span><span class="n">lmap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span> <span class="p">:</span> <span class="n">cmap</span><span class="p">(</span><span class="n">cnorm</span><span class="p">(</span><span class="n">i</span><span class="p">)),</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">)))</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">ind_pts</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">iteritems</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">)):</span>
+        <span class="n">ind</span><span class="p">,</span> <span class="n">pts</span> <span class="o">=</span> <span class="n">ind_pts</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_2_domains</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1">#must match length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">pal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">colors</span> <span class="o">==</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">colors</span>
+        <span class="n">coords</span><span class="o">=</span><span class="n">lmap</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">pts</span><span class="p">))</span>
+
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">,</span><span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">alpha</span><span class="o">=.</span><span class="mi">75</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;modularity&quot;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_similarity_heatmap_single_layer"><a class="viewcode-back" href="../../_static/plotting2.html#champ.plot_similarity_heatmap_single_layer">[docs]</a><span class="k">def</span> <span class="nf">plot_similarity_heatmap_single_layer</span><span class="p">(</span><span class="n">partitions</span><span class="p">,</span> <span class="n">index_2_domain</span><span class="p">,</span> <span class="n">partitions_other</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">index_2_dom_other</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                         <span class="n">sim_mat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    :param partitions:</span>
+<span class="sd">    :type partitions:</span>
+<span class="sd">    :param index_2_domain:</span>
+<span class="sd">    :type index_2_domain:</span>
+<span class="sd">    :param sim_mat:</span>
+<span class="sd">    :type sim_mat:</span>
+<span class="sd">    :param ax: Axes to draw the figure on.  New figure created if not supplied.</span>
+<span class="sd">    :type ax: Matplotlib.Axes</span>
+<span class="sd">    :param cmap: Color mapping.  Default is plasma</span>
+<span class="sd">    :type cmap: Matplotlib.colors.Colormap</span>
+<span class="sd">    :param title: True if add generic title, or string of title to add</span>
+<span class="sd">    :type title: boolean or string</span>
+<span class="sd">    :return: axis drawn on , computed similarity matrix</span>
+<span class="sd">    :rtype: matplolib.Axes,np.array</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;PuBu&#39;</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="n">ind_vals</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="n">index_2_domain</span><span class="o">.</span><span class="n">keys</span><span class="p">(),[</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">index_2_domain</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+    <span class="n">ind_vals</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># Take the x coordinate of first point in each domain</span>
+    <span class="n">gamma_transitions</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ind_vals</span><span class="p">]</span>
+    <span class="n">gamma_transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index_2_domain</span><span class="p">[</span><span class="n">ind_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># Append last point of last partition</span>
+
+    <span class="c1">#if there isn&#39;t a partition set to compare to the default is to compare to self.</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span> <span class="n">index_2_dom_other</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">partitions_other</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">ind_vals2</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">index_2_dom_other</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">[</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">index_2_dom_other</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="n">ind_vals2</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">gamma_transitions2</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ind_vals2</span><span class="p">]</span>
+        <span class="n">gamma_transitions2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index_2_dom_other</span><span class="p">[</span><span class="n">ind_vals2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]][</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ind_vals2</span> <span class="o">=</span> <span class="n">ind_vals</span>
+        <span class="n">gamma_transitions2</span><span class="o">=</span><span class="n">gamma_transitions</span>
+        <span class="n">partitions_other</span><span class="o">=</span><span class="n">partitions</span>
+
+
+    <span class="c1"># G2S, G1S = np.meshgrid(gamma_transitions2, gamma_transitions)</span>
+    <span class="n">G1S</span><span class="p">,</span> <span class="n">G2S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">gamma_transitions2</span><span class="p">,</span> <span class="n">gamma_transitions</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sim_mat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">AMI_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_vals</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_vals2</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span>  <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_vals</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ind_vals2</span><span class="p">)):</span>
+                <span class="n">partition1</span><span class="o">=</span><span class="n">partitions</span><span class="p">[</span><span class="n">ind_vals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">partition2</span><span class="o">=</span><span class="n">partitions_other</span><span class="p">[</span><span class="n">ind_vals2</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+
+                <span class="n">AMI_mat</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">adjusted_mutual_info_score</span><span class="p">(</span><span class="n">partition1</span><span class="p">,</span>
+                                                            <span class="n">partition2</span><span class="p">)</span>
+                <span class="c1"># AMI_mat[j][i] = AMI_mat[i][j] #symmetric</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">AMI_mat</span> <span class="o">=</span> <span class="n">sim_mat</span>
+
+
+    <span class="c1"># pal = sbn.cubehelix_palette(start=2, rot=.3, dark=0, light=.95, reverse=True, as_cmap=True)</span>
+
+
+    <span class="n">pmap</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">G1S</span><span class="p">,</span> <span class="n">G2S</span><span class="p">,</span> <span class="n">AMI_mat</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">gm</span> <span class="ow">in</span> <span class="n">gamma_transitions</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">gm</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gm</span> <span class="ow">in</span> <span class="n">gamma_transitions2</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">gm</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">gamma_transitions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">max</span><span class="p">(</span><span class="n">gamma_transitions</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">gamma_transitions2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">max</span><span class="p">(</span><span class="n">gamma_transitions2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Adjusted Mutual Information between Partitions&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">pmap</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">AMI_mat</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, William Weir.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: ''
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

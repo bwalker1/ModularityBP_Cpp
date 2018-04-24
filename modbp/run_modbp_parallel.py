@@ -43,7 +43,7 @@ def _run_modbp_multilayer(n_c_eta_ep_q_nlayers_gamma_omega_ntrials):
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,
                                    comm_vec=ml_sbm.get_all_layers_block())
         mlbp = modbp.ModularityBP(mlgraph=mgraph)
-        bstar=mlbp.get_bstar(q=q)+.1
+        bstar=mlbp.get_bstar(q=q)
         mlbp.run_modbp(beta=bstar,q=q,resgamma=resgamma,omega=omega,niter=500)
         allstats.loc[i,:]=mlbp.retrieval_modularities.loc[0,['retrieval_modularity','AMI_layer_avg','Accuracy_layer_avg']].values
 
@@ -62,28 +62,28 @@ def create_parallel_arguments(*args):
     return list(itertools.product(*toproduct))
 
 
-n=50
-c=3.0
-etas=np.linspace(0,1,5)
-eps=np.linspace(0.01,1,5)
+n=512
+c=16.0
+etas=np.linspace(0,1,50)
+eps=np.linspace(0.01,1,50)
 q=2
-nlayers=10
+nlayers=40
 resgamma=1.0
 omega=1.0
-ntrials=1
+ntrials=50
 args=create_parallel_arguments(n,c,etas,eps,q,nlayers,resgamma,omega,ntrials)
 
-
+print ("running on {:d} number of jobs".format(len(args)))
 # res=_run_modbp_multilayer(args[0])
 t=time()
 output=pd.DataFrame(columns=['ep','eta','resgamma','omega','retrieval_modularity','AMI','Accuracy'])
-with terminating(mp.Pool(processes=2)) as pool:
+with terminating(mp.Pool(processes=20)) as pool:
     res=pool.map(_run_modbp_multilayer,args)
 
 for i,res_i in enumerate(res):
     output.loc[i,:]=res_i
 
-outfile='eta_eps_scan_{:d}trials'.format(ntrials)
+outfile='eta_eps_scan_{:d}trials_{:d}nodes_{:d}layers.df.gz'.format(ntrials,n,nlayers)
 with gzip.open(outfile,'w') as fh:
     pickle.dump(output,fh)
 

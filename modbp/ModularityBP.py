@@ -1,5 +1,4 @@
 import numpy as np
-import random
 import igraph as ig
 from future.utils import iteritems,iterkeys
 from collections import Hashable
@@ -15,7 +14,8 @@ class ModularityBP():
     This is python interface class for the mulitlayer modularity BP
     """
 
-    def __init__(self,mlgraph=None,interlayer_edgelist=None,intralayer_edgelist=None,layer_vec=None,accuracy_off=False):
+    def __init__(self,mlgraph=None,interlayer_edgelist=None,
+                 intralayer_edgelist=None,layer_vec=None,accuracy_off=False,use_effective=False):
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
@@ -47,6 +47,7 @@ class ModularityBP():
         self.niters={}
         self.group_maps={} #
         self.group_distances={}
+        self.use_effective=use_effective
         self.nruns=0 #how many times has the BP algorithm been run.  Also serves as index for outputs
 
         #make single index
@@ -61,7 +62,7 @@ class ModularityBP():
         self._bpmod=None
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
-
+        assert(q>0),"q must be > 0"
         if self._bpmod is None:
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
                                         intra_edgelist=self._intraedgelistpv,
@@ -90,9 +91,9 @@ class ModularityBP():
         # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
         # iters = self._bpmod.run(niter)
         cmargs=np.array(self._bpmod.return_marginals())
-
+        self.marginals[self.nruns]=cmargs
         # cpartition = np.argmax(cmargs, axis=1)
-        cpartition=self._get_partition(cmargs)
+
 
         #assure it is initialized
         # self.marginals[q]=self.marginals.get(q,{})
@@ -100,22 +101,24 @@ class ModularityBP():
         # self.niters[q]=self.niters.get(q,{})
         # self.retrieval_modularities[q]=self.retrieval_modularities.get(q,{})
 
-        #set values
-        self.marginals[self.nruns]=cmargs
+        #Calculate effective group size and get partitions
+        self._get_community_distances(self.nruns) #sets values in method
+        cpartition=self._get_partition(self.nruns,self.use_effective)
         self.partitions[self.nruns]=cpartition
+
         self.retrieval_modularities.loc[self.nruns, 'q'] = q
         self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
         self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
         self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
         self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
-        self._get_community_distances(self.nruns) #sets values in method
 
         retmod=self._get_retrieval_modularity(self.nruns)
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
         _,cnts=np.unique(cpartition,return_counts=True)
-
         self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
+
         self.retrieval_modularities.loc[self.nruns,'qstar']=self._get_true_number_of_communities(self.nruns)
+        self.retrieval_modularities.loc[self.nruns,'bstar']=self._bpmod.compute_bstar()
 
         if self.graph.comm_vec is not None:
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
@@ -147,18 +150,32 @@ class ModularityBP():
             _edgelistpv = PairVector(self.intralayer_edges)
         return _edgelistpv
 
-    def _get_partition(self,marginal):
+    def _get_partition(self,ind,use_effective=True):
         """ We want to have argmax with randomly broken ties.
 
-        :param marginal:
+        :param ind: index of the marginal to use
         :return:
         """
         #thanks to SO 42071597
 
+        marginal=self.marginals[ind]
+
         def argmax_breakties(x):
             return np.random.choice(np.flatnonzero(np.abs(x-x.max())<np.power(10.0,-6)))
 
-        return np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
+        parts=np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
+
+
+        if use_effective:
+            groupmap=self.group_maps[ind]
+            # We use the effective communities to map
+            commsets = list(set([frozenset(s) for s in groupmap.values()]))
+            com2finalind = dict(zip(commsets, range(len(commsets))))  # set 2 final indice mapping
+            parts=np.array(map(lambda x: com2finalind[frozenset(groupmap[x])],parts ))
+            return parts
+
+        else:
+            return parts
 
     def get_bstar(self,q):
         #c is supposed to be the average excess degree
@@ -168,6 +185,7 @@ class ModularityBP():
         c= d2/d_avg - 1
         #c=(2.0*self.totaledgeweight/(self.n))
         return np.log(q/(np.sqrt(c)-1)+1)
+
 
     def _get_retrieval_modularity(self,nrun=None):
         '''
@@ -195,11 +213,11 @@ class ModularityBP():
 
         #For Ahat and Chat we simply iterate over the edges and count internal ones
         if self.intralayer_edges.shape[0]>0:
-            Ahat=2*np.sum(np.apply_along_axis(func1d=part_equal, arr=self.intralayer_edges,axis=1))
+            Ahat=np.sum(np.apply_along_axis(func1d=part_equal, arr=self.intralayer_edges,axis=1))
         else:
             Ahat=0
         if self.interlayer_edges.shape[0]>0:
-            Chat=2*np.sum(np.apply_along_axis(func1d=part_equal , arr=self.interlayer_edges,axis=1))
+            Chat=np.sum(np.apply_along_axis(func1d=part_equal , arr=self.interlayer_edges,axis=1))
         else:
             Chat=0
         #TODO make this work for weighted edges
@@ -233,7 +251,7 @@ class ModularityBP():
                     Phat+=(np.sum(cPmat)/(2.0*self.graph.intra_edge_counts[i]))
 
 
-        return (1.0/(2.0*self.totaledgeweight))*( Ahat-resgamma*Phat+omega*Chat)
+        return (1.0/(self.totaledgeweight))*( Ahat-resgamma*Phat+omega*Chat)
 
     def _get_community_distances(self,ind,thresh=np.power(10.0,-3)):
         """
@@ -277,6 +295,9 @@ class ModularityBP():
         self.group_maps[ind]=groups
         self.group_distances[ind]=distmat
 
+
+
+
     def _get_true_number_of_communities(self,ind):
         """
 
@@ -286,7 +307,6 @@ class ModularityBP():
 
         if ind not in self.group_maps.keys():
             self._get_community_distances(ind)
-
         groupmap=self.group_maps[ind]
 
         #create set of sets and take len.  Frozenset is immutable
