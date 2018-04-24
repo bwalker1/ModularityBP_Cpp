@@ -17,6 +17,7 @@ __________
 
     self
     _static/intro
+    _static/generategraph
 
 
 
@@ -41,7 +42,7 @@ For basic installation:
 Dependencies
 ***************
 
-Most of the dependencies for CHAMP are fairly standard tools for data analysis in Python.   They include :
+Most of the dependencies for modbp are fairly standard tools for data analysis in Python.   They include :
 
 + `NumPy <https://www.scipy.org/scipylib/download.html>`_ \: Python numerical analysis library.
 + `sklearn <http://scikit-learn.org/stable/install.html>`_ \:Machine learning tools for python.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# CHAMP documentation build configuration file, created by
+# modBP documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul 11 15:50:43 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -99,9 +99,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CHAMP'
-copyright = u'2017, William Weir'
-author = u'William Weir'
+project = u'modBP'
+copyright = u'2018, William Weir and Benjamin Walker'
+author = u'William Weir and Benjamin Walker'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -185,7 +185,7 @@ todo_include_todos = True
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = u'CHAMP v1'
+# html_title = u'modBP v1'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -286,7 +286,7 @@ todo_include_todos = True
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'CHAMPdoc'
+htmlhelp_basename = 'modBPdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -312,7 +312,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'CHAMP.tex', u'CHAMP Documentation',
+    (master_doc, 'modBP.tex', u'modBP Documentation',
      u'William Weir', 'manual'),
 ]
 
@@ -354,7 +354,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'champ', u'CHAMP Documentation',
+    (master_doc, 'modBP', u'modBP Documentation',
      [author], 1)
 ]
 
@@ -369,8 +369,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'CHAMP', u'CHAMP Documentation',
-     author, 'CHAMP', 'One line description of project.',
+    (master_doc, 'modBP', u'modBP Documentation',
+     author, 'modBP', 'One line description of project.',
      'Miscellaneous'),
 ]
 

@@ -8,7 +8,7 @@ Background
 
 
 =================================
-Introduction
+Introduction: Belief Propagation
 =================================
 
 
@@ -39,16 +39,7 @@ connectivity of the network in the form of a second adjacency matrix :math:`C_{i
 
 Communities in this context group nodes within the layers and across the layers.  The inclusion of the :math:`C_ij` \
 boost the modularity for communites that include alot interlayer links.  There is an additional parameter, \
-:math:`\omega` that tunes how much weight these interlink ties contribute to the modularity.  With the additional \
-parameter, each partitions can be represented in the :math:`(\gamma,\omega,Q)` space by three coefficients. \
-The two in equation :ref:`single layer coefficients<single_param>` and \:
-
-.. math::
-
-    \begin{array}
-    \hat{C}=\sum{C_{ij}\delta(c_i,c_j)} &\textit{Sum of interlayer edges internal to communities}\\
-    \end{array}
-
+:math:`\omega` that tunes how much weight these interlink ties contribute to the modularity.   \
 
 
 References
