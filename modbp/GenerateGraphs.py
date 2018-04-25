@@ -116,10 +116,16 @@ class RandomSBMGraph(RandomGraph):
 
 class MultilayerGraph():
     """ """
-    def __init__(self,intralayer_edges,interlayer_edges,layer_vec,comm_vec=None):
+    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None):
+
 
         self.n=len(layer_vec)
-        self.interlayer_edges=interlayer_edges
+
+        if interlayer_edges is None: #Assume that it is single layer
+            self.interlayer_edges=np.zeros((0,2),dtype='int')
+        else:
+            self.interlayer_edges=interlayer_edges
+
         self.intralayer_edges=intralayer_edges
         self.layer_vec=np.array(layer_vec)
         self.layers=self._create_layer_graphs()
@@ -130,7 +136,8 @@ class MultilayerGraph():
         self.totaledgeweight=np.sum(self.interdegrees)/2.0+np.sum(self.intradegrees)/2.0
 
         self.comm_vec=comm_vec #for known community labels of nodes
-
+        if self.comm_vec is not None:
+            self._label_layers(self.comm_vec)
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -140,17 +147,35 @@ class MultilayerGraph():
             node_inds=set(node_inds) # hash for look up
             celist=[]
             #subtract this off so that number of nodes created in igraph is correct
-
             for ei,ej in self.intralayer_edges:
                 if ei in node_inds or ej in node_inds:
-
                     celist.append((ei-min_ind,ej-min_ind))
             layers.append(self._create_graph_from_elist(len(node_inds),celist))
         return layers
 
 
-    def _create_graph_from_elist(self,n,elist):
-        return ig.Graph(n=n,edges=elist)
+    def _create_graph_from_elist(self,n,elist,simplify=True):
+        cgraph=ig.Graph(n=n,edges=elist,directed=False)
+        if simplify:
+            cgraph=cgraph.simplify(multiple=True)
+        return cgraph
+
+    def _label_layers(self,comvec=None):
+        """
+        Here we set the true community assignmetn for each node in each layer using commvec
+        :return: None
+        """
+        if comvec is None:
+            assert self.comm_vec is not None, "Cannot set node communities if they are not provided"
+            comvec=self.comm_vec
+
+        assert len(comvec)==self.n,"length of comvec: {:d} does not equal number of nodes: {:}".format(len(comvec),self.n)
+        coffset=0 #keep track of nodes already seen
+        for layer in self.layers:
+            layer.vs['block']=comvec[coffset:layer.vcount()]
+            coffset+=layer.vcount()
+
+
 
     def get_layer_edgecounts(self):
         ecounts=[]
