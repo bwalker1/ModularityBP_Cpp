@@ -298,7 +298,7 @@ class ModularityBP():
 
 
 
-    def _get_true_number_of_communities(self,ind):
+    def _get_true_number_of_communities(self,ind,min_com_size=0):
         """
 
         :param ind:
@@ -310,7 +310,10 @@ class ModularityBP():
         groupmap=self.group_maps[ind]
 
         #create set of sets and take len.  Frozenset is immutable
-        return len(set([frozenset(s) for s in groupmap.values()]))
-
+        #
+        if min_com_size==0:
+            return len(set([frozenset(s) for s in groupmap.values()]))
+        else:
+            return len(set([ frozenset(s) for s in groupmap.values()] ))
 
 

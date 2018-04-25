@@ -97,9 +97,7 @@ We begin by examining how our modifications effect the ability of \textit{modbp}
 \item We have set an upper limit on the number of communities, $q_{\text max }$ and have incorporated the approach Ref~\cite{Schulke:2015hq} to select an effective number of communities based on the overlap of the marginal (see \fullref{numcom})
 \end{enumerate}
 
-\subsubsection{Stochastic Block Model}
-We examine the behavior of \textit{multimodbp} on realization of a four community stochastic block model for different values of $\gamma$.  First, we show that in the setting with several smaller communities, a higher value of $\gamma$ produces a much wider retrieval phase and thus makes detection of communities more robust to selection of $\beta$.  We generated a single realization of an SBM and scanned a range of $\beta$ values to characterize the behavior of the algorithm seen in \textbf{Figure~\ref{fig:singlelayer}}.  The retrieval modularity seen in \textbf{Figure~\ref{fig:igeven}} shows a clear plateau for $\gamma=.5$ (right most panel), corresponding with a broad retrieval phase (middle panel) that is absent at $\gamma=1$.  The AMI (left most panel) is clearly higher for all values of $\gamma$ within the retrieval phase.  What's more, the number of communities identified for $\gamma=.5$ plateaus at 5, which is more closely aligned with the underlying model (really there are only 4 main communities show in far right panel of \textbf{Figure}~\ref{fig:igeve}).   
-
+\subsubsection{Single Layer Stochastic Block Model}
 %\begin{figure}[htbp]
 %\begin{center}
 %\includegraphics[width=\linewidth]{fourcom_varyinggamma4c.pdf}
@@ -112,7 +110,7 @@ We examine the behavior of \textit{multimodbp} on realization of a four communit
 \centering
 \begin{subfigure}{\textwidth}
 	\begin{mdframed}
-		\includegraphics[width = .74\textwidth]{fourcom_varyinggamma4c.pdf}
+		\includegraphics[width = .74\textwidth]{fourcom_even_varyinggamma4c.pdf}
 		\includegraphics[width = .24\textwidth]{igraph_even_commlayout4c.pdf}
 		\hspace{-.2in}
 		\begin{minipage}[c]{0.001\textwidth}
@@ -132,12 +130,39 @@ We examine the behavior of \textit{multimodbp} on realization of a four communit
 		\end{mdframed}
 \end{subfigure}
 \vspace{-.1in}
-\caption { Demonstration of \textit{multimodbp} on two realization of SBM model.  From left to right the plots show the retrieval modularity, number of iterations to convergence, and the AMI of the retrieved partition with known community assignments and the effective number of communities.  The black dotted lines denote the values of $\betta^*$ for values of $q$ ranging from 2 to $q_{\text{max}} (see \ref{eq:bstar}).  \textbf{(a)} 4 community SBM with $n=1000$,  $\epsilon=\frac{p_{out}}{p_{in}}=.1$, $c_{avg}=4$, and even community sizes and  \textbf{(b)} and 4 community SBM with $n=1000$,  $\epsilon=.1$, $c_{avg}=4$, with  uneven community sizes ( $\nu = [ 350,150,350,150]$ ) \label{fig:singlelayer} } 
+\caption { Demonstration of \textit{multimodbp} on two realization of SBM model.  From left to right the plots show the retrieval modularity, number of iterations to convergence, and the AMI of the retrieved partition with known community assignments and the effective number of communities.  The black dotted lines denote the values of $\beta^*$ for values of $q$ ranging from 2 to $q_{\text{max}}$ (see \ref{eq:bstar}).  \textbf{(a)} 4 community SBM with $n=1000$,  $\epsilon=\frac{p_{out}}{p_{in}}=.1$, $c_{avg}=4$, and even community sizes and  \textbf{(b)} and 4 community SBM with $n=1000$,  $\epsilon=.1$, $c_{avg}=4$, with  uneven community sizes ( $\nu = [ 350,150,350,150]$ ) \label{fig:singlelayer} } 
 \vspace{-.2in}
 \end{figure}
+We examine the behavior of \textit{multimodbp} on realization of a four community stochastic block model for different values of $\gamma$.  First, we show that in the setting with several smaller communities, a higher value of $\gamma$ produces a much wider retrieval phase and thus makes detection of communities more robust to selection of $\beta$.  We generated a single realization of an SBM and scanned a range of $\beta$ values to characterize the behavior of the algorithm seen in \textbf{Figure~\ref{fig:singlelayer}}.  The retrieval modularity seen in \textbf{Figure~\ref{fig:igeven}} shows a clear plateau for $\gamma=.5$ (right most panel), corresponding with a broad retrieval phase (middle panel) that is absent at $\gamma=1$.  The AMI (left most panel) is clearly higher for all values of $\gamma$ within the retrieval phase.  What's more, the number of communities identified for $\gamma=.5$ plateaus at 5, which is more closely aligned with the underlying model (really there are only 4 main communities show in far right panel of \textbf{Figure~\ref{fig:igeven}}).  
 
-We also tested the performance of the algorithm in the case where the sizes of the planted communities were uneven, shown in \textbf{Figure~\ref{fig:iguneven}}.  The results here were similar though even more striking.  There is a small retrieval phase for $\gamma=1$, but it is much smaller than that of $\gamma=.5$ and the AMI is again consistently lower.  For $\gamma=.5$ we actually detect two retrieval phases, the first one in which only nodes within the two larger communities are labelled correctly.  Then as $\beta$ increases the smaller two communities also become identifiable.  This is consistent with the multiphase behavior observed in \cite{Schulke:2015hq}, though we note that in this example, the phase transition is only observed in a particular $\gamma$ regime.    
+We also tested the performance of the algorithm in the case where the sizes of the planted communities were uneven, shown in \textbf{Figure~\ref{fig:iguneven}}.  The results here were similar though even more striking.  There is a small retrieval phase for $\gamma=1$, but it is much smaller than that of $\gamma=.5$ and the AMI is again consistently lower.  For $\gamma=.5$ we actually detect two retrieval phases, the first one in which only nodes within the two larger communities are labelled correctly.  Then as $\beta$ increases the smaller two communities also become identifiable.  This is consistent with the multiphase behavior observed in \cite{Schulke:2015hq}, though we note that in this example, the phase transition is only observed in a particular $\gamma$ regime.
 
+\subsubsection{ NCAA Division I-A College Football Network }
+ 
+ We also look at how incorportation of the resolution parameter affects the ability of \textit{multimodbp} to detection community structure on real world network.  As     
+ \begin{figure}[htbp]
+\begin{center}
+	\begin{mdframed}
+		\includegraphics[width = .66\textwidth]{football_gamma_scan.pdf}
+		\includegraphics[width = .33\textwidth]{igraph_american_football.pdf}
+%		\hspace{-.2in}
+%		\begin{minipage}[c]{0.001\textwidth}
+%		\caption{ \label{fig:igeven}}
+%		\end{minipage}%
+	\end{mdframed}
+\caption{ \label{fig:footballgamma}}
+\end{center}
+\end{figure}   
+
+%	\begin{mdframed}
+%		\includegraphics[width = .74\textwidth]{fourcom_even_varyinggamma4c.pdf}
+%		\includegraphics[width = .24\textwidth]{igraph_even_commlayout4c.pdf}
+%		\hspace{-.2in}
+%		\begin{minipage}[c]{0.001\textwidth}
+%		\caption{ \label{fig:igeven}}
+%		\end{minipage}%
+%	\end{mdframed}
+%    
 %\begin{figure}[htbp]
 %\begin{center}
 %\includegraphics[width=\linewidth]{fourcom_uneven_varyinggamma4c.pdf}
@@ -215,7 +240,7 @@ We have made two major modifications to Zhang and Moore's original \text{modbp} 
 Where $\mathcal{E}_{\text{inter}}$, denotes the interlayer edges, while $\mathcal{E}_{\text{intra}}$ is the set of interlayer edges.  While, we have demonstrated \textit{multimodbp} in the context of a specific multilayer topology, that is the multiplex network, our formulation is flexible enough to handle any type of multilayer networks with two classes of edges.  In principle, the method could even be extended to many edge types, each with their own coupling parameter, $\omega_i$.  
 
 \begin{equation} \label{eq:bstar}
-\beta^*=
+\beta^*=\log\left(\frac{q}{(\sqrt{c}-1)}+1\right)
 \end{equation}
 
 

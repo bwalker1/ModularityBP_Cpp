@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 APR 2018 17:07
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  24 APR 2018 22:08
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -931,105 +931,121 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 {/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3]
 
+<./graphics/fourcom_even_varyinggamma4c.pdf, id=110, 1517.67pt x 505.89pt>
+File: ./graphics/fourcom_even_varyinggamma4c.pdf Graphic file (type pdf)
 
-LaTeX Warning: Reference `fig:igeve' on page 4 undefined on input line 101.
-
-<./graphics/fourcom_varyinggamma4c.pdf, id=108, 1517.67pt x 505.89pt>
-File: ./graphics/fourcom_varyinggamma4c.pdf Graphic file (type pdf)
-
-<use ./graphics/fourcom_varyinggamma4c.pdf>
-Package pdftex.def Info: ./graphics/fourcom_varyinggamma4c.pdf used on input li
-ne 115.
+<use ./graphics/fourcom_even_varyinggamma4c.pdf>
+Package pdftex.def Info: ./graphics/fourcom_even_varyinggamma4c.pdf used on inp
+ut line 113.
 (pdftex.def)             Requested size: 311.69374pt x 103.89337pt.
 
-<./graphics/igraph_even_commlayout4c.pdf, id=109, 401.5pt x 401.5pt>
+<./graphics/igraph_even_commlayout4c.pdf, id=111, 401.5pt x 401.5pt>
 File: ./graphics/igraph_even_commlayout4c.pdf Graphic file (type pdf)
 
 <use ./graphics/igraph_even_commlayout4c.pdf>
 Package pdftex.def Info: ./graphics/igraph_even_commlayout4c.pdf used on input 
-line 116.
+line 114.
 (pdftex.def)             Requested size: 101.09142pt x 101.09154pt.
 
-Overfull \hbox (12.35364pt too wide) in paragraph at lines 119--119
+Overfull \hbox (12.35364pt too wide) in paragraph at lines 117--117
 []\OT1/cmr/m/n/10 (a)|[][][]| 
  []
 
 Package mdframed Info: mdframed inside float 
- mdframed uses option nobreak mdframed on input line 121.
+ mdframed uses option nobreak mdframed on input line 119.
 Package mdframed Info: mdframed inside a box 
- mdframed uses option nobreak mdframed on input line 121.
-<./graphics/fourcom_uneven_varyinggamma4c.pdf, id=110, 1517.67pt x 505.89pt>
+ mdframed uses option nobreak mdframed on input line 119.
+<./graphics/fourcom_uneven_varyinggamma4c.pdf, id=112, 1517.67pt x 505.89pt>
 File: ./graphics/fourcom_uneven_varyinggamma4c.pdf Graphic file (type pdf)
 
 <use ./graphics/fourcom_uneven_varyinggamma4c.pdf>
 Package pdftex.def Info: ./graphics/fourcom_uneven_varyinggamma4c.pdf used on i
-nput line 126.
+nput line 124.
 (pdftex.def)             Requested size: 311.69374pt x 103.89337pt.
 
-<./graphics/igraph_uneven_commlayout4c.pdf, id=111, 401.5pt x 401.5pt>
+<./graphics/igraph_uneven_commlayout4c.pdf, id=113, 401.5pt x 401.5pt>
 File: ./graphics/igraph_uneven_commlayout4c.pdf Graphic file (type pdf)
 
 <use ./graphics/igraph_uneven_commlayout4c.pdf>
 Package pdftex.def Info: ./graphics/igraph_uneven_commlayout4c.pdf used on inpu
-t line 127.
+t line 125.
 (pdftex.def)             Requested size: 101.09142pt x 101.09154pt.
 
-Overfull \hbox (12.9092pt too wide) in paragraph at lines 130--130
+Overfull \hbox (12.9092pt too wide) in paragraph at lines 128--128
 []\OT1/cmr/m/n/10 (b)|[][]| 
  []
 
 Package mdframed Info: mdframed inside float 
- mdframed uses option nobreak mdframed on input line 132.
+ mdframed uses option nobreak mdframed on input line 130.
 Package mdframed Info: mdframed inside a box 
- mdframed uses option nobreak mdframed on input line 132.
-[4] [5 <./graphics/fourcom_varyinggamma4c.pdf> <./graphics/igraph_even_commlayo
-ut4c.pdf> <./graphics/fourcom_uneven_varyinggamma4c.pdf
+ mdframed uses option nobreak mdframed on input line 130.
+[4 <./graphics/fourcom_even_varyinggamma4c.pdf> <./graphics/igraph_even_commlay
+out4c.pdf> <./graphics/fourcom_uneven_varyinggamma4c.pdf
 
 pdfTeX warning: /Library/TeX/texbin/pdflatex (file ./graphics/fourcom_uneven_va
 ryinggamma4c.pdf): PDF inclusion: multiple pdfs with page group included in a s
 ingle page
 > <./graphics/igraph_uneven_commlayout4c.pdf>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 226.
- [6]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 226.
+<./graphics/football_gamma_scan.pdf, id=303, 722.7pt x 361.35pt>
+File: ./graphics/football_gamma_scan.pdf Graphic file (type pdf)
+
+<use ./graphics/football_gamma_scan.pdf>
+Package pdftex.def Info: ./graphics/football_gamma_scan.pdf used on input line 
+146.
+(pdftex.def)             Requested size: 277.9966pt x 138.99611pt.
+
+<./graphics/igraph_american_football.pdf, id=304, 401.5pt x 401.5pt>
+File: ./graphics/igraph_american_football.pdf Graphic file (type pdf)
+
+<use ./graphics/igraph_american_football.pdf>
+Package pdftex.def Info: ./graphics/igraph_american_football.pdf used on input 
+line 147.
+(pdftex.def)             Requested size: 138.99829pt x 139.00162pt.
+Package mdframed Info: mdframed inside float 
+ mdframed uses option nobreak mdframed on input line 152.
+Package mdframed Info: mdframed inside a box 
+ mdframed uses option nobreak mdframed on input line 152.
+ [5 <./graphics/football_gamma_scan.pdf> <./graphics/igraph_american_football.p
+df>] [6]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 253.
+ [7]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 253.
  (./multimodbp.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 226.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 226.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 253.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 253.
 Package rerunfilecheck Info: File `multimodbp.out' has not changed.
-(rerunfilecheck)             Checksum: C64B4D0CC1091C21DF0A0AFF1C798F53;732.
-
-
-LaTeX Warning: There were undefined references.
-
+(rerunfilecheck)             Checksum: E48E3F6BDB09486BB8305246E578E6AD;849.
 Package logreq Info: Writing requests to 'multimodbp.run.xml'.
 \openout1 = `multimodbp.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 21243 strings out of 493014
- 380674 string characters out of 6133351
+ 21259 strings out of 493014
+ 381172 string characters out of 6133351
  627799 words of memory out of 5000000
- 24542 multiletter control sequences out of 15000+600000
+ 24552 multiletter control sequences out of 15000+600000
  11698 words of font info for 44 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 42i,10n,45p,10399b,964s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 42i,10n,45p,10399b,1106s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
 </usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><
 /usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></
-usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></us
-r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/
-local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/lo
-cal/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/loca
-l/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/
-texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/tex
-live/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texl
-ive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texliv
-e/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on multimodbp.pdf (6 pages, 505292 bytes).
+usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></u
+sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr
+/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/l
+ocal/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/loc
+al/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local
+/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/t
+exlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texl
+ive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texli
+ve/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive
+/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/
+2016/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb>
+Output written on multimodbp.pdf (7 pages, 724377 bytes).
 PDF statistics:
- 337 PDF objects out of 1000 (max. 8388607)
- 191 compressed objects within 2 object streams
- 36 named destinations out of 1000 (max. 500000)
- 117 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 398 PDF objects out of 1000 (max. 8388607)
+ 227 compressed objects within 3 object streams
+ 40 named destinations out of 1000 (max. 500000)
+ 135 words of extra memory for PDF output out of 10000 (max. 10000000)
 
