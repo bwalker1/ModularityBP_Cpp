@@ -46,6 +46,7 @@ class ModularityBP():
         self.partitions={} # max of marginals
         self.niters={}
         self.group_maps={} #
+        self.reverse_group_maps={}
         self.group_distances={}
         self.use_effective=use_effective
         self.nruns=0 #how many times has the BP algorithm been run.  Also serves as index for outputs
@@ -166,12 +167,10 @@ class ModularityBP():
         parts=np.apply_along_axis(func1d=argmax_breakties,arr=marginal,axis=1)
 
 
-        if use_effective:
+        if use_effective: #map the marginals to very close ones.
             groupmap=self.group_maps[ind]
             # We use the effective communities to map
-            commsets = list(set([frozenset(s) for s in groupmap.values()]))
-            com2finalind = dict(zip(commsets, range(len(commsets))))  # set 2 final indice mapping
-            parts=np.array(map(lambda x: com2finalind[frozenset(groupmap[x])],parts ))
+            parts=np.array(map(lambda x: self.reverse_group_maps[ind][frozenset(groupmap[x])],parts ))
             return parts
 
         else:
@@ -282,6 +281,7 @@ class ModularityBP():
 
 
         for k,l in itertools.combinations(range(q),2):
+
             dist_kl=np.mean(np.power(cmarginal[:,k]-cmarginal[:,l],2.0))
 
             distmat[k,l]=dist_kl
@@ -294,7 +294,8 @@ class ModularityBP():
 
         self.group_maps[ind]=groups
         self.group_distances[ind]=distmat
-
+        commsets = list(set([frozenset(s) for s in groupmap.values()]))
+        self.reverse_group_maps[ind] = dict(zip(commsets, range(len(commsets))))  # set 2 final indice mapping
 
 
 
@@ -314,6 +315,6 @@ class ModularityBP():
         if min_com_size==0:
             return len(set([frozenset(s) for s in groupmap.values()]))
         else:
-            return len(set([ frozenset(s) for s in groupmap.values()] ))
+            return len(set([ frozenset(s) for s in groupmap.values()] if len(s) >= min_com_size ))
 
 

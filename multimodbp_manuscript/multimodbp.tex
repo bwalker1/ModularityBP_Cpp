@@ -140,6 +140,9 @@ We also tested the performance of the algorithm in the case where the sizes of t
 \subsubsection{ NCAA Division I-A College Football Network }
  
  We also look at how incorportation of the resolution parameter affects the ability of \textit{multimodbp} to detection community structure on real world network.  As 
+ 
+ 
+ To look at how the value of $\gamma$ effects the retrieval phase, we ran \textit{multimodbp} for a range of $\gamma$ value and examined the minimal number of iterations in the retrieval phase shown  in \textbf{Figure~\ref{fig:footballgamma}}.  For each value of $\gamma$, \textit{multimodbp} was run over ten values in $\beta \in [1.5,2.5]$, and values calculated at the $\beta$ corresponding to the minimum number of iterations within this range.  Runs that did not converge after 500 iterations suggest that for that value of $\gamma$ the retrieval phase was either very small or nonexistent.  Furthermore, \textbf{Figure~\ref{fig:footballgamma}} demonstrates that the AMI of the retrieved partition increases as a function of $\gamma$  from $\gamma=1$ up until is plateaus form $\gamma=[1.7,3.4]$ at a stable 11 community solution (show in far right panel).    
      
  \begin{figure}[!htbp]
 \begin{center}
@@ -240,9 +243,15 @@ We have made two major modifications to Zhang and Moore's original \text{modbp} 
 
 Where $\mathcal{E}_{\text{inter}}$, denotes the interlayer edges, while $\mathcal{E}_{\text{intra}}$ is the set of interlayer edges.  While, we have demonstrated \textit{multimodbp} in the context of a specific multilayer topology, that is the multiplex network, our formulation is flexible enough to handle any type of multilayer networks with two classes of edges.  In principle, the method could even be extended to many edge types, each with their own coupling parameter, $\omega_i$.  
 
+\subsection{Identification of $\beta$}
+
+
+
 \begin{equation} \label{eq:bstar}
 \beta^*=\log\left(\frac{q}{(\sqrt{c}-1)}+1\right)
 \end{equation}
+
+Where $c=\frac{<d^2>}{<d>}-1$ is the excess degree.  Based 
 
 
 \printbibliography

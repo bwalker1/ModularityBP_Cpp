@@ -47,8 +47,15 @@ class RandomERGraph(RandomGraph):
 
 
 class RandomSBMGraph(RandomGraph):
-    def __init__(self,n,comm_prob_mat,block_sizes=None,graph=None):
+    def __init__(self,n,comm_prob_mat,block_sizes=None,graph=None,use_gcc=False):
+        """
 
+        :param n:
+        :param comm_prob_mat:
+        :param block_sizes:
+        :param graph:
+        :param use_gcc:
+        """
         if block_sizes is None:
             block_sizes = [int(n / (1.0 * comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0] - 1)]
             block_sizes += [n - np.sum(block_sizes)]  # make sure it sums to one
@@ -63,6 +70,7 @@ class RandomSBMGraph(RandomGraph):
                 pass
             self.graph = ig.Graph.SBM(n=n, pref_matrix=comm_prob_mat, block_sizes=list(block_sizes), directed=False,loops=False)
 
+        self.use_gcc=use_gcc
         self.block_sizes=np.array(block_sizes)
         self.comm_prob_mat=comm_prob_mat
 
@@ -72,6 +80,11 @@ class RandomSBMGraph(RandomGraph):
         for i,blk in enumerate(block_sizes):
             block+=[i for _ in range(blk)]
         self.graph.vs['block']=block
+
+        if use_gcc==True: #in this case the block sizes need ot be recalculated
+            self.graph=self.graph.components().giant()
+            _,cnts=np.unique(self.graph.vs['block'],return_counts=True)
+            self.block_sizes=cnts
 
     @property
     def block(self):
@@ -120,13 +133,12 @@ class MultilayerGraph():
 
 
         self.n=len(layer_vec)
-
+        self.intralayer_edges=intralayer_edges
         if interlayer_edges is None: #Assume that it is single layer
             self.interlayer_edges=np.zeros((0,2),dtype='int')
         else:
             self.interlayer_edges=interlayer_edges
 
-        self.intralayer_edges=intralayer_edges
         self.layer_vec=np.array(layer_vec)
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)
@@ -264,22 +276,31 @@ class MultilayerGraph():
 
 class MultilayerSBM():
 
-    def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None):
+    def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None,use_gcc=False):
+
         self.layer_sbms=[]
-        self.n=n #number of total nodeslayers
         self.nlayers=layers
-        self.N=self.n*self.nlayers
         self.transition_prob=transition_prob
         self.comm_prob_mat=comm_prob_mat
+
+
         if block_sizes0 is None:
             block_sizes0 = [int(n / (1.0 * comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0] - 1)]
             block_sizes0 += [n - np.sum(block_sizes0)]  # make sure it sums to one
 
-        self._blocks=range(self.comm_prob_mat.shape[0])
+        assert not (use_gcc and layers > 1), "use_gcc only applies to single layer network"
+        initalSBM = RandomSBMGraph(n=n, comm_prob_mat=comm_prob_mat, block_sizes=block_sizes0, use_gcc=use_gcc)
+
+        self.n = initalSBM.n  # number of total nodeslayers
+        self.nlayers = layers
+        self.N = self.n * self.nlayers
+
+        self._blocks=range(self.comm_prob_mat.shape[0]) #
         #initialize the first one
-        initalSBM=RandomSBMGraph(n=self.n,comm_prob_mat=self.comm_prob_mat,block_sizes=block_sizes0)
+
         initalSBM.graph.vs['id']=np.arange(n) #set id's in order
         self.layer_sbms.append(initalSBM)
+
         for _ in range(layers-1):
             #create the next sbm from the previous one and add it to the list.
             self.layer_sbms.append(self.get_next_sbm(self.layer_sbms[-1]))
