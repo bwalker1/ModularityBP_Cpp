@@ -225,32 +225,41 @@ def test_generate_graph():
 
 def test_modbp_interface():
     # confirmt that it is still working on the single layer case
-    n = 100
-    q = 2
-    nlayers = 2
+
+
+    n = 1000
+    q = 4
+    nlayers = 1
     nblocks = q
-    c = 10
+    c = 4
     ep = .1
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
-    ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=0)
-    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,
+    ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=.1)
+    mgraph = modbp.MultilayerGraph(interlayer_edges=ml_sbm.intraedges,
+                                   intralayer_edges=ml_sbm.interedges, layer_vec=ml_sbm.layer_vec,
                                    comm_vec=ml_sbm.get_all_layers_block())
-    mlbp = modbp.ModularityBP(mlgraph=mgraph)
-    bstar = mlbp.get_bstar(q=q)
+    mlbp = modbp.ModularityBP(mlgraph=mgraph, accuracy_off=True, use_effective=False)
     # mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=1000,omega=0)
-    # betas = np.linspace(0, 3, 50)
-    betas=[ bstar ]
+
+    # betas=np.linspace(.5,2.5,50)
+
     ntrials = 1
-    for i, beta in enumerate(betas):
-        if i % 10 == 0: print("{:d}/{:d}".format(i, len(betas)))
-        for trial in range(ntrials):
-            mlbp.run_modbp(q=2, beta=beta, omega=0, niter=500, reset=True)
+    qvals = np.array([2, 3, 4, 5, 6, 7, 8, 9])
+    bstars = map(lambda x: mlbp.get_bstar(x), qvals)
+
+    # resgammas=np.linspace(.1,1.5,5)
+    resgammas = np.array([.5, 1, 1.5])
+    for i, q in enumerate(qvals):
+        print('trial {:d}'.format(q))
+        betas = np.linspace(bstars[i] - .2, bstars[i] + .2, 10)
+        for j, beta in enumerate(betas):
+            mlbp.run_modbp(q=q, beta=beta, resgamma=1.0, omega=0, niter=1000, reset=True)
 
 
 def main():
-    test_retmod_calculation()
+    test_modbp_interface()
 
 if __name__=='__main__':
     main()

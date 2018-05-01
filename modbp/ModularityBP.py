@@ -15,7 +15,7 @@ class ModularityBP():
     """
 
     def __init__(self,mlgraph=None,interlayer_edgelist=None,
-                 intralayer_edgelist=None,layer_vec=None,accuracy_off=False,use_effective=False):
+                 intralayer_edgelist=None,layer_vec=None,accuracy_off=False,use_effective=False,comm_vec=None):
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
@@ -26,6 +26,8 @@ class ModularityBP():
                 self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
                                               interlayer_edges=np.zeros((0,2),dtype='int'),
                                               layer_vec=[0 for _ in range(mlgraph.vcount())])
+                if not comm_vec is None:
+                    self.graph.comm_vec=comm_vec
             else:
                 self.graph=mlgraph
         else:
@@ -33,6 +35,8 @@ class ModularityBP():
                 interlayer_edgelist=np.zeros((0,2),dtype='int')
             self.graph = MultilayerGraph(intralayer_edges=intralayer_edgelist,
                                          interlayer_edges=interlayer_edgelist,layer_vec=layer_vec)
+            if not comm_vec is None:
+                self.graph.comm_vec = comm_vec
 
         self.n=self.graph.n
         self.nlayers=self.graph.nlayers
@@ -114,13 +118,15 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
 
         retmod=self._get_retrieval_modularity(self.nruns)
+        bethe_energy=self._bpmod.compute_bethe_free_energy()
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
+        self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
+
         _,cnts=np.unique(cpartition,return_counts=True)
         self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
 
         self.retrieval_modularities.loc[self.nruns,'qstar']=self._get_true_number_of_communities(self.nruns)
         self.retrieval_modularities.loc[self.nruns,'bstar']=self._bpmod.compute_bstar()
-
         if self.graph.comm_vec is not None:
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
             self.retrieval_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_with_communities(cpartition)
@@ -294,7 +300,7 @@ class ModularityBP():
 
         self.group_maps[ind]=groups
         self.group_distances[ind]=distmat
-        commsets = list(set([frozenset(s) for s in groupmap.values()]))
+        commsets = list(set([frozenset(s) for s in groups.values()]))
         self.reverse_group_maps[ind] = dict(zip(commsets, range(len(commsets))))  # set 2 final indice mapping
 
 
@@ -315,6 +321,6 @@ class ModularityBP():
         if min_com_size==0:
             return len(set([frozenset(s) for s in groupmap.values()]))
         else:
-            return len(set([ frozenset(s) for s in groupmap.values()] if len(s) >= min_com_size ))
+            return len(set([ frozenset(s) for s in groupmap.values() if len(s) >= min_com_size ]))
 
 
