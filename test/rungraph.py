@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
 
     accuracy = 0.0
+    ami = 0.0
+    ami_avg = 0.0
     
     for trial in xrange(ntrials):
         print trial
@@ -40,9 +42,13 @@ if __name__ == "__main__":
         mlbp = modbp.ModularityBP(mlgraph=mgraph)
         mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=500, reset=True)
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']
+        ami += mlbp.retrieval_modularities.loc[0,'AMI']
+        ami_avg += mlbp.retrieval_modularities.loc[0,'AMI_layer_avg']
     
     accuracy /= ntrials
+    ami /= ntrials
+    ami_avg /= ntrials
     
     f = open("{:s}/data/eps{:f}eta{:f}gamma{:f}omega{:f}.dat".format(expanduser("~"),ep,eta,gamma,omega),"wb")
-    f.write("{:f} {:f} {:f} {:f} {:f}\n".format(ep,eta,gamma,omega,accuracy))
+    f.write("{:f} {:f} {:f} {:f} {:f} {:f} {:f}\n".format(ep,eta,gamma,omega,accuracy,ami,ami_avg))
     f.close()

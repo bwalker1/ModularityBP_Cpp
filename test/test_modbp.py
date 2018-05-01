@@ -256,6 +256,7 @@ def test_modbp_interface():
         betas = np.linspace(bstars[i] - .2, bstars[i] + .2, 10)
         for j, beta in enumerate(betas):
             mlbp.run_modbp(q=q, beta=beta, resgamma=1.0, omega=0, niter=1000, reset=True)
+            #print mlbp.retrieval_modularities
 
 
 def main():

@@ -140,16 +140,20 @@ long BP_Modularity::run(unsigned long maxIters)
     {
         step();
         
+        // monitor changes
+        
+        
         if (verbose)
             printf("Iteration %lu: change %f\n",iter+1,change);
         
         if (!changed)
         {
             converged = true;
-            return iter;
             
             if (verbose)
                 printf("Converged after %lu iterations.\n",iter+1);
+            
+            return iter;
         }
     }
     if (verbose)
