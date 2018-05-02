@@ -1536,7 +1536,7 @@ int erase_links(deque<set<int> > & E, const deque<deque<int> > & member_list, co
 	
 }
 
-int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, const deque<deque<int> > & member_matrix, deque<int> & num_seq) {
+int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, const deque<deque<int> > & member_matrix, deque<int> & num_seq , string out_prefix) {
 
 	
 	int edges=0;
@@ -1597,7 +1597,7 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 	
 
 
-	ofstream out1("network.dat");
+	ofstream out1(out_prefix+"network.dat");
 	for (int u=0; u<E.size(); u++) {
 
 		set<int>::iterator itb=E[u].begin();
@@ -1611,7 +1611,7 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 		
 
 	
-	ofstream out2("community.dat");
+	ofstream out2(out_prefix+"community.dat");
 
 	for (int i=0; i<member_list.size(); i++) {
 		
@@ -1631,7 +1631,7 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 
 	
 	
-	ofstream statout("statistics.dat");
+	ofstream statout(out_prefix+"statistics.dat");
 	
 	deque<int> degree_seq;
 	for (int i=0; i<E.size(); i++)
@@ -1668,7 +1668,7 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 
 
 int benchmark(bool excess, bool defect, int num_nodes, double  average_k, int  max_degree, double  tau, double  tau2, 
-	double  mixing_parameter, int  overlapping_nodes, int  overlap_membership, int  nmin, int  nmax, bool  fixed_range, double ca) {	
+	double  mixing_parameter, int  overlapping_nodes, int  overlap_membership, int  nmin, int  nmax, bool  fixed_range, double ca, string out_prefix) {
 
 	
 	
@@ -1775,7 +1775,7 @@ int benchmark(bool excess, bool defect, int num_nodes, double  average_k, int  m
 	
 	
 	cout<<"recording network..."<<endl;	
-	print_network(E, member_list, member_matrix, num_seq);
+	print_network(E, member_list, member_matrix, num_seq,out_prefix);
 
 	
 	
@@ -1825,11 +1825,11 @@ int main(int argc, char * argv[]) {
 	
 	
 	
-	erase_file_if_exists("network.dat");
-	erase_file_if_exists("community.dat");
-	erase_file_if_exists("statistics.dat");
+	erase_file_if_exists(p.out_prefix+"network.dat");
+	erase_file_if_exists(p.out_prefix+"community.dat");
+	erase_file_if_exists(p.out_prefix+"statistics.dat");
 	
-	benchmark(p.excess, p.defect, p.num_nodes, p.average_k, p.max_degree, p.tau, p.tau2, p.mixing_parameter, p.overlapping_nodes, p.overlap_membership, p.nmin, p.nmax, p.fixed_range, p.clustering_coeff);	
+	benchmark(p.excess, p.defect, p.num_nodes, p.average_k, p.max_degree, p.tau, p.tau2, p.mixing_parameter, p.overlapping_nodes, p.overlap_membership, p.nmin, p.nmax, p.fixed_range, p.clustering_coeff,p.out_prefix);
 		
 	return 0;
 	
