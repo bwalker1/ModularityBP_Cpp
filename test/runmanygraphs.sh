@@ -1,9 +1,7 @@
-rm "~/data/*"
-
 for gamma in 0.5 1 1.5 
 do
     for omega in 0 1 2
-    do
+    do 
         for eta in $(seq 0.0 0.05 1.01)
         do
             for eps in $(seq 0.0 0.05 1.01)

@@ -9,7 +9,7 @@ import pandas as pd
 import sys
 from os.path import expanduser
 
-# python rungraph.py 512 2 40 0.5 16 0.5 100 1.0 1.0
+# python rungraph.py 512 2 40 0.5 16 0.5 2 1.0 1.0
 
 if __name__ == "__main__":
     # generate a graph and then run it some number of times
@@ -45,11 +45,13 @@ if __name__ == "__main__":
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']
         ami += mlbp.retrieval_modularities.loc[0,'AMI']
         ami_avg += mlbp.retrieval_modularities.loc[0,'AMI_layer_avg']
+        ret_mod += mlbp.retrieval_modularities.loc[0,'retrieval_modularity']
     
     accuracy /= ntrials
     ami /= ntrials
     ami_avg /= ntrials
+    ret_mod /= ntrials
     
     f = open("{:s}/data/eps{:f}eta{:f}gamma{:f}omega{:f}.dat".format(expanduser("~"),ep,eta,gamma,omega),"wb")
-    f.write("{:f} {:f} {:f} {:f} {:f} {:f} {:f}\n".format(ep,eta,gamma,omega,accuracy,ami,ami_avg))
+    f.write("{:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f}\n".format(ep,eta,gamma,omega,accuracy,ami,ami_avg, ret_mod))
     f.close()
