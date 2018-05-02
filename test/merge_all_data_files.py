@@ -18,12 +18,15 @@ def main(pargs=None):
     parser.add_argument('--input_dir',dest='input',type=str,
                         default=default_dir)
     parser.add_argument('--output_file',dest='outfilename',type=str,default=None)
-
+    
     if pargs is None:
-        parser.parse_args()
+        args=parser.parse_args()
     else:
-        parser.parse_args(pargs)
-
+        args=parser.parse_args(pargs)
+    if args.outfilename is None:
+	outfile='merged_all_{:}'.format(args.input.split('/')[-1])
+    else:
+        outfile=args.outfilename 
     allfiles=os.listdir(args.input)
     outdf=pd.DataFrame()
     for i,file in enumerate(allfiles):
@@ -33,8 +36,8 @@ def main(pargs=None):
             outdf=c_df
         else:
             outdf=pd.concat([outdf,c_df])
-
-    outdf.to_csv(args.outfilename)
+    print ('writing file to {:}'.format(outfile))
+    outdf.to_csv(outfile)
     return 0
 
 if __name__=='__main__':

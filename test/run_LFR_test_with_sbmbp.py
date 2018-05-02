@@ -30,10 +30,10 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     if process.returncode != 0:
         raise RuntimeError("creating LFR failed : {:}".format(stderr))
 
-    elist = pd.read_table('network.dat', header=None).sort_values(
+    elist = pd.read_table('{:d}network.dat'.format(rprefix), header=None).sort_values(
         by=0).as_matrix() - 1  # have to subtract 1 to get it to work
     # elist=elist[:elist.shape[0]/2,:]
-    comvec = pd.read_table('community.dat', header=None).sort_values(by=0).as_matrix()[:, 1] - 1
+    comvec = pd.read_table('{:d}community.dat'.format(rprefix), header=None).sort_values(by=0).as_matrix()[:, 1] - 1
     nfin=len(comvec)
     mgraph = modbp.MultilayerGraph(intralayer_edges=elist, layer_vec=[0 for _ in range(nfin)],
                                    comm_vec=comvec)
@@ -45,8 +45,10 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     if use_gcc:
         cgraph = cgraph.components().giant()
     for s in ['network.dat','community.dat','statistics.dat']:
-        if os.path.exists("{:}{:}".format(s,rprefix)):
-            os.remove("{:}{:}".format(s,rprefix))
+        f2del="{:d}{:}".format(rprefix,s)
+	#print (f2del)
+	if os.path.exists(f2del):
+            os.remove(f2del)
     return cgraph
 
 
