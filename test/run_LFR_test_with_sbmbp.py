@@ -1,9 +1,6 @@
 from __future__ import division
 from context import modbp
-from time import time
 import numpy as np
-import igraph as ig
-import matplotlib.pyplot as plt
 import seaborn as sbn
 import pandas as pd
 import sys
