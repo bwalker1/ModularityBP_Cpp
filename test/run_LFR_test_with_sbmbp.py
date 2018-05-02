@@ -8,6 +8,7 @@ from subprocess import Popen,PIPE
 import re
 import os
 import sklearn.metrics as skm
+
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
@@ -108,13 +109,10 @@ def run_SBMBP_on_graph(graph):
                     marginals.append(line.split())
                 if inpartition:
                     partition = line.split()
-        if os.path.exists(marginal_file):
-	    os.remove(marginal_file)
+
         partition = np.array(partition, dtype=int)
         all_partitions[q] = partition
     minq = sorted(final_values.items(), key=lambda x: x[1]['f'])[0][0]
-    if os.path.exists(tmp_grph_file):
-	os.remove(tmp_grph_file)
     return skm.adjusted_mutual_info_score(all_partitions[q], graph.vs['block'])
 
 
@@ -138,6 +136,7 @@ def main():
         output.loc[cind,['beta','resgamma','niters','retrieval_modularity']]=[None,None,None,None]
         output.loc[cind,'AMI']=ami_sbm
         output.loc[cind,'isSBM']=True
+        output.loc[cind,'ep']=ep
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,
                                   comm_vec=np.array(graph.vs['block']))
         bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
