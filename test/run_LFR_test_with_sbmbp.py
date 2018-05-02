@@ -10,7 +10,7 @@ import sys
 from subprocess import Popen,PIPE
 from os.path import expanduser
 
-clusterdir="/nas/longleaf/home/wweir/ModBP_proj"
+clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     benchmarkfile = os.path.join(clusterdir,'benchmark')
@@ -53,7 +53,7 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
 # returns the AMI of the learned partition
 def run_SBMBP_on_graph(graph):
     sbmbpfile = os.path.join(clusterdir,'test/mode_net/sbm')
-    outdir = os.path.join(clusterdir,'modbpdata/LFR_test_data')
+    outdir = os.path.join(clusterdir,'test/modbpdata/LFR_test_data')
     tmp_grph_file = os.path.join(outdir, 'temporary_graph_file.gml')
     graph.save(tmp_grph_file)
     all_partitions = {}
@@ -118,7 +118,7 @@ def main():
     gamma = float(sys.argv[5])
     ntrials= int(sys.argv[6])
     output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity'])
-    outfile="{:}/modbpdata/LFR_test_data/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
+    outfile="{:}/test/modbpdata/LFR_test_data/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
     print(outfile)
     qmax=8
     for trial in range(ntrials):
