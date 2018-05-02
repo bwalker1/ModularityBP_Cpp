@@ -13,7 +13,7 @@ clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/binary_networks
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     benchmarkfile = os.path.join(clusterdir,'/binary_networks/benchmark')
-    
+    rprefix=np.random.randint(100000)
     parameters = [
         benchmarkfile,
         "-N", '{:d}'.format(n),
@@ -24,6 +24,7 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
         '-t2', '1',
         '-minc', '200',
         '-maxc', '300',
+        '-w','{:d}'.format(rprefix)
     ]
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
