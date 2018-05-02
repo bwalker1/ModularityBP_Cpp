@@ -140,13 +140,20 @@ def main():
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,
                                   comm_vec=np.array(graph.vs['block']))
         bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
-        betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 4)
+        betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=0)
 
             mlbp_rm = mlbp.retrieval_modularities
+
+
         minidx = mlbp_rm[mlbp_rm['niters'] < 1000]['retrieval_modularity'].idxmax()
+
         cind=output.shape[0]
+        if len(mlbp_rm[mlbp_rm['niters'] < 1000]) == 0:  # none converged !
+            output.loc[cind,['ep']]=ep
+            output.loc[cind,['niters']]=1000
+            continue
         output.loc[cind, ['beta', 'resgamma', 'niters', 'AMI','retrieval_modularity']] = mlbp_rm.loc[
             minidx, ['beta', 'resgamma', 'niters', 'AMI','retrieval_modularity']]
         output.loc[cind,['ep']]=ep
