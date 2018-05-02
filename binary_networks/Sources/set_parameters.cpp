@@ -28,7 +28,7 @@ class Parameters {
 		bool defect;
 		bool randomf;
 		double clustering_coeff;
-		
+		string out_prefix;
 		
 		bool set(string &, string &);
 		void set_random();
@@ -65,7 +65,8 @@ Parameters::Parameters() {
 		defect=false;
 		
 		clustering_coeff=unlikely;
-		
+		out_prefix="";
+
 		command_flags.push_back("-N");		//0
 		command_flags.push_back("-k");		//1
 		command_flags.push_back("-maxk");	//2
@@ -77,7 +78,7 @@ Parameters::Parameters() {
 		command_flags.push_back("-on");		//8
 		command_flags.push_back("-om");		//9
 		command_flags.push_back("-C");		//10
-
+        command_flags.push_back("-w");      //11
 			
 		
 }
@@ -333,6 +334,12 @@ bool Parameters::set(string & flag, string & num) {
 	else if(flag==command_flags[10]) {
 					
 		clustering_coeff=err;		
+
+	}
+	else if(flag==command_flags[11]) {
+
+		//don't type cast this
+		out_prefix=num;
 
 	}
 	else {
