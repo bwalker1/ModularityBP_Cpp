@@ -9,6 +9,7 @@ import pandas as pd
 import sys
 from os.path import expanduser
 
+# python rungraph.py 512 2 40 0.5 16 0.5 100 1.0 1.0
 
 if __name__ == "__main__":
     # generate a graph and then run it some number of times
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     for trial in xrange(ntrials):
         print trial
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
-        mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.interedges, ml_sbm.layer_vec,comm_vec=ml_sbm.get_all_layers_block())
+        mgraph = modbp.MultilayerGraph(ml_sbm.intraedges,ml_sbm.layer_vec,  ml_sbm.interedges, comm_vec=ml_sbm.get_all_layers_block())
         mlbp = modbp.ModularityBP(mlgraph=mgraph)
         mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=500, reset=True)
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']
