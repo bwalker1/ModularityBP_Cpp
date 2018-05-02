@@ -227,8 +227,7 @@ class MultilayerGraph():
         lay_vals=np.unique(self.layer_vec)
         for lay_val in lay_vals:
             cinds=np.where(self.layer_vec==lay_val)[0]
-            la_amis.append(len(cinds)/(1.0*self.n)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],
-                                                                     labels_pred=self.comm_vec[cinds]))
+            la_amis.append(len(cinds)/(1.0*self.n)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds]))
 
         return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         

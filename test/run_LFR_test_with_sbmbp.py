@@ -10,9 +10,10 @@ import sys
 from subprocess import Popen,PIPE
 from os.path import expanduser
 
+clusterdir="/nas/longleaf/home/wweir/ModBP_proj"
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
-    benchmarkfile = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/binary_networks/benchmark'
+    benchmarkfile = os.path.join(clusterdir,'benchmark')
 
     parameters = [
         benchmarkfile,
@@ -51,8 +52,8 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
 # run SBMBP on the input graph with the chosen q, using the EM algorithm to learn parameters
 # returns the AMI of the learned partition
 def run_SBMBP_on_graph(graph):
-    sbmbpfile = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/mode_net/sbm'
-    outdir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/'
+    sbmbpfile = os.path.join(clusterdir,'test/mode_net/sbm')
+    outdir = os.path.join(clusterdir,'modbpdata/LFR_test_data')
     tmp_grph_file = os.path.join(outdir, 'temporary_graph_file.gml')
     graph.save(tmp_grph_file)
     all_partitions = {}
@@ -117,7 +118,7 @@ def main():
     gamma = float(sys.argv[5])
     ntrials= int(sys.argv[6])
     output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity'])
-    outfile="{:s}/data/n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(expanduser("~"),n, ep, gamma,ntrials)
+    outfile="{:}/modbpdata/LFR_test_data/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
     print(outfile)
     qmax=8
     for trial in range(ntrials):
