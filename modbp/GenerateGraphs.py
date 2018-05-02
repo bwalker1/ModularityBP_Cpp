@@ -150,6 +150,7 @@ class MultilayerGraph():
         self.comm_vec=comm_vec #for known community labels of nodes
         if self.comm_vec is not None:
             self._label_layers(self.comm_vec)
+
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -161,6 +162,8 @@ class MultilayerGraph():
             #subtract this off so that number of nodes created in igraph is correct
             for ei,ej in self.intralayer_edges:
                 if ei in node_inds or ej in node_inds:
+                    if not (ei>=min_ind and ej>=min_ind):
+                        print('problem ')
                     celist.append((ei-min_ind,ej-min_ind))
             layers.append(self._create_graph_from_elist(len(node_inds),celist))
         return layers
@@ -184,7 +187,7 @@ class MultilayerGraph():
         assert len(comvec)==self.n,"length of comvec: {:d} does not equal number of nodes: {:}".format(len(comvec),self.n)
         coffset=0 #keep track of nodes already seen
         for layer in self.layers:
-            layer.vs['block']=comvec[coffset:layer.vcount()]
+            layer.vs['block']=comvec[coffset:coffset+layer.vcount()]
             coffset+=layer.vcount()
 
 
