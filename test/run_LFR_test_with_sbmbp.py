@@ -8,8 +8,7 @@ import seaborn as sbn
 import pandas as pd
 import sys
 from subprocess import Popen,PIPE
-from os.path import expanduser
-
+import os
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
