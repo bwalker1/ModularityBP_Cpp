@@ -56,8 +56,9 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
 # returns the AMI of the learned partition
 def run_SBMBP_on_graph(graph):
     sbmbpfile = os.path.join(clusterdir,'test/mode_net/sbm')
-    outdir = os.path.join(clusterdir,'test/modbpdata/LFR_test_data')
-    tmp_grph_file = os.path.join(outdir, 'temporary_graph_file.gml')
+    outdir = os.path.join(clusterdir,'test/modbpdata/LFR_test_data/')
+    rprefix = np.random.randint(100000)
+    tmp_grph_file = os.path.join(outdir, '{:d}temporary_graph_file.gml'.format(rprefix))
     graph.save(tmp_grph_file)
     all_partitions = {}
     final_values = {}
@@ -120,14 +121,18 @@ def main():
     c = float(sys.argv[4])
     gamma = float(sys.argv[5])
     ntrials= int(sys.argv[6])
-    output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity'])
+    output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity','isSBM'])
     outfile="{:}/test/modbpdata/LFR_test_data/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
     print(outfile)
     qmax=8
     for trial in range(ntrials):
 
         graph=create_lfr_graph(n=n, ep=ep, c=c, mk=10, use_gcc=True)
-
+        ami_sbm=run_SBMBP_on_graph(graph)
+        cind = output.shape[0]
+        output.loc[cind,['beta','resgamma','niters','retrieval_modularity']]=[None,None,None,None]
+        output.loc[cind,'AMI']=ami_sbm
+        output.loc[cind,'isSBM']=True
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,
                                   comm_vec=np.array(graph.vs['block']))
         bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
