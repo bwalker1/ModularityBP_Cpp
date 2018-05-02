@@ -38,6 +38,8 @@
 
 
 
+
+
 bool they_are_mate(int a, int b, const deque<deque<int> > & member_list) {
 
 
@@ -1593,11 +1595,11 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 	density=density/member_matrix.size();
 	sparsity=sparsity/member_matrix.size();
 	
-	
-	
-
-
-	ofstream out1(out_prefix+"network.dat");
+	string outfile = out_prefix+"network.dat";
+	int hk=outfile.size();
+	char b[hk+1];
+    cast_string_to_char(outfile,b);
+	ofstream out1(b);
 	for (int u=0; u<E.size(); u++) {
 
 		set<int>::iterator itb=E[u].begin();
@@ -1610,8 +1612,11 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 	}
 		
 
-	
-	ofstream out2(out_prefix+"community.dat");
+	outfile = out_prefix+"community.dat";
+	int h=outfile.size();
+	char c[h+1];
+    cast_string_to_char(outfile,c);
+	ofstream out2(c);
 
 	for (int i=0; i<member_list.size(); i++) {
 		
@@ -1630,8 +1635,11 @@ int print_network(deque<set<int> > & E, const deque<deque<int> > & member_list, 
 	cout<<"p_in: "<<density<<"\tp_out: "<<sparsity<<endl;
 
 	
-	
-	ofstream statout(out_prefix+"statistics.dat");
+	outfile = out_prefix+"statistics.dat";
+	int hj=outfile.size();
+	char d[hj+1];
+    cast_string_to_char(outfile,d);
+	ofstream statout(d);
 	
 	deque<int> degree_seq;
 	for (int i=0; i<E.size(); i++)
@@ -1821,13 +1829,26 @@ int main(int argc, char * argv[]) {
 	
 	}
 	
-	
-	
-	
-	
-	erase_file_if_exists(p.out_prefix+"network.dat");
-	erase_file_if_exists(p.out_prefix+"community.dat");
-	erase_file_if_exists(p.out_prefix+"statistics.dat");
+
+	string outfile = p.out_prefix+"network.dat";
+	int hj=outfile.size();
+	char b[hj+1];
+    cast_string_to_char(outfile,b);
+	erase_file_if_exists(b);
+
+	outfile = p.out_prefix+"community.dat";
+	int hk=outfile.size();
+	char c[hk+1];
+    cast_string_to_char(outfile,c);
+	erase_file_if_exists(c);
+
+	outfile = p.out_prefix+"statistics.dat";
+	int hl=outfile.size();
+	char d[hl+1];
+    cast_string_to_char(outfile,d);
+	erase_file_if_exists(d);
+
+
 	
 	benchmark(p.excess, p.defect, p.num_nodes, p.average_k, p.max_degree, p.tau, p.tau2, p.mixing_parameter, p.overlapping_nodes, p.overlap_membership, p.nmin, p.nmax, p.fixed_range, p.clustering_coeff,p.out_prefix);
 		
