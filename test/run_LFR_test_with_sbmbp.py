@@ -13,7 +13,6 @@ clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
-    print(benchmarkfile)
     rprefix=np.random.randint(100000)
     parameters = [
         benchmarkfile,
@@ -112,7 +111,12 @@ def run_SBMBP_on_graph(graph):
 
         partition = np.array(partition, dtype=int)
         all_partitions[q] = partition
+        if os.exists(marginal_file):
+            os.remove(marginal_file)
+    if os.exists(tmp_grph_file):
+        os.remove(tmp_grph_file)
     minq = sorted(final_values.items(), key=lambda x: x[1]['f'])[0][0]
+
     return skm.adjusted_mutual_info_score(all_partitions[q], graph.vs['block'])
 
 
@@ -126,8 +130,8 @@ def main():
     ntrials= int(sys.argv[6])
     output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity','isSBM'])
     outfile="{:}/test/modbpdata/LFR_test_data/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
-    print(outfile)
     qmax=8
+    print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
     for trial in range(ntrials):
 
         graph=create_lfr_graph(n=n, ep=ep, c=c, mk=10, use_gcc=True)
