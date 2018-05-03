@@ -3,7 +3,7 @@ import os
 import sys
 import pandas as pd
 import argparse
-
+import re
 #Constants
 DESCRIPTION="""Script to take a folder of csv files and stack them into a single 
             data frame.  Assumes that each file has the same number of columns 
@@ -30,6 +30,8 @@ def main(pargs=None):
     allfiles=os.listdir(args.input)
     outdf=pd.DataFrame()
     for i,file in enumerate(allfiles):
+        if not re.search('\.csv',file):
+            continue #only append csv files
         cfile=os.path.join(args.input,file)
         c_df=pd.read_csv(cfile,index_col=0)
         if i==0:
