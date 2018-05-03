@@ -111,9 +111,9 @@ def run_SBMBP_on_graph(graph):
 
         partition = np.array(partition, dtype=int)
         all_partitions[q] = partition
-        if os.exists(marginal_file):
+        if os.path.exists(marginal_file):
             os.remove(marginal_file)
-    if os.exists(tmp_grph_file):
+    if os.path.exists(tmp_grph_file):
         os.remove(tmp_grph_file)
     minq = sorted(final_values.items(), key=lambda x: x[1]['f'])[0][0]
 
