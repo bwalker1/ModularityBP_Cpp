@@ -9,8 +9,8 @@ import re
 import os
 import sklearn.metrics as skm
 
-# clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
