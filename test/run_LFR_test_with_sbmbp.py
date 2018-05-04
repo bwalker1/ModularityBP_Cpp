@@ -9,7 +9,8 @@ import re
 import os
 import sklearn.metrics as skm
 
-clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+# clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
     benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
@@ -20,8 +21,8 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
         '-k', '{:.4f}'.format(c),
         '-maxk', '{:d}'.format(mk),
         '-mu', '{:.4f}'.format(ep),
-        '-t1', '2',
-        '-t2', '1',
+        '-t1', '3', #gamma
+        '-t2', '2', #beta
         '-minc', '200',
         '-maxc', '300',
        '-w','{:d}'.format(rprefix)
@@ -80,7 +81,7 @@ def run_SBMBP_on_graph(graph):
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             raise RuntimeError("running SBMBP failed : {:}".format(stderr))
-
+        # print(stdout)
         marginal_file = '{:}_q{:d}_marginals.txt'.format(tmp_grph_file, q)
         marginals = []
         partition = []
@@ -115,10 +116,12 @@ def run_SBMBP_on_graph(graph):
             os.remove(marginal_file)
     if os.path.exists(tmp_grph_file):
         os.remove(tmp_grph_file)
+
+
     minq = sorted(final_values.items(), key=lambda x: x[1]['f'])[0][0]
 
-    return skm.adjusted_mutual_info_score(all_partitions[q], graph.vs['block'])
-
+    AMI=skm.adjusted_mutual_info_score(all_partitions[q], graph.vs['block'])
+    return AMI
 
 
 def main():
@@ -129,7 +132,7 @@ def main():
     gamma = float(sys.argv[5])
     ntrials= int(sys.argv[6])
     output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity','isSBM'])
-    outfile="{:}/test/modbpdata/LFR_test_data/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
+    outfile="{:}/test/modbpdata/LFR_test_data_gamma3_beta2/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
     qmax=8
     print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
     for trial in range(ntrials):

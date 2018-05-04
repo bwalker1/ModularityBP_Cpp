@@ -30,9 +30,9 @@ def main(pargs=None):
     allfiles=os.listdir(args.input)
     outdf=pd.DataFrame()
     for i,file in enumerate(allfiles):
-	if not re.search("\.csv",file):
-		continue
-	cfile=os.path.join(args.input,file)
+        if not re.search('\.csv',file):
+            continue #only append csv files
+        cfile=os.path.join(args.input,file)
         c_df=pd.read_csv(cfile,index_col=0)
         if i==0:
             outdf=c_df
