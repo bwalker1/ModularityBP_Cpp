@@ -11,8 +11,11 @@ import sklearn.metrics as skm
 
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+# finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
+finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2_k4')
 
-def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
+
+def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True):
     benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
     rprefix=np.random.randint(100000)
     parameters = [
@@ -21,8 +24,8 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
         '-k', '{:.4f}'.format(c),
         '-maxk', '{:d}'.format(mk),
         '-mu', '{:.4f}'.format(ep),
-        '-t1', '3', #gamma
-        '-t2', '2', #beta
+        '-t1', '2', #gamma
+        '-t2', '1', #beta
         '-minc', '200',
         '-maxc', '300',
        '-w','{:d}'.format(rprefix)
@@ -59,9 +62,9 @@ def create_lfr_graph(n=1000, ep=.1, c=3, mk=10, use_gcc=True):
 # returns the AMI of the learned partition
 def run_SBMBP_on_graph(graph):
     sbmbpfile = os.path.join(clusterdir,'test/mode_net/sbm')
-    outdir = os.path.join(clusterdir,'test/modbpdata/LFR_test_data/')
+    # outdir = os.path.join(clusterdir,'test/modbpdata/LFR_test_data/')
     rprefix = np.random.randint(100000)
-    tmp_grph_file = os.path.join(outdir, '{:d}temporary_graph_file.gml'.format(rprefix))
+    tmp_grph_file = os.path.join(finoutdir, '{:d}temporary_graph_file.gml'.format(rprefix))
     graph.save(tmp_grph_file)
     all_partitions = {}
     final_values = {}
@@ -132,7 +135,7 @@ def main():
     gamma = float(sys.argv[5])
     ntrials= int(sys.argv[6])
     output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity','isSBM'])
-    outfile="{:}/test/modbpdata/LFR_test_data_gamma3_beta2/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(clusterdir,n, ep, gamma,ntrials)
+    outfile="{:}/LFR_test_n{:d}eps{:.4f}gamma{:.4f}trials{:d}.csv".format(finoutdir,n, ep, gamma,ntrials)
     qmax=8
     print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
     for trial in range(ntrials):
