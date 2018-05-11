@@ -14,7 +14,8 @@ DESCRIPTION="""Script to take a folder of csv files and stack them into a single
 
 def main(pargs=None):
 	#default_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/modbpdata/LFR_test_data'
-    default_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/modbpdata/LFR_test_data_gamma3_beta2'
+    #default_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/modbpdata/LFR_test_data_gamma3_beta2'
+    default_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/modbpdata/LFR_test_data_gamma2_beta1_k4'
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--input_dir',dest='input',type=str,
                         default=default_dir)

@@ -12,7 +12,7 @@ import sklearn.metrics as skm
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
-finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2_k4')
+finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma2_beta1_k4')
 
 
 def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True):
