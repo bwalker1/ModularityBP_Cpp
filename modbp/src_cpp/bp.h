@@ -60,7 +60,7 @@ public:
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
     
-    double compute_bstar();
+    double compute_bstar(double omega_in,int q_in);
 private:
     void initializeBeliefs();
     void initializeTheta();

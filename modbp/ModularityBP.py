@@ -67,6 +67,16 @@ class ModularityBP():
         self._bpmod=None
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
+        """
+
+        :param beta:
+        :param q:
+        :param niter:
+        :param resgamma:
+        :param omega:
+        :param reset:
+        :return:
+        """
         assert(q>0),"q must be > 0"
         if self._bpmod is None:
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
@@ -126,7 +136,7 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
 
         self.retrieval_modularities.loc[self.nruns,'qstar']=self._get_true_number_of_communities(self.nruns)
-        self.retrieval_modularities.loc[self.nruns,'bstar']=self._bpmod.compute_bstar()
+        self.retrieval_modularities.loc[self.nruns,'bstar']=self.get_bstar(q,omega)
         if self.graph.comm_vec is not None:
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
             self.retrieval_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_with_communities(cpartition)
@@ -136,6 +146,7 @@ class ModularityBP():
 
                 self.retrieval_modularities.loc[self.nruns, 'Accuracy'] = self.graph.get_accuracy_with_communities(cpartition)
 
+        self.retrieval_modularities.loc[self.nruns,'is_trivial']=self._is_trivial(self.nruns)
 
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'retrieval_modularity']=retmod
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
@@ -182,15 +193,22 @@ class ModularityBP():
         else:
             return parts
 
-    def get_bstar(self,q):
+    def get_bstar(self,q,omega=0):
         #c is supposed to be the average excess degree
-        degrees=self.graph.intradegrees + self.graph.interdegrees
-        d_avg=np.mean(degrees)
-        d2=np.mean(np.power(degrees,2.0))
-        c= d2/d_avg - 1
+        # degrees=self.graph.intradegrees + self.graph.interdegrees
+        # d_avg=np.mean(degrees)
+        # d2=np.mean(np.power(degrees,2.0))
+        # c= d2/d_avg - 1
         #c=(2.0*self.totaledgeweight/(self.n))
-        return np.log(q/(np.sqrt(c)-1)+1)
+        # return np.log(q/(np.sqrt(c)-1)+1)
 
+        if self._bpmod is None:
+            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
+                                        intra_edgelist=self._intraedgelistpv,
+                                      inter_edgelist=self._interedgelistpv,
+                                      _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
+                                       omega=omega,transform=False)
+        return self._bpmod.compute_bstar(omega,q)
 
     def _get_retrieval_modularity(self,nrun=None):
         '''
@@ -323,4 +341,17 @@ class ModularityBP():
         else:
             return len(set([ frozenset(s) for s in groupmap.values() if len(s) >= min_com_size ]))
 
+    def _is_trivial(self,ind,thresh=np.power(10.0,-3)):
+        """
+        We use the same metric to define marginals that represent the same partitions\
+        used in _get_community_distances.
 
+        :param ind: index of marginal to examine
+        :return: true if partition is close enough to trival, false if it is sufficiently differet
+        """
+        cmarginal=self.marginals[ind]
+        trival=np.ones(cmarginal.shape)/cmarginal.shape[1]
+        if np.mean(np.power(cmarginal-trival,2.0))<thresh:
+            return True
+        else:
+            return False

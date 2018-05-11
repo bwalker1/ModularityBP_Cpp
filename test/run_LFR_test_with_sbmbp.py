@@ -157,7 +157,7 @@ def main():
             mlbp_rm = mlbp.retrieval_modularities
 
 
-        minidx = mlbp_rm[mlbp_rm['niters'] < 1000]['retrieval_modularity'].idxmax()
+        minidx = mlbp_rm[ mlbp_rm['niters']<1000 && mlbp_rm['is_trivial'] == False]['retrieval_modularity'].idxmax()
 
         cind=output.shape[0]
         if len(mlbp_rm[mlbp_rm['niters'] < 1000]) == 0:  # none converged !
