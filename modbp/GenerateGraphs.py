@@ -118,6 +118,32 @@ class RandomSBMGraph(RandomGraph):
 
         return (totpin/pin_possible)/(totpout/pout_possible)
 
+    def get_observed_group_sizes(self):
+        """
+
+        :return:
+        """
+        coms,cnts=np.unique(self.graph.vs['block'],return_counts=True)
+        return cnts
+
+    def get_observed_cin_cout(self):
+        coms,cnts=np.unique(self.graph.vs['block'],return_counts=True)
+
+        ncoms=len(coms)
+
+        totalcnts=np.divide(np.ones((ncoms, ncoms)) * sum(cnts),
+                     np.outer(cnts,cnts)-np.diag(cnts)) #N/(N_A*N_B)
+        label2num=dict(zip(coms,range(ncoms)))
+        observed_cnts=np.zeros((ncoms,ncoms))
+        for ei, ej in self.get_edgelist():
+            ind1=label2num[self.graph.vs['block'][ei]]
+            ind2=label2num[self.graph.vs['block'][ej]]
+            observed_cnts[ind1,ind2]+=1
+            observed_cnts[ind2,ind1]+=1
+        return np.multiply(observed_cnts,totalcnts)
+
+
+
     def get_accuracy(self, labels):
         """
         :param labels:

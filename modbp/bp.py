@@ -164,8 +164,8 @@ class BP_Modularity(_object):
     def setVerbose(self, arg2):
         return _bp.BP_Modularity_setVerbose(self, arg2)
 
-    def compute_bstar(self):
-        return _bp.BP_Modularity_compute_bstar(self)
+    def compute_bstar(self, omega_in, q_in):
+        return _bp.BP_Modularity_compute_bstar(self, omega_in, q_in)
     __swig_destroy__ = _bp.delete_BP_Modularity
     __del__ = lambda self: None
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister

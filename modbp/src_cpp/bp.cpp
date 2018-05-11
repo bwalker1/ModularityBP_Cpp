@@ -458,7 +458,7 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
 {
     if (beta==0)
     {
-        beta = compute_bstar();
+        beta = compute_bstar(omega,q);
     }
     scale = exp(beta)-1;
     scaleOmega = exp(beta*omega)-1;
@@ -552,7 +552,7 @@ double sp(double beta, double omega, double q, double c)
     return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
 }
 
-double BP_Modularity::compute_bstar()
+double BP_Modularity::compute_bstar(double omega_in,int q_in)
 {
     // currently this assumes multiplex graph
     
@@ -585,15 +585,15 @@ double BP_Modularity::compute_bstar()
     double xn;
     
     // find bounding interval
-    while (s(xr,omega,q,c) < 1)
+    while (s(xr,omega_in,q_in,c) < 1)
     {
         xr *= 2;
     }
     
     // start newton's from midpoint
     xn = (xl+xr)/2;
-    double yn = s(xn,omega,q,c);
-    double ypn = sp(xn,omega,q,c);
+    double yn = s(xn,omega_in,q_in,c);
+    double ypn = sp(xn,omega_in,q_in,c);
     
     int maxiters = 100;
     for (int iters=0;iters<maxiters;)
@@ -601,8 +601,8 @@ double BP_Modularity::compute_bstar()
         // try a newton step
         
         xn -= (yn - 1)/ypn;
-        yn = s(xn,omega,q,c);
-        ypn = sp(xn,omega,q,c);
+        yn = s(xn,omega_in,q_in,c);
+        ypn = sp(xn,omega_in,q_in,c);
         
         // check if this is in our bounding interval
         if (xl < xn && xn < xr)
@@ -621,7 +621,7 @@ double BP_Modularity::compute_bstar()
         {
             // narrow our interval using bisection
             double xc = (xl + xr)/2;
-            if (s(xc,omega,q,c)>1)
+            if (s(xc,omega_in,q_in,c)>1)
             {
                 xr = xc;
             }
@@ -632,8 +632,8 @@ double BP_Modularity::compute_bstar()
             
             // restart newton's at the new midpoint
             xn = (xl + xr)/2;
-            yn = s(xn,omega,q,c);
-            ypn = sp(xn,omega,q,c);
+            yn = s(xn,omega_in,q_in,c);
+            ypn = sp(xn,omega_in,q_in,c);
         }
         
         // check for convergence

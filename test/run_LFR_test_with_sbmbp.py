@@ -12,7 +12,7 @@ import sklearn.metrics as skm
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
-finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2_k4')
+finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma2_beta1_k4')
 
 
 def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True):
@@ -157,7 +157,7 @@ def main():
             mlbp_rm = mlbp.retrieval_modularities
 
 
-        minidx = mlbp_rm[mlbp_rm['niters'] < 1000]['retrieval_modularity'].idxmax()
+        minidx = mlbp_rm[ mlbp_rm['niters']<1000 && mlbp_rm['is_trivial'] == False]['retrieval_modularity'].idxmax()
 
         cind=output.shape[0]
         if len(mlbp_rm[mlbp_rm['niters'] < 1000]) == 0:  # none converged !
