@@ -21,7 +21,7 @@ using namespace std;
 double truncate(const double in, const int q);
 
 
-BP_Inference::BP_Inference(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
+BP_Inference::BP_Inference(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
 {
     eps = 1e-8;
     computed_marginals = false;
@@ -46,18 +46,19 @@ BP_Inference::BP_Inference(const vector<index_t>& _layer_membership, const vecto
         total_edges += 2;
     }
     
-    for (auto p : inter_edgelist)
-    {
-        index_t i = p.first;
-        index_t j = p.second;
-        edges[i].push_back(ibpair(j,false));
-        edges[j].push_back(ibpair(i,false));
-        total_edges += 2;
-    }
+    /*for (auto p : inter_edgelist)
+     {
+     index_t i = p.first;
+     index_t j = p.second;
+     edges[i].push_back(ibpair(j,false));
+     edges[j].push_back(ibpair(i,false));
+     total_edges += 2;
+     }*/
     
     beliefs.resize(q*total_edges);
     beliefs_old.resize(q*total_edges);
     beliefs_offsets.resize(n+1);
+    beliefs_temporal.resize(q*n*(nt-1));
     
     neighbors.resize(total_edges);
     neighbors_reversed.resize(total_edges);
@@ -123,20 +124,20 @@ long BP_Inference::run(unsigned long maxIters)
         
         
         if (verbose)
-        printf("Iteration %lu: change %f\n",iter+1,change);
+            printf("Iteration %lu: change %f\n",iter+1,change);
         
         if (!changed)
         {
             converged = true;
             
             if (verbose)
-            printf("Converged after %lu iterations.\n",iter+1);
+                printf("Converged after %lu iterations.\n",iter+1);
             
             return iter;
         }
     }
     if (verbose)
-    printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
+        printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
     return maxIters+1;
     
     
@@ -172,10 +173,25 @@ void BP_Inference::compute_marginal(index_t i, bool do_bfe_contribution)
         
         Z += marginals[q*i + s];
     }
-    if (do_bfe_contribution)
+    for (int s = 0; s < q;++s)
     {
-        bfe += log(Z);
+        // incoming beliefs are already stored locally
+        // figure out the sum of logs part of the update equation that uses the incoming beliefs
+        marginals[q*i+s]=0;
+        for (index_t idx2 = 0;idx2<nn;++idx2)
+        {
+            
+            double mul = lambda*beliefs[beliefs_offsets[i]+nn*s+idx2] + (1-lambda)/q;
+            
+            marginals[q*i+s] *= mul;
+        }
+        // evaluate the rest of the update equation
+        marginals[q*i+s]= exp(-theta[t][s]) * marginals[q*i+s] * (eta*beliefs_temporal[i+s]+ (1-eta)/q) * (eta*beliefs_temporal[i - n/nt+s] + (1-eta)/q);
+        
+        
+        Z += marginals[q*i+s];
     }
+
     // normalize
     for (index_t s = 0; s < q; ++s)
     {
@@ -222,7 +238,7 @@ void BP_Inference::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            theta[t][s] += -beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+            //theta[t][s] += -beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -231,37 +247,43 @@ void BP_Inference::step()
         copy(marginals.begin() + q*i, marginals.begin() + q*i + q, marginals_old.begin() + q*i);
         
         // iterate over all states
+        vector<double> tempMessages(q);
         for (int s = 0; s < q;++s)
         {
             // incoming beliefs are already stored locally
             // figure out the sum of logs part of the update equation that uses the incoming beliefs
+            tempMessages[s] = 1;
             for (index_t idx=0; idx<nn; ++idx)
             {
                 scratch[nn*s+idx] = 0;
-                bool type1 = neighbors_type[neighbors_offsets[i]+idx];
                 for (index_t idx2 = 0;idx2<nn;++idx2)
                 {
                     if (idx2 == idx) continue;
-                    bool type2 = neighbors_type[neighbors_offsets[i]+idx2];
-                    double mul;
-                    if (type2==true)
-                    {
-                        // intralayer contribution
-                        
-                    }
-                    else
-                    {
-                        // interlayer contribution
-                        
-                    }
+                    
+                    double mul = lambda*beliefs[beliefs_offsets[i]+nn*s+idx2] + (1-lambda)/q;
+                    
                     scratch[nn*s+idx] *= mul;
                 }
                 // evaluate the rest of the update equation
-                scratch[nn*s+idx] = exp(nn*theta[t][s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = exp(-theta[t][s]) * scratch[nn*s+idx] * (eta*beliefs_temporal[i+s]+ (1-eta)/q) * (eta*beliefs_temporal[i - n/nt+s] + (1-eta)/q);
+                
+                
+                tempMessages[s] *= lambda*beliefs[beliefs_offsets[i]+nn*s+idx] + (1-lambda)/q;
             }
+            tempMessages[s] *= exp(-theta[t][s]) *(1-eta)/q * (eta*beliefs_temporal[i - n/nt+s]);
         }
         
         // normalize the scratch space
+        double sum=0;
+        for (index_t s=0;s<q;++s)
+        {
+            sum += tempMessages[s];
+        }
+        for (index_t s=0;s<q;++s)
+        {
+            tempMessages[s] /= sum;
+        }
+        
         for (index_t idx = 0;idx<nn;++idx)
         {
             // iterate over all states
@@ -301,24 +323,27 @@ void BP_Inference::step()
                 
                 beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
             }
+            beliefs_temporal[i+s] = tempMessages[s];
         }
     }
-    if (compute_bfe)
-    {
-        compute_marginals(true);
-        
-        for (index_t t=0;t<nt;++t)
-        {
-            double temp = 0;
-            for (index_t s=0;s<q;++s)
-            {
-                double temp2 = theta[t][s];
-                temp += temp2*temp2;
-            }
-            bfe += beta/(2*num_edges[t]) * temp;
-        }
-        bfe /= (beta*n);
-    }
+    /*
+     if (compute_bfe)
+     {
+     compute_marginals(true);
+     
+     for (index_t t=0;t<nt;++t)
+     {
+     double temp = 0;
+     for (index_t s=0;s<q;++s)
+     {
+     double temp2 = theta[t][s];
+     temp += temp2*temp2;
+     }
+     bfe += beta/(2*num_edges[t]) * temp;
+     }
+     bfe /= (beta*n);
+     }
+     */
 }
 
 void BP_Inference::normalize(vector<double> & beliefs, index_t i)
@@ -372,8 +397,9 @@ double BP_Inference::compute_factorized_free_energy()
 {
     //Calculate the bethe free energy of the factorized state ( each node uniform on all communities)
     //log(1-1/q-exp(beta))
-    double bffe=log(1-1.0/q - exp(beta));
-    return bffe;
+    
+    //double bffe=log(1-1.0/q - exp(beta));
+    return 0;
 }
 
 
@@ -395,20 +421,7 @@ vector<vector<double> > BP_Inference::return_marginals() {
     return ret;
 }
 
-void BP_Inference::setBeta(double in, bool reset) {
-    beta = in;
-    reinit(reset,true);
-}
 
-void BP_Inference::setResgamma(double in, bool reset) {
-    resgamma = in;
-    reinit(reset,true);
-}
-
-void BP_Inference::setOmega(double in, bool reset) {
-    omega = in;
-    reinit(reset,true);
-}
 
 void BP_Inference::setq(double new_q) {
     // rearrange the optimizer to have a different q and reinitialize
@@ -436,12 +449,10 @@ void BP_Inference::setq(double new_q) {
 
 void BP_Inference::reinit(bool init_beliefs,bool init_theta)
 {
-    scale = exp(beta)-1;
-    scaleOmega = exp(beta*omega)-1;
     if (init_beliefs)
-    initializeBeliefs();
+        initializeBeliefs();
     if (init_theta)
-    initializeTheta();
+        initializeTheta();
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
 }
 
@@ -453,6 +464,12 @@ void BP_Inference::initializeBeliefs() {
     {
         double val = eps_dist(rng);
         beliefs[idx] = truncate(1.0/q + val,q);
+    }
+    
+    for (index_t idx = 0; idx < beliefs_temporal.size();++idx)
+    {
+        double val = eps_dist(rng);
+        beliefs_temporal[idx] = truncate(1.0/q + val,q);
     }
     
     for (index_t i=0;i<n;++i)
@@ -476,8 +493,8 @@ void BP_Inference::initializeTheta() {
         theta[t].resize(q);
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] = beta*resgamma/(q);
-            //theta[t][s] = 0;
+            //theta[t][s] = beta*resgamma/(q);
+            theta[t][s] = 0;
         }
     }
     
@@ -486,7 +503,7 @@ void BP_Inference::initializeTheta() {
     {
         for (index_t s=0;s<q;++s)
         {
-            theta[t][s]=0;
+            theta[t][s]=1;
         }
     }
     for (index_t i=0;i<n;++i)
@@ -495,15 +512,7 @@ void BP_Inference::initializeTheta() {
         index_t nn = neighbor_count[i];
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] += nn * marginals[q*i + s];
-        }
-    }
-    for (index_t t = 0; t < nt; ++t)
-    {
-        // fold in prefactor to theta
-        for (index_t s = 0; s<q;++s)
-        {
-            theta[t][s] *= -(beta*resgamma/num_edges[t]);
+            theta[t][s] += marginals[q*i + s];
         }
     }
 }
