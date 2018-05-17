@@ -26,7 +26,7 @@ int main(int argc, const char * argv[]) {
     BP_Modularity bp(vector<index_t>(),vector<pair<index_t,index_t> >(),vector<pair<index_t,index_t> >(), n,1,q,1,omega,1.0,false,false);
     printf("Starting computation\n");
     clock_t start = clock();
-    printf("%f\n",bp.compute_bstar());
+    //printf("%f\n",bp.compute_bstar());
     clock_t finish = clock()-start;
     printf("%f seconds elapsed\n",double(finish)/double(CLOCKS_PER_SEC));
 }

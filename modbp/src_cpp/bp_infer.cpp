@@ -149,35 +149,12 @@ void BP_Inference::compute_marginal(index_t i, bool do_bfe_contribution)
     index_t t = layer_membership[i];
     // iterate over all states
     double Z = 0;
-    for (index_t s = 0; s < q; ++s)
-    {
-        marginals[q*i+s] = 0;
-        for (index_t idx2 = 0; idx2<nn; ++idx2)
-        {
-            bool type = neighbors_type[neighbors_offsets[i]+idx2];
-            double add;
-            if (type==true)
-            {
-                // intralayer contribution
-                add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-            }
-            else
-            {
-                // interlayer contribution
-                add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-            }
-            marginals[q*i+s] += add;
-        }
-        // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
-        
-        Z += marginals[q*i + s];
-    }
+
     for (int s = 0; s < q;++s)
     {
         // incoming beliefs are already stored locally
         // figure out the sum of logs part of the update equation that uses the incoming beliefs
-        marginals[q*i+s]=0;
+        marginals[q*i+s]=1;
         for (index_t idx2 = 0;idx2<nn;++idx2)
         {
             
@@ -238,7 +215,7 @@ void BP_Inference::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            //theta[t][s] += -beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+            theta[t][s] += (double(nt)/n) * (marginals[q*i + s] - marginals_old[q*i + s]);
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -503,7 +480,7 @@ void BP_Inference::initializeTheta() {
     {
         for (index_t s=0;s<q;++s)
         {
-            theta[t][s]=1;
+            theta[t][s]=0;
         }
     }
     for (index_t i=0;i<n;++i)
@@ -512,7 +489,14 @@ void BP_Inference::initializeTheta() {
         index_t nn = neighbor_count[i];
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] += marginals[q*i + s];
+            theta[t][s] += lambda*marginals[q*i + s] + (1-lambda)/q;
+        }
+    }
+    for (int t=0;t<nt;++t)
+    {
+        for (int s=0;s<q;++s)
+        {
+            theta[t][s] *= double(nt)/n;
         }
     }
 }
