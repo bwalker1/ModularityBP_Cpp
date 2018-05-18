@@ -176,7 +176,7 @@ class MultilayerGraph():
         self.comm_vec=comm_vec #for known community labels of nodes
         if self.comm_vec is not None:
             self._label_layers(self.comm_vec)
-
+        self.interedgesbylayers=self._create_interlayeredges_by_layers()
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -200,6 +200,16 @@ class MultilayerGraph():
         if simplify:
             cgraph=cgraph.simplify(multiple=True)
         return cgraph
+
+    def _create_interlayeredges_by_layers(self):
+        layers2edges={}
+
+        for i,j in self.interlayer_edges:
+            lay_i=self.layer_vec[i]
+            lay_j=self.layer_vec[j]
+            layers2edges[(lay_i,lay_j)]=layers2edges.get((lay_i,lay_j),[])+[(i,j)]
+            layers2edges[(lay_j, lay_i)]=layers2edges[(lay_i, lay_j)] #keep reference
+        return layers2edges
 
     def _label_layers(self,comvec=None):
         """
@@ -258,8 +268,17 @@ class MultilayerGraph():
         return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         
     def get_accuracy_with_communities(self,labels,permute=True):
+        """
+
+        :param labels:
+        :param permute:
+        :return:
+        """
         if self.comm_vec is None:
             raise ValueError("Must provide communities lables for Multilayer Graph")
+
+        #TODO
+        # #this needs to be re-written to be more efficient
 
         if permute:
             vals=np.unique(labels)

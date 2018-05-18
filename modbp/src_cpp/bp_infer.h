@@ -41,18 +41,6 @@ class BP_Inference
     
     vector<vector<double> > return_marginals();
     
-    // accessors
-    double getBeta() const { return beta; };
-    void setBeta(double in, bool reset=true);
-    
-    // accessors
-    double getResgamma() const { return resgamma; };
-    void setResgamma(double in, bool reset=true);
-    
-    //accessors for omega
-    double getOmega() const { return omega; };
-    void setOmega(double in, bool reset=true);
-    
     index_t getq() const { return q; };
     void setq(double new_q);
     
@@ -77,6 +65,7 @@ class BP_Inference
     vector<double> beliefs;
     vector<double> beliefs_old;     // for out-of-place updates
     vector<size_t> beliefs_offsets;
+    vector<double> beliefs_temporal;
     
     vector<index_t> neighbors;
     vector<index_t> neighbors_reversed;
@@ -96,9 +85,8 @@ class BP_Inference
     
     index_t n, nt;
     int q;
-    double beta;
-    double resgamma;
-    double omega;
+    
+    double lambda, eta;
     
     bool transform;
     
