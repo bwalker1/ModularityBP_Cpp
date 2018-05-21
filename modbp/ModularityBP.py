@@ -477,6 +477,10 @@ class ModularityBP():
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
         com_map_dict=dict(zip(col_ind,row_ind)) #map to current layer coms to previous ones
+        for com in coms_by_size:
+            if com not in com_map_dict.keys():  #can happen if there are less communities in the previous layer
+                com_map_dict[com]=com # map it to itself.
+
         return com_map_dict
 
         #found more efficient method above
@@ -504,7 +508,8 @@ class ModularityBP():
     def _permute_layer_with_dict(self,ind,layer,permutation):
         """
 
-        Swap a given layer by the partitions
+        Swap a given layer by the partition dictionary.  Any community \
+        not present in dictionary is mapped to itself
 
         :param ind: which partition to permute
         :param layer: the layer that needs to be permuated in the
@@ -516,7 +521,8 @@ class ModularityBP():
         lay_inds=np.where(self.layer_vec==layer)[0]
         old_layer=self.partitions[ind][lay_inds]
 
-        self.partitions[ind][lay_inds]=map(lambda x : permutation[x],self.partitions[ind][lay_inds])
+        self.partitions[ind][lay_inds]=\
+            map(lambda x : permutation[x] if x in permutation else x, self.partitions[ind][lay_inds])
 
         #sanity check.  Internal communities shouldn't change
         assert(np.abs(skm.adjusted_mutual_info_score(old_layer,self.partitions[ind][lay_inds])-1)<np.power(10.0,-6))

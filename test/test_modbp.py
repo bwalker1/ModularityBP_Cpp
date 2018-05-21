@@ -260,9 +260,10 @@ def test_modbp_interface():
 
 def test_community_swapping_ml():
 
-    n = 100
-    q = 4
-    nlayers = 10
+
+    n = 512
+    q = 2
+    nlayers = 40
     eta = .1
     c = 16
     ep = .1
@@ -279,28 +280,42 @@ def test_community_swapping_ml():
                                    'AMI', 'AMI_layer_avg', 'retrieval_modularity', 'bethe_free_energy',
                                    'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial'])
 
-
     qmax = 2 * q
-    omegas = [1, 2, 4]
-    ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
-    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
-                                   comm_vec=ml_sbm.get_all_layers_block())
-    mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True)
-    for trial in xrange(ntrials):
-        for omega in omegas:
-            # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+    for trial in range(ntrials):
+        ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
+        mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
+                                       comm_vec=ml_sbm.get_all_layers_block())
 
-            # bstars = [mlbp.get_bstar(q,omega) for q in range(2, qmax+1)]
-            bstar = mlbp.get_bstar(q, omega)
-            mlbp.run_modbp(beta=bstar, niter=1000, q=q, resgamma=gamma, omega=omega)
-    #     betas = np.linspace(bstars[0], bstars[-1], len(bstars))
-    #     for beta in betas[:1]:
-    #         mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
-    mlbp_rm = mlbp.retrieval_modularities
-    ind2look=mlbp_rm['AMI'].idxmax()
-    # layer_changes=mlbp.get_number_nodes_switched_all_layers(ind2look, percent=True)
-    # layer_max=np.argmax(layer_changes)
-    #print(layer_changes)
+        mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
+
+        # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+        bstar = mlbp.get_bstar(q, omega)
+
+        bstars = [mlbp.get_bstar(q, omega) for q in range(2, qmax + 1)]
+        betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
+        for beta in betas:
+            mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+            mlbp_rm = mlbp.retrieval_modularities
+
+        # these are the non-trivial ones
+        minidx = mlbp_rm[mlbp_rm['niters'] < 1000][
+            'retrieval_modularity']  # & ~mlbp_rm['is_trivial'] ]['retrieval_modularity']
+        cind = output.shape[0]
+
+        if minidx.shape[0] == 0:
+            output.loc[cind, ['ep', 'eta', 'resgamma', 'omega']] = [ep, eta, gamma, omega]
+            output.loc[cind, ['niters']] = 1000
+            continue
+        minidx = minidx.idxmax()
+
+        output.loc[cind, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
+                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']] = \
+            mlbp_rm.loc[
+                minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
+                         'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']]
+        output.loc[cind, ['ep', 'eta']] = [ep, eta]
+
+    # output.to_csv(outfile)
     plt.close()
     f,a=plt.subplots(1,2,figsize=(6,3))
     a=plt.subplot(1,2,1)
@@ -314,7 +329,6 @@ def test_community_swapping_ml():
     # layer_changes=mlbp.get_number_nodes_switched_all_layers(ind2look, percent=True)
     # print(layer_changes)
 
-    print()
 def main():
     test_community_swapping_ml()
 if __name__=='__main__':
