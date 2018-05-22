@@ -42,7 +42,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     eps = 1e-8;
     computed_marginals = false;
@@ -98,6 +98,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     max_degree = 0;
     for (index_t i=0;i<n;++i)
     {
+        order[i] = i;
+        
         beliefs_offset_count += q*edges[i].size();
         neighbors_offset_count += edges[i].size();
         neighbor_count[i] = (index_t) edges[i].size();
@@ -217,10 +219,12 @@ void BP_Modularity::step()
         bfe = 0.0;
     }
     
+    // shuffle order
+    shuffle(order.begin(),order.end(),rng);
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
-        index_t i = node_idx;
+        index_t i = order[node_idx];
         index_t t = layer_membership[i];
         const index_t nn = neighbor_count[i];
         if (nn==0) continue;
