@@ -414,11 +414,11 @@ double BP_Modularity::compute_factorized_free_energy()
 }
 
 
-vector<vector<double> > BP_Modularity::return_marginals() { 
+vector<vector<double>> BP_Modularity::return_marginals() {
     // make sure the marginals are up-to-date
     compute_marginals();
     
-    vector<vector<double> > ret(n);
+    vector<vector<double>> ret(n);
     
     for (index_t i=0;i<n;++i)
     {
@@ -484,6 +484,14 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     if (init_theta)
         initializeTheta();
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
+}
+
+
+
+void shuffleBeliefs(vector<vector<double>> in_beliefs){
+    //rearrange each of outgoing beliefs for each node
+    //according to permutation vector
+    //input is a n by q vector
 }
 
 void BP_Modularity::initializeBeliefs() { 
