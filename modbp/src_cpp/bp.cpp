@@ -220,7 +220,7 @@ void BP_Modularity::step()
     }
     
     // shuffle order
-    std::shuffle(order.begin(),order.end(),rng);
+    std::random_shuffle(order.begin(),order.end());
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
