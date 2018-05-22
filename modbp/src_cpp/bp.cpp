@@ -15,6 +15,7 @@
 #include <stack>
 #include <map>
 #include <unordered_set>
+#include <algorithm>
 using namespace std;
 
 
@@ -220,7 +221,7 @@ void BP_Modularity::step()
     }
     
     // shuffle order
-    std::random_shuffle(order.begin(),order.end());
+    std::shuffle(order.begin(),order.end(),rng);
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
