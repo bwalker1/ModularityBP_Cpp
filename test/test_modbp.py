@@ -241,6 +241,7 @@ def test_modbp_interface():
                                    intralayer_edges=ml_sbm.interedges, layer_vec=ml_sbm.layer_vec,
                                    comm_vec=ml_sbm.get_all_layers_block())
     mlbp = modbp.ModularityBP(mlgraph=mgraph, accuracy_off=True, use_effective=False)
+    #inferbp = modbp.InferenceBP(mlgraph=mgraph)
     # mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=1000,omega=0)
 
     # betas=np.linspace(.5,2.5,50)

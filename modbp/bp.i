@@ -1,6 +1,7 @@
 %module bp
 
 %{
+#include "src_cpp/bp_infer.h"
 #include "src_cpp/bp.h"
 typedef unsigned long index_t;
 %}
@@ -8,6 +9,7 @@ typedef unsigned long index_t;
 %apply double *OUTPUT {double& s}
 
 %include "src_cpp/bp.h"
+%include "src_cpp/bp_infer.h"
 %include "std_vector.i"
 %include "std_pair.i"
 %template() std::pair<unsigned long,unsigned long>;

@@ -210,6 +210,8 @@ void BP_Modularity::step()
     changed = false;
     change = 0;
     
+    bool fast_convergence = false;
+    
     if (compute_bfe)
     {
         bfe = 0.0;
@@ -230,10 +232,13 @@ void BP_Modularity::step()
             local_change += fabs(beliefs[idx] - beliefs_old[idx]);
         }
         local_change /= q*nn;
-        if (local_change < eps)
+        if (fast_convergence)
         {
-            // not enough change in incoming beliefs to warrant an update
-            continue;
+            if (local_change < eps)
+            {
+                // not enough change in incoming beliefs to warrant an update
+                //continue;
+            }
         }
         // if we changed any nodes, set this to true so we know we haven't converged
         changed = true;
@@ -338,6 +343,18 @@ void BP_Modularity::step()
             bfe += beta/(2*num_edges[t]) * temp;
         }
         bfe /= (beta*n);
+    }
+    
+    if (!fast_convergence)
+    {
+        if (change > eps)
+        {
+            changed = true;
+        }
+        else
+        {
+            changed = false;
+        }
     }
 }
 
