@@ -129,9 +129,9 @@ class ModularityBP():
         self.partitions[self.nruns]=cpartition
         if self._align_communities:
             t=time()
-            print('sweeping')
+            # print('sweeping')
             self._perform_permuation_sweep(self.nruns) # modifies partition directly
-            print('time sweeping {:.4f}'.format(time()-t))
+            # print('time sweeping {:.4f}'.format(time()-t))
 
 
         self.retrieval_modularities.loc[self.nruns, 'q'] = q
@@ -428,7 +428,7 @@ class ModularityBP():
             max_layer_switched=np.argmax(number_switched)
             permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
             # print (number_switched)
-            print(number_switched[max_layer_switched], max_layer_switched, permdict)
+            # print(number_switched[max_layer_switched], max_layer_switched, permdict)
             # oldpart=self.partitions[ind] #before switch
             # plt.close()
             # plt.subplots(1, 2, figsize=(10, 5))
