@@ -9,7 +9,9 @@ import itertools
 import pandas as pd
 import scipy.optimize as sciopt
 import matplotlib.pyplot as plt
-
+import seaborn as sbn
+from time import time
+import os,pickle,gzip
 
 class ModularityBP():
     """
@@ -126,8 +128,10 @@ class ModularityBP():
         cpartition=self._get_partition(self.nruns,self.use_effective)
         self.partitions[self.nruns]=cpartition
         if self._align_communities:
+            t=time()
+            print('sweeping')
             self._perform_permuation_sweep(self.nruns) # modifies partition directly
-
+            print('time sweeping {:.4f}'.format(time()-t))
 
 
         self.retrieval_modularities.loc[self.nruns, 'q'] = q
@@ -397,23 +401,81 @@ class ModularityBP():
         """
         max_iters=100
         niters=0
+        #go through at least once
+        # number_switched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
+        # max_layer_switched = np.argmax(number_switched)
+        # permdict = self._create_layer_permutation_single_layer(ind, max_layer_switched)
+        # print(number_switched[max_layer_switched],max_layer_switched,permdict)
+        # plt.close()
+        # plt.subplots(1,2,figsize=(10,5))
+        # a=plt.subplot(1,2,1)
+        # a.set_title('before')
+        # self.plot_communities(ind,layers=[max_layer_switched-1,
+        #                                   max_layer_switched],ax=a,numbers=True)
+        # for layer in range(max_layer_switched, self.layers_unique[-1] + 1):  # permute all layers behind
+        #     self._permute_layer_with_dict(ind, layer=layer, permutation=permdict)
+        # a = plt.subplot(1, 2, 2)
+        # a.set_title('after')
+        # self.plot_communities(ind, layers=[max_layer_switched - 1,
+        #                                    max_layer_switched], ax=a, numbers=True)
+        # plt.show()
+
+
+
         while niters<max_iters:
+        # for clayer in self.layers_unique:
             number_switched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
             max_layer_switched=np.argmax(number_switched)
             permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
+            # print (number_switched)
+            print(number_switched[max_layer_switched], max_layer_switched, permdict)
+            # oldpart=self.partitions[ind] #before switch
+            # plt.close()
+            # plt.subplots(1, 2, figsize=(10, 5))
+            # a = plt.subplot(1, 2, 1)
+            # a.set_title('before')
+            # self.plot_communities(ind, layers=[max_layer_switched - 1,
+            #                                    max_layer_switched], ax=a)
+            # self._permute_layer_with_dict(ind, layer=max_layer_switched, permutation=permdict)
+            # a = plt.subplot(1, 2, 2)
+            # a.set_title('after')
+            # self.plot_communities(ind, layers=[max_layer_switched - 1,
+            #                                    max_layer_switched], ax=a)
+            # plt.show()
+            # #
+            # dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
+            # with gzip.open(os.path.join(dir,'test_case_partswitch.txt'),'w') as fh:
+            #     pickle.dump((self.layer_vec,max_layer_switched,oldpart),fh)
+            # print(max_layer_switched,permdict)
+            #
+            # print()
             if all([k==v for k,v in permdict.items()]):
                 break #nothing changed
             for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
                 self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
 
-            # plt.close()
-            # self.plot_communities(ind)
-            # plt.show()
-            # print(max_layer_switched,permdict)
+
+
+            #after sweept
+
+
+
 
 
             niters+=1
 
+        plt.close()
+        f, a = plt.subplots(1, 2, figsize=(6, 3))
+        a = plt.subplot(1, 2, 1)
+        self.plot_communities(ax=a)
+        a = plt.subplot(1, 2, 2)
+        self.plot_communities(ind, ax=a)
+        plt.show()
+        # dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
+        # with gzip.open(os.path.join(dir,'test_case_partswitch.txt'),'w') as fh:
+        #     pickle.dump((self.layer_vec,max_layer_switched,oldpart),fh)
+        # print(max_layer_switched,permdict)
+        print(niters)
 
     def get_number_nodes_switched_all_layers(self, ind, percent=False):
         """
@@ -433,27 +495,24 @@ class ModularityBP():
 
         return switched
 
-    def _create_distmat_to_minimize(self,ind,layer):
-        layers=self.layers_unique
-        prev_layer = layers[np.where(layers == layer)[0][0] - 1]
-        cind=np.where(self.layer_vec==layer)[0]
-        prevind=np.where(self.layer_vec==prev_layer)[0]
-
-        curpart=self.partitions[ind][cind]
-        prevpart=self.partitions[ind][prevind]
-        curcoms=np.unique(curpart)
-        prevcoms = np.unique(prevpart)
-        distmat=np.zeros((len(prevcoms),len(curcoms)))
-
-        #the index within the current layer partition
-        prev_inds={ com:np.where(prevpart==com)[0] for com in prevcoms }
-
-
-        for i,prevcom in enumerate(prevcoms):
-            for j,curcom in enumerate(curcoms):
-                #how many of the currentl communities are not in the previous community
-                distmat[i,j]=np.sum(curpart[prev_inds[prevcom]]!=curcom)
-        return distmat
+    # def _create_com_dist_map_to_minimize(self,ind,layer):
+    #     layers=self.layers_unique
+    #     prev_layer = layers[np.where(layers == layer)[0][0] - 1]
+    #     cind=np.where(self.layer_vec==layer)[0]
+    #     prevind=np.where(self.layer_vec==prev_layer)[0]
+    #
+    #     curpart=self.partitions[ind][cind]
+    #     prevpart=self.partitions[ind][prevind]
+    #     curcoms=np.unique(curpart)
+    #     prevcoms = np.unique(prevpart)
+    #     distmat=np.zeros((len(prevcoms),len(curcoms)))
+    #     #the index within the current layer partition
+    #     prev_inds={ com:np.where(prevpart==com)[0] for com in prevcoms }
+    #     for i,prevcom in enumerate(prevcoms):
+    #         for j,curcom in enumerate(curcoms):
+    #             #how many of the currentl communities are not in the previous community
+    #             distmat[i,j]=np.sum(curpart[prev_inds[prevcom]]!=curcom)
+    #     return distmat
 
     def _create_layer_permutation_single_layer(self,ind,layer):
         """
@@ -463,23 +522,47 @@ class ModularityBP():
         :param ind:
         :return:
         """
-        cpart=self.partitions[ind].copy()
+
+        cind = np.where(self.layer_vec == layer)[0]
+        layers=self.layers_unique
         #we switch only the communiites in that layer
         layer_inds=np.where(self.layer_vec==layer)[0]
-        coms,cnts=np.unique(cpart[layer_inds],return_counts=True)
+        prev_layer = layers[np.where(layers == layer)[0][0] - 1]
+        prevind = np.where(self.layer_vec == prev_layer)[0]
+        curpart = self.partitions[ind][cind]
+        prevpart = self.partitions[ind][prevind]
+        curcoms = np.unique(curpart)
+        prevcoms = np.unique(prevpart)
+        distmat = np.zeros((len(prevcoms), len(curcoms)))
 
-        #sort according to size
-        coms_by_size=[x[0] for x in sorted(zip(coms,cnts),reverse=True,key=lambda x : x[1])]
-        # we use this to map over to new communiites
+        # the index within the current layer partition
+        prev_inds = {com: np.where(prevpart == com)[0] for com in prevcoms}
+        cur_inds = {com: np.where(curpart == com)[0] for com in curcoms}
 
+        for i, prevcom in enumerate(prevcoms):
+            for j, curcom in enumerate(curcoms):
+                # how many of the currentl communities are not in the previous community
+                #plus how many of the previous communities are not in the current community
+                distmat[i, j] = np.sum(curpart[prev_inds[prevcom]] != curcom) + \
+                                np.sum(prevpart[cur_inds[curcom]] != prevcom)
 
-        distmat=self._create_distmat_to_minimize(ind,layer)
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
-        com_map_dict=dict(zip(col_ind,row_ind)) #map to current layer coms to previous ones
-        for com in coms_by_size:
-            if com not in com_map_dict.keys():  #can happen if there are less communities in the previous layer
-                com_map_dict[com]=com # map it to itself.
+        colcoms=map(lambda x : curcoms[x],col_ind)
+        rwcoms=map(lambda x : prevcoms[x],row_ind)
+        com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
+
+        #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
+        coms_remaining=set(curcoms).difference(com_map_dict.values())
+        comsnotmapped=set(curcoms).difference(com_map_dict.keys())
+        #things that are in both get mapped to themselves first
+        for com in coms_remaining.intersection(comsnotmapped):
+            com_map_dict[com]=com
+            coms_remaining.remove(com)
+            comsnotmapped.remove(com)
+        for com in comsnotmapped:
+            com_map_dict[com]=coms_remaining.pop()
+
 
         return com_map_dict
 
@@ -518,15 +601,42 @@ class ModularityBP():
 
         """
 
+
         lay_inds=np.where(self.layer_vec==layer)[0]
         old_layer=self.partitions[ind][lay_inds]
+        curcoms=np.unique(old_layer)
+        curpermutation={k:v for k,v in permutation.items()}
+
+        #ensure that things don't get map to that aren't mapped so some other community
+        comsremain=set(list(curcoms)+permutation.keys()).difference(permutation.values())
+        coms2match=set(curcoms).difference(curpermutation.keys()) #communities that need to be matched
+
+        for com in comsremain.intersection(coms2match) : # these map to themselve
+            curpermutation[com]=com
+            comsremain.remove(com)
+            coms2match.remove(com)
+
+        for com in coms2match:
+            curpermutation[com]=comsremain.pop()
+
+
+
+
+
+        # for com in curcoms:
+        #     if com not in curpermutation.keys():
+        #         if com in comsremain:
+        #             curpermutation[com]=com
+        #             comsremain.remove(com)
+        #         else:
+        #             curpermutation[com]=comsremain.pop()
 
         self.partitions[ind][lay_inds]=\
-            map(lambda x : permutation[x] if x in permutation else x, self.partitions[ind][lay_inds])
+            map(lambda x : curpermutation[x], self.partitions[ind][lay_inds])
 
         #sanity check.  Internal communities shouldn't change
         assert(np.abs(skm.adjusted_mutual_info_score(old_layer,self.partitions[ind][lay_inds])-1)<np.power(10.0,-6))
-
+        # stack=np.vstack([old_layer,self.partitions[ind][lay_inds]])
 
 
 
@@ -543,13 +653,14 @@ class ModularityBP():
         self._bpmod.shuffleBeliefs(perm_vec_c)
 
 
-    def plot_communities(self,ind=None,layers=None,ax=None):
+    def plot_communities(self,ind=None,layers=None,ax=None,cmap=None):
         """
 
         :param ind:
         :param layers:
         :return:
         """
+
 
         if layers is None:
             layers=self.layers_unique
@@ -566,6 +677,7 @@ class ModularityBP():
                 com_matrix[:, i] = ccoms
             return com_matrix
 
+
         cinds=np.where(np.isin(self.layer_vec,layers))
         if ind is None: #use baseline
             assert self.graph.comm_vec is not None, "Must specify ground truth com_vec for graph"
@@ -573,14 +685,24 @@ class ModularityBP():
         else:
             cpart=self.partitions[ind][cinds]
 
+        vmin=np.min(cpart)
+        vmax=np.max(cpart)
+
         clayer_vec=self.layer_vec[cinds]
         part_mat=get_partition_matrix(cpart,clayer_vec)
 
         if ax is None:
             ax=plt.axes()
 
+        if cmap is None:
+            cmap=sbn.cubehelix_palette(as_cmap=True)
+
+
         ax.grid('off')
-        ax.pcolormesh(part_mat)
+        ax.pcolormesh(part_mat,cmap=cmap,vmin=vmin,vmax=vmax)
+
+
+
         ax.set_xticks(range(0,len(layers)))
-        ax.set_xlabel(layers)
+        ax.set_xticklabels(layers)
         return ax
