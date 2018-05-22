@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
 
 ext_module=Extension(name="_bp",
                     sources=["modbp/src_cpp/bp.cpp","modbp/src_cpp/bp_infer.cpp","modbp/bp.i"],
-                    include_dirs=["modbp/src_cpp"],swig_opts=["-c++"],extra_compile_args=['-std=c++14'],
+                    include_dirs=["modbp/src_cpp"],swig_opts=["-c++"],extra_compile_args=['-std=c++11'],
                     )
 
 options=dict( name='modbp',
