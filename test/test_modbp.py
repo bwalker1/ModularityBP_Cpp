@@ -6,6 +6,7 @@ import igraph as ig
 import matplotlib.pyplot as plt
 import seaborn as sbn
 import pandas as pd
+import os, gzip, pickle
 
 def test_detection():
     n=10000
@@ -231,8 +232,8 @@ def test_modbp_interface():
     q = 4
     nlayers = 1
     nblocks = q
-    c = 4
-    ep = .1
+    c = 1
+    ep = .04
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
@@ -241,6 +242,7 @@ def test_modbp_interface():
                                    intralayer_edges=ml_sbm.interedges, layer_vec=ml_sbm.layer_vec,
                                    comm_vec=ml_sbm.get_all_layers_block())
     mlbp = modbp.ModularityBP(mlgraph=mgraph, accuracy_off=True, use_effective=False)
+    #inferbp = modbp.InferenceBP(mlgraph=mgraph)
     # mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=1000,omega=0)
 
     # betas=np.linspace(.5,2.5,50)
@@ -266,7 +268,7 @@ def test_community_swapping_ml():
     nlayers = 40
     eta = .1
     c = 16
-    ep = .1
+    ep = .05
     ntrials = 1
     omega = .5
     gamma = 1.0
@@ -286,6 +288,11 @@ def test_community_swapping_ml():
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
                                        comm_vec=ml_sbm.get_all_layers_block())
 
+        # #graph for testing
+        # testdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
+        # with gzip.open(os.path.join(testdir,'test_ml_graph.gz'),'r') as fh:
+        #     mgraph=pickle.load(fh)
+
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
@@ -293,9 +300,20 @@ def test_community_swapping_ml():
 
         bstars = [mlbp.get_bstar(q, omega) for q in range(2, qmax + 1)]
         betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
-        for beta in betas:
+
+        for beta in betas[:1]:
             mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
             mlbp_rm = mlbp.retrieval_modularities
+            ind2look = mlbp_rm['AMI'].idxmax()
+            # output.to_csv(outfile)
+            print(mlbp.get_number_nodes_switched_all_layers(ind2look,percent=True))
+            plt.close()
+            f, a = plt.subplots(1, 2, figsize=(6, 3))
+            a = plt.subplot(1, 2, 1)
+            mlbp.plot_communities(ax=a)
+            a = plt.subplot(1, 2, 2)
+            mlbp.plot_communities(ind2look, ax=a)
+            plt.show()
 
         # these are the non-trivial ones
         minidx = mlbp_rm[mlbp_rm['niters'] < 1000][
@@ -315,14 +333,7 @@ def test_community_swapping_ml():
                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']]
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
 
-    # output.to_csv(outfile)
-    plt.close()
-    f,a=plt.subplots(1,2,figsize=(6,3))
-    a=plt.subplot(1,2,1)
-    mlbp.plot_communities(ax=a)
-    a=plt.subplot(1,2,2)
-    mlbp.plot_communities(ind2look,ax=a)
-    plt.show()
+
     # permdict=mlbp._create_layer_permutation_single_layer(ind2look,layer_max)
     # mlbp.permute_layer_with_dict(ind2look,layer_max,permdict)
     #

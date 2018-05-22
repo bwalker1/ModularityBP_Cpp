@@ -74,6 +74,7 @@ private:
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
     
+    
     // private variables
     vector<double> beliefs;
     vector<double> beliefs_old;     // for out-of-place updates
