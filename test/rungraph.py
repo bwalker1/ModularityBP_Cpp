@@ -35,6 +35,7 @@ if __name__ == "__main__":
     accuracy = 0.0
     ami = 0.0
     ami_avg = 0.0
+    ret_mod = 0.0
     
     for trial in xrange(ntrials):
         print trial

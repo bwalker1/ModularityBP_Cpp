@@ -21,7 +21,7 @@ using namespace std;
 double truncate(const double in, const int q);
 
 
-BP_Inference::BP_Inference(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), verbose(_verbose), transform(_transform), order(_n), rng((int)5)
+BP_Inference::BP_Inference(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     eps = 1e-8;
     computed_marginals = false;
