@@ -263,7 +263,7 @@ def test_modbp_interface():
 def test_community_swapping_ml():
 
 
-    n = 512
+    n = 100
     q = 2
     nlayers = 40
     eta = .1

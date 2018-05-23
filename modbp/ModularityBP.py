@@ -453,29 +453,20 @@ class ModularityBP():
                 break #nothing changed
             for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
                 self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
-
-
-
-            #after sweept
-
-
-
-
-
             niters+=1
 
-        plt.close()
-        f, a = plt.subplots(1, 2, figsize=(6, 3))
-        a = plt.subplot(1, 2, 1)
-        self.plot_communities(ax=a)
-        a = plt.subplot(1, 2, 2)
-        self.plot_communities(ind, ax=a)
-        plt.show()
+        # plt.close()
+        # f, a = plt.subplots(1, 2, figsize=(6, 3))
+        # a = plt.subplot(1, 2, 1)
+        # self.plot_communities(ax=a)
+        # a = plt.subplot(1, 2, 2)
+        # self.plot_communities(ind, ax=a)
+        # plt.show()
         # dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
         # with gzip.open(os.path.join(dir,'test_case_partswitch.txt'),'w') as fh:
         #     pickle.dump((self.layer_vec,max_layer_switched,oldpart),fh)
         # print(max_layer_switched,permdict)
-        print(niters)
+        # print(niters)
 
     def get_number_nodes_switched_all_layers(self, ind, percent=False):
         """
