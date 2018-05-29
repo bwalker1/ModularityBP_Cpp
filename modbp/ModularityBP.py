@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import numpy as np
 import igraph as ig
 from future.utils import iteritems,iterkeys
 from collections import Hashable
-from GenerateGraphs import MultilayerGraph
+from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
 from .bp import BP_Modularity,PairVector,IntArray
 import itertools
@@ -108,21 +109,8 @@ class ModularityBP():
 
 
         iters=self._bpmod.run(niter)
-
-
-        # self._bpmod = BP_Modularity(self._edgelistpv, _n=self.n, q=q, beta=beta, transform=False)
-        # iters = self._bpmod.run(niter)
         cmargs=np.array(self._bpmod.return_marginals())
         self.marginals[self.nruns]=cmargs
-        # cpartition = np.argmax(cmargs, axis=1)
-
-
-        #assure it is initialized
-        # self.marginals[q]=self.marginals.get(q,{})
-        # self.partitions[q]=self.partitions.get(q,{})
-        # self.niters[q]=self.niters.get(q,{})
-        # self.retrieval_modularities[q]=self.retrieval_modularities.get(q,{})
-
         #Calculate effective group size and get partitions
         self._get_community_distances(self.nruns) #sets values in method
         cpartition=self._get_partition(self.nruns,self.use_effective)
@@ -132,6 +120,8 @@ class ModularityBP():
             # print('sweeping')
             self._perform_permuation_sweep(self.nruns) # modifies partition directly
             # print('time sweeping {:.4f}'.format(time()-t))
+        self
+
 
 
         self.retrieval_modularities.loc[self.nruns, 'q'] = q
@@ -640,6 +630,7 @@ class ModularityBP():
         :param permutation_vector:
         :return:
         """
+        #TODO
         perm_vec_c=PairVector(permutation_vector)
         self._bpmod.shuffleBeliefs(perm_vec_c)
 
