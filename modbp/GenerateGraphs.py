@@ -189,7 +189,7 @@ class MultilayerGraph():
             for ei,ej in self.intralayer_edges:
                 if ei in node_inds or ej in node_inds:
                     if not (ei>=min_ind and ej>=min_ind):
-                        print('problem ')
+                        raise AssertionError('edge indicies not in layer {:d},{:d}'.format(ei,ej))
                     celist.append((ei-min_ind,ej-min_ind))
             layers.append(self._create_graph_from_elist(len(node_inds),celist))
         return layers
@@ -427,8 +427,8 @@ class MultilayerSBM():
         for i in range(self.nlayers-1):
             cnet=self.layer_sbms[i]
             cnetnxt=self.layer_sbms[i+1]
-            cedge=np.array(zip(range(offset,offset+cnet.n),
-                               range(offset+cnet.n,offset+2*cnet.n)))
+            cedge=np.array(list(zip(range(offset,offset+cnet.n),
+                               range(offset+cnet.n,offset+2*cnet.n))))
             interedges[offset:offset+cnet.n,:]=cedge
 
             offset+=cnet.n
