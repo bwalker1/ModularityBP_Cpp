@@ -133,6 +133,8 @@ private:
 	void compute_marginal(index_t i, bool do_bfe_contribution = false);
     
     bool verbose;
+    
+    unsigned long iter;
 };
 
 #endif /* bp_hpp */

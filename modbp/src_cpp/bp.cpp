@@ -43,7 +43,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(5)
 {
     eps = 1e-8;
     computed_marginals = false;
@@ -139,7 +139,8 @@ long BP_Modularity::run(unsigned long maxIters)
     change = 1;
     //unsigned long maxIters = 100;
     bool converged = false;
-    for (unsigned long iter = 0; iter < maxIters; ++iter)
+    iter = 0;
+    for (iter = 0; iter < maxIters; ++iter)
     {
         step();
         
@@ -225,7 +226,16 @@ void BP_Modularity::step()
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
-        index_t i = order[node_idx];
+        index_t i;
+        if (iter%2 == 0)
+        {
+            i = order[node_idx];
+        }
+        else
+        {
+            i = node_idx;
+        }
+        
         index_t t = layer_membership[i];
         const index_t nn = neighbor_count[i];
         if (nn==0) continue;
@@ -246,7 +256,7 @@ void BP_Modularity::step()
             }
         }
         // if we changed any nodes, set this to true so we know we haven't converged
-        changed = true;
+        //changed = true;
         change += local_change;
         
         // we should update the nodes contribution to theta
@@ -328,7 +338,7 @@ void BP_Modularity::step()
                 index_t k = neighbors[neighbors_offsets[i]+idx];
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
-                
+                assert(!isnan(scratch[nn*s+idx]));
                 beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
             }
         }
@@ -377,7 +387,16 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
         }
         for (size_t s = 0; s < q;++s)
         {
-            beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
+            assert(sum==1);
+            if (sum > 0)
+            {
+                beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
+            }
+            else
+            {
+                beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q;
+            }
+            assert(!isnan(beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q));
         }
     }
 }
@@ -502,16 +521,36 @@ void shuffleBeliefs(vector<vector<double>> in_beliefs){
 void BP_Modularity::initializeBeliefs() { 
     // set starting value of beliefs
     // generate values for each state and then normalize
-    normal_distribution<double> eps_dist(0,0.1);
-    for (size_t idx = 0;idx<q*total_edges;++idx)
+    normal_distribution<double> eps_dist(0,0.01);
+    
+    for (index_t idx=0;idx<n;++idx)
     {
-        double val = eps_dist(rng);
-        beliefs[idx] = truncate(1.0/q + val,q);
+        const index_t nn = neighbor_count[idx];
+        
+        bool group1 =((idx-(n/nt)*layer_membership[idx])) < (n*1.0/(2.0*nt));
+        
+        for (size_t s = 0; s < q; ++s)
+        {
+            for (index_t idx2 = 0; idx2 < nn; ++ idx2)
+            {
+                index_t k = neighbors[neighbors_offsets[idx]+idx2];
+                const index_t nnk = neighbor_count[k];
+                index_t idx_out = neighbors_reversed[neighbors_offsets[idx]+idx2];
+                beliefs[beliefs_offsets[idx]+nn*s+idx2] = int(group1);
+                //printf("%f\n",beliefs[beliefs_offsets[k]+nnk*s+idx_out]);
+            }
+        }
     }
     
+    //compute_marginals();
     for (index_t i=0;i<n;++i)
     {
-        normalize(beliefs,i);
+        //printf("%f\n",marginals[i]);
+    }
+
+    for (index_t i=0;i<n;++i)
+    {
+        //normalize(beliefs,i);
     }
     
     // zero out old beliefs
