@@ -219,10 +219,9 @@ def test_generate_graph():
 
 def test_modbp_interface():
 	# confirmt that it is still working on the single layer case
-
 	
-	n = 1000
-	q = 4
+	n = 100
+	q = 2
 	nlayers = 1
 	nblocks = q
 	c = 1
@@ -235,11 +234,11 @@ def test_modbp_interface():
 								   intralayer_edges=ml_sbm.interedges, layer_vec=ml_sbm.layer_vec,
 								   comm_vec=ml_sbm.get_all_layers_block())
 	mlbp = modbp.ModularityBP(mlgraph=mgraph, accuracy_off=True, use_effective=False)
-	#inferbp = modbp.InferenceBP(mlgraph=mgraph)
-	# mlbp.run_modbp(beta=beta, resgamma=1, q=q,niter=1000,omega=0)
-
-	# betas=np.linspace(.5,2.5,50)
-
+	inferbp = modbp.InferenceBP(mlgraph=mgraph)
+	mlbp.run_modbp(beta=0, resgamma=1, q=q,niter=1000,omega=0)
+	#inferbp.run_modbp(q=q,niter=1000)
+	# betas=np.linspace(.5,2.5,50)return
+	return
 	ntrials = 1
 	qvals = np.array([2, 3, 4, 5, 6, 7, 8, 9])
 	bstars = map(lambda x: mlbp.get_bstar(x), qvals)
@@ -334,6 +333,6 @@ def test_community_swapping_ml():
 	# print(layer_changes)
 
 def main():
-	test_community_swapping_ml()
+	test_modbp_interface()
 if __name__=='__main__':
 	main()

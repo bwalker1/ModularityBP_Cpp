@@ -42,7 +42,7 @@ if __name__ == "__main__":
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges,ml_sbm.layer_vec,  ml_sbm.interedges, comm_vec=ml_sbm.get_all_layers_block())
         mlbp = modbp.ModularityBP(mlgraph=mgraph,align_communities=False)
-        mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=0, reset=True)
+        mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=1000, reset=True)
         print mlbp.marginals[0]
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']
         ami += mlbp.retrieval_modularities.loc[0,'AMI']

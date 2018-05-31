@@ -43,7 +43,7 @@ void print_array(double *arr, index_t n)
 
 
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(5)
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     eps = 1e-8;
     computed_marginals = false;
@@ -196,6 +196,14 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
         
         Z += marginals[q*i + s];
+        
+        assert(Z > 0);
+        assert(!isnan(Z));
+        
+        if (!(Z > 0 && !isnan(Z)))
+        {
+            //printf("Z is not correct\n");
+        }
     }
     if (do_bfe_contribution)
     {
@@ -204,8 +212,15 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
     // normalize
     for (index_t s = 0; s < q; ++s)
     {
-        marginals[q*i + s] /= Z;
-        
+        if (Z > 0)
+        {
+            marginals[q*i + s] /= Z;
+        }
+        else
+        {
+            marginals[q*i + s] = 1.0/q;
+        }
+        assert(!isnan(marginals[q*i + s]));
     }
 }
 
@@ -521,8 +536,8 @@ void shuffleBeliefs(vector<vector<double>> in_beliefs){
 void BP_Modularity::initializeBeliefs() { 
     // set starting value of beliefs
     // generate values for each state and then normalize
-    normal_distribution<double> eps_dist(0,0.01);
-    
+    normal_distribution<double> eps_dist(0,0.1);
+    /*
     for (index_t idx=0;idx<n;++idx)
     {
         const index_t nn = neighbor_count[idx];
@@ -541,16 +556,21 @@ void BP_Modularity::initializeBeliefs() {
             }
         }
     }
-    
+    */
     //compute_marginals();
     for (index_t i=0;i<n;++i)
     {
         //printf("%f\n",marginals[i]);
     }
+    
+    for (index_t i=0;i<beliefs.size();++i)
+    {
+        beliefs[i] = truncate(1.0/q + eps_dist(rng),q);
+    }
 
     for (index_t i=0;i<n;++i)
     {
-        //normalize(beliefs,i);
+        normalize(beliefs,i);
     }
     
     // zero out old beliefs
