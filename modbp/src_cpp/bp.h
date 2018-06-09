@@ -61,6 +61,9 @@ public:
     void setVerbose(bool in) { verbose = in; };
     
     double compute_bstar(double omega_in,int q_in);
+    
+    void permute_beliefs(vector<vector<index_t> > permutation);
+    void merge_communities(vector<index_t> merges);
 private:
 
     void shuffleBeliefs(vector<vector<double>> in_beliefs);

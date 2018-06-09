@@ -641,6 +641,52 @@ double sp(double beta, double omega, double q, double c)
     return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
 }
 
+void BP_Modularity::merge_communities(vector<index_t> merges)
+{
+    vector<double> vals(q);
+    for (index_t i=0;i<n;++i)
+    {
+        for (int s=0;s<q;++s)
+        {
+            vals[s] = 0;
+        }
+        index_t nn = neighbor_count[i];
+        for (int s=0;s<q;++s)
+        {
+            for (index_t idx2=0;idx2<nn;++idx2)
+            {
+                vals[merges[s]] += beliefs[beliefs_offsets[i]+nn*s+idx2];
+            }
+        }
+    }
+}
+
+void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
+{
+    // go through each layer and apply the permutation described to it
+    if (permutation.size() != q)
+    {
+        fprintf(stderr,("Permutation vector list has wrong length\n"));
+        return;
+    }
+    vector<double> vals(q);
+    for (index_t i = 0; i < nt; ++i)
+    {
+        index_t nn = neighbor_count[i];
+        for (index_t idx2=0;idx2<nn;++idx2)
+        {
+            for (int s=0;s<q;++s)
+            {
+                vals[s] = beliefs[beliefs_offsets[i]+nn*s+idx2];
+            }
+            for (int k=0;k<permutation[i].size();++k)
+            {
+                vals[k] = beliefs[beliefs_offsets[i]+nn*permutation[i][k]+idx2];
+            }
+        }
+    }
+}
+
 double BP_Modularity::compute_bstar(double omega_in,int q_in)
 {
     // currently this assumes multiplex graph
