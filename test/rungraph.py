@@ -41,7 +41,7 @@ if __name__ == "__main__":
         print trial
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges,ml_sbm.layer_vec,  ml_sbm.interedges, comm_vec=ml_sbm.get_all_layers_block())
-        mlbp = modbp.ModularityBP(mlgraph=mgraph,align_communities=False)
+        mlbp = modbp.ModularityBP(mlgraph=mgraph, align_communities_across_layers=False)
         mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=1000, reset=True)
         print mlbp.marginals[0]
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']

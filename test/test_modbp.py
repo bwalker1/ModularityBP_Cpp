@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sbn
 import pandas as pd
 import os, gzip, pickle
+import sklearn.metrics as skm
 
 def test_detection():
 	n=10000
@@ -257,7 +258,7 @@ def test_community_swapping_ml():
 
 	n = 100
 	q = 2
-	nlayers = 40
+	nlayers = 10
 	eta = .1
 	c = 16
 	ep = .05
@@ -285,26 +286,46 @@ def test_community_swapping_ml():
 		# with gzip.open(os.path.join(testdir,'test_ml_graph.gz'),'r') as fh:
 		#	 mgraph=pickle.load(fh)
 
-		mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
+		mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
+									align_communities_across_layers=False)
 
 		# mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
-		bstar = mlbp.get_bstar(q, omega)
-
-		bstars = [mlbp.get_bstar(q, omega) for q in range(2, qmax + 1)]
+		bstars = [mlbp.get_bstar(q_, omega) for q_ in range(2, qmax + 1)]
 		betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
-
-		for beta in betas[:1]:
+		bstar = mlbp.get_bstar(q_, omega)
+		for beta in [bstar]: #just run at bstar.
 			mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+			print("Group mapping")
+			print(mlbp.marginal_index_to_close_marginals[0])
+			print(mlbp.marginal_to_comm_number[0])
+			print(mlbp._groupmap_to_permutation_vector(0))
 			mlbp_rm = mlbp.retrieval_modularities
-			ind2look = mlbp_rm['AMI'].idxmax()
-			# output.to_csv(outfile)
-			print(mlbp.get_number_nodes_switched_all_layers(ind2look,percent=True))
+
+			old_part=mlbp.partitions[0].copy() #before change
+			old_transformed=np.zeros(len(old_part))
+			mlbp._perform_permuation_sweep(0) # permute all layers
+			print('AMI after transform')
+			print(skm.adjusted_mutual_info_score(old_part,mlbp.partitions[0]))
+			# print('old',old_part)
+			# print('new',mlbp.partitions[0])
+			for layer in mlbp.layers_unique:
+
+				cinds=np.where(mlbp.layer_vec==layer)[0]
+
+				old_transformed[cinds]=map( lambda x : mlbp._permutation_vectors[0][layer][x] ,old_part[cinds])
+			print('old trans formed',
+				  skm.adjusted_mutual_info_score(old_transformed,mlbp.partitions[0]))
+
+
+			# ind2look = mlbp_rm['AMI'].idxmax()
+			# # output.to_csv(outfile)
+			# print(mlbp.get_number_nodes_switched_all_layers(ind2look,percent=True))
 			plt.close()
 			f, a = plt.subplots(1, 2, figsize=(6, 3))
 			a = plt.subplot(1, 2, 1)
 			mlbp.plot_communities(ax=a)
 			a = plt.subplot(1, 2, 2)
-			mlbp.plot_communities(ind2look, ax=a)
+			mlbp.plot_communities(0, ax=a)
 			plt.show()
 
 		# these are the non-trivial ones
@@ -333,6 +354,6 @@ def test_community_swapping_ml():
 	# print(layer_changes)
 
 def main():
-	test_modbp_interface()
+	test_community_swapping_ml()
 if __name__=='__main__':
 	main()

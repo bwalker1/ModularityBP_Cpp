@@ -16,5 +16,6 @@ typedef unsigned long index_t;
 %template(PairVector) std::vector< std::pair < unsigned long, unsigned long > >;
 
 %template(IntArray) std::vector<index_t>;
+%template(IntMatrix) std::vector< std::vector<index_t> >;
 %template() std::vector<double>;
 %template(Array) std::vector< std::vector<double> >;
