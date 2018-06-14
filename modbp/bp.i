@@ -12,10 +12,12 @@ typedef unsigned long index_t;
 %include "src_cpp/bp_infer.h"
 %include "std_vector.i"
 %include "std_pair.i"
+
 %template() std::pair<unsigned long,unsigned long>;
 %template(PairVector) std::vector< std::pair < unsigned long, unsigned long > >;
 
-%template(IntArray) std::vector<index_t>;
-%template(IntMatrix) std::vector< std::vector<index_t> >;
+%template(IntArray) std::vector<unsigned long>;
+%template(IntMatrix) std::vector< std::vector<unsigned long> >;
+
 %template() std::vector<double>;
 %template(Array) std::vector< std::vector<double> >;

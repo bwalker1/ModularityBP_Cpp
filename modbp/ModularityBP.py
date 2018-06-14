@@ -120,7 +120,17 @@ class ModularityBP():
 			# print('sweeping')
 			self._perform_permuation_sweep(self.nruns) # modifies partition directly
 			# print('time sweeping {:.4f}'.format(time()-t))
-		self
+
+		#We perform the merger and the swap on the BP side and then rerun
+		self._merge_communities_bp(self.nruns)
+		self._switch_beliefs_bp(self.nruns)
+		iters = self._bpmod.run(niter)
+		cmargs = np.array(self._bpmod.return_marginals())
+		self.marginals[self.nruns] = cmargs
+		# Calculate effective group size and get partitions
+		self._get_community_distances(self.nruns)  # sets values in method
+		cpartition = self._get_partition(self.nruns, self.use_effective)
+		self.partitions[self.nruns] = cpartition
 
 
 
@@ -194,7 +204,7 @@ class ModularityBP():
 		if use_effective: #map the marginals to very close ones.
 			groupmap=self.marginal_index_to_close_marginals[ind]
 			# We use the effective communities to map
-			parts=np.array(map(lambda x: self.marginal_to_comm_number[ind][x], parts))
+			parts=np.array( map(lambda x: self.marginal_to_comm_number[ind][x], parts))
 			return parts
 
 		else:
@@ -331,14 +341,14 @@ class ModularityBP():
 		revmap={}
 		for i,comset in enumerate(commsets):
 			for val in comset:
-				revmap[val]=i
+				revmap[val]=np.min(list(comset))
 
 		self.marginal_to_comm_number[ind] = revmap
 
 	def _groupmap_to_permutation_vector(self,ind):
 		revgroupmap=self.marginal_to_comm_number[ind]
 
-		outarray=range([np.max(revgroupmap.keys())])
+		outarray=np.arange(np.max(revgroupmap.keys())+1)
 
 		for k,val in revgroupmap.items():
 			outarray[k]=val
@@ -682,20 +692,27 @@ class ModularityBP():
 			currow = map ( lambda  x : self._permutation_vectors[ind][layer][x],currow)
 			outarray[i,:]=currow
 
-		return IntMatrix(outarray)
+		return outarray
 
-
-
-	def _switch_marginals(self,ind):
+	def _merge_communities_bp(self,ind):
 		"""
-		This switches the marginals.  Should only be called after _perform_permutation_sweep
+
+		:param ind:
+		:return:
+		"""
+		merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
+		self._bpmod.merge_communities(merge_vec)
+
+	def _switch_beliefs_bp(self, ind):
+		"""
+		This switches the belefs.  Should only be called after _perform_permutation_sweep
 		:param ind: modbp run index
 		:returns: permutes the beliefs or marginals
 		"""
 
-		perm_vec_c=self._create_all_layers_permuation_vector(ind)
+		perm_vec_c=IntMatrix(self._create_all_layers_permuation_vector(ind).astype(int))
 		#TODO
-		self._bpmod.shuffleBeliefs(perm_vec_c)
+		self._bpmod.permute_beliefs(perm_vec_c)
 
 
 	def plot_communities(self,ind=None,layers=None,ax=None,cmap=None):

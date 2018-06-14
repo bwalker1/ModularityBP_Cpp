@@ -166,6 +166,12 @@ class BP_Modularity(_object):
 
     def compute_bstar(self, omega_in, q_in):
         return _bp.BP_Modularity_compute_bstar(self, omega_in, q_in)
+
+    def permute_beliefs(self, permutation):
+        return _bp.BP_Modularity_permute_beliefs(self, permutation)
+
+    def merge_communities(self, merges):
+        return _bp.BP_Modularity_merge_communities(self, merges)
     __swig_destroy__ = _bp.delete_BP_Modularity
     __del__ = lambda self: None
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
