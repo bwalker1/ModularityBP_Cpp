@@ -666,7 +666,7 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
     // go through each layer and apply the permutation described to it
     if (permutation.size() != q)
     {
-        fprintf(stderr,("Permutation vector list has wrong length\n"));
+        fprintf(stderr,("Permutation vector list has wrong length %d != %d \n"),permutation.size(),q);
         return;
     }
     vector<double> vals(q);

@@ -254,8 +254,6 @@ def test_modbp_interface():
 			#print mlbp.retrieval_modularities
 
 def test_community_swapping_ml():
-
-
 	n = 100
 	q = 2
 	nlayers = 10
@@ -265,7 +263,6 @@ def test_community_swapping_ml():
 	ntrials = 1
 	omega = .5
 	gamma = 1.0
-
 	nblocks = q
 
 	pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
@@ -281,15 +278,10 @@ def test_community_swapping_ml():
 		mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
 									   comm_vec=ml_sbm.get_all_layers_block())
 
-		# #graph for testing
-		# testdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
-		# with gzip.open(os.path.join(testdir,'test_ml_graph.gz'),'r') as fh:
-		#	 mgraph=pickle.load(fh)
 
 		mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
-									align_communities_across_layers=False)
+									align_communities_across_layers=True)
 
-		# mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
 		bstars = [mlbp.get_bstar(q_, omega) for q_ in range(2, qmax + 1)]
 		betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
 		bstar = mlbp.get_bstar(q_, omega)
@@ -299,27 +291,20 @@ def test_community_swapping_ml():
 			print(mlbp.marginal_index_to_close_marginals[0])
 			print(mlbp.marginal_to_comm_number[0])
 			print(mlbp._groupmap_to_permutation_vector(0))
+			print('Test permutation sweep.')
 			mlbp_rm = mlbp.retrieval_modularities
-
 			old_part=mlbp.partitions[0].copy() #before change
 			old_transformed=np.zeros(len(old_part))
 			mlbp._perform_permuation_sweep(0) # permute all layers
-			print('AMI after transform')
+			print('AMI after permutation sweep')
 			print(skm.adjusted_mutual_info_score(old_part,mlbp.partitions[0]))
 			# print('old',old_part)
 			# print('new',mlbp.partitions[0])
 			for layer in mlbp.layers_unique:
-
 				cinds=np.where(mlbp.layer_vec==layer)[0]
-
 				old_transformed[cinds]=map( lambda x : mlbp._permutation_vectors[0][layer][x] ,old_part[cinds])
-			print('old trans formed',
+			print('AMI of old transformed with new ',
 				  skm.adjusted_mutual_info_score(old_transformed,mlbp.partitions[0]))
-
-
-			# ind2look = mlbp_rm['AMI'].idxmax()
-			# # output.to_csv(outfile)
-			# print(mlbp.get_number_nodes_switched_all_layers(ind2look,percent=True))
 			plt.close()
 			f, a = plt.subplots(1, 2, figsize=(6, 3))
 			a = plt.subplot(1, 2, 1)
@@ -328,30 +313,7 @@ def test_community_swapping_ml():
 			mlbp.plot_communities(0, ax=a)
 			plt.show()
 
-		# these are the non-trivial ones
-		minidx = mlbp_rm[mlbp_rm['niters'] < 1000][
-			'retrieval_modularity']  # & ~mlbp_rm['is_trivial'] ]['retrieval_modularity']
-		cind = output.shape[0]
 
-		if minidx.shape[0] == 0:
-			output.loc[cind, ['ep', 'eta', 'resgamma', 'omega']] = [ep, eta, gamma, omega]
-			output.loc[cind, ['niters']] = 1000
-			continue
-		minidx = minidx.idxmax()
-
-		output.loc[cind, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-						  'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']] = \
-			mlbp_rm.loc[
-				minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-						 'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']]
-		output.loc[cind, ['ep', 'eta']] = [ep, eta]
-
-
-	# permdict=mlbp._create_layer_permutation_single_layer(ind2look,layer_max)
-	# mlbp.permute_layer_with_dict(ind2look,layer_max,permdict)
-	#
-	# layer_changes=mlbp.get_number_nodes_switched_all_layers(ind2look, percent=True)
-	# print(layer_changes)
 
 def main():
 	test_community_swapping_ml()
