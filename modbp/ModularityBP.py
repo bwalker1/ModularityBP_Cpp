@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import seaborn as sbn
 from time import time
 import os,pickle,gzip
+import logging
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class ModularityBP():
 	"""
@@ -86,6 +88,8 @@ class ModularityBP():
 		:return:
 		"""
 		assert(q>0),"q must be > 0"
+		t=time()
+		logging.debug("Creating c++ modbp object")
 		if self._bpmod is None:
 			self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
 										intra_edgelist=self._intraedgelistpv,
@@ -106,31 +110,37 @@ class ModularityBP():
 		# in case c++ class calculated b*
 		if beta==0:
 			beta = self._bpmod.getBeta();
-
-
+		logging.debug('time: {:.4f}'.format(time()-t))
+		t=time()
+		logging.debug('Running modbp')
 		iters=self._bpmod.run(niter)
 		cmargs=np.array(self._bpmod.return_marginals())
+		logging.debug('time: {:.4f}'.format(time()-t))
+		t=time()
 		self.marginals[self.nruns]=cmargs
 		#Calculate effective group size and get partitions
+		logging.debug('Combining marginals')
 		self._get_community_distances(self.nruns) #sets values in method
 		cpartition=self._get_partition(self.nruns,self.use_effective)
 		self.partitions[self.nruns]=cpartition
-		if self._align_communities_across_layers:
-			t=time()
-			# print('sweeping')
-			self._perform_permuation_sweep(self.nruns) # modifies partition directly
-			# print('time sweeping {:.4f}'.format(time()-t))
+		logging.debug('time: {:.4f}'.format(time()-t))
+		t=time()
 
+		if self._align_communities_across_layers:
+			logging.debug('aligning communities across layers')
+			self._perform_permuation_sweep(self.nruns) # modifies partition directly
+			logging.debug('time: {:.4f}'.format(time() - t))
+			t = time()
 		#We perform the merger and the swap on the BP side and then rerun
-		self._merge_communities_bp(self.nruns)
-		self._switch_beliefs_bp(self.nruns)
-		iters = self._bpmod.run(niter)
-		cmargs = np.array(self._bpmod.return_marginals())
-		self.marginals[self.nruns] = cmargs
-		# Calculate effective group size and get partitions
-		self._get_community_distances(self.nruns)  # sets values in method
-		cpartition = self._get_partition(self.nruns, self.use_effective)
-		self.partitions[self.nruns] = cpartition
+		# self._merge_communities_bp(self.nruns)
+		# self._switch_beliefs_bp(self.nruns)
+		# iters = self._bpmod.run(niter)
+		# cmargs = np.array(self._bpmod.return_marginals())
+		# self.marginals[self.nruns] = cmargs
+		# # Calculate effective group size and get partitions
+		# self._get_community_distances(self.nruns)  # sets values in method
+		# cpartition = self._get_partition(self.nruns, self.use_effective)
+		# self.partitions[self.nruns] = cpartition
 
 
 

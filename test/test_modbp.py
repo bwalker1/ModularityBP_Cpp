@@ -280,7 +280,7 @@ def test_community_swapping_ml():
 
 
 		mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
-									align_communities_across_layers=True)
+									align_communities_across_layers=False)
 
 		bstars = [mlbp.get_bstar(q_, omega) for q_ in range(2, qmax + 1)]
 		betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
