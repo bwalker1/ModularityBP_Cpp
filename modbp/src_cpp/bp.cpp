@@ -643,22 +643,32 @@ double sp(double beta, double omega, double q, double c)
 
 void BP_Modularity::merge_communities(vector<index_t> merges)
 {
-    vector<double> vals(q);
+    // figure out the new number of communities
+    index_t q_new = *max_element(merges.begin(),merges.end());
+    index_t q_old = q;
+    vector<double> beliefs_temp(beliefs);
+    setq(q_new);
+    
+    // zero out beliefs
+    for (index_t i=0;i<beliefs.size();++i)
+    {
+        beliefs[i] = 0;
+    }
+    
+    // write in correct values for beliefs
     for (index_t i=0;i<n;++i)
     {
-        for (int s=0;s<q;++s)
-        {
-            vals[s] = 0;
-        }
         index_t nn = neighbor_count[i];
-        for (int s=0;s<q;++s)
+        for (int s=0;s<q_old;++s)
         {
             for (index_t idx2=0;idx2<nn;++idx2)
             {
-                vals[merges[s]] += beliefs[beliefs_offsets[i]+nn*s+idx2];
+                beliefs[q_new*i+merges[s]] += beliefs_temp[beliefs_offsets[i]+nn*s+idx2];
             }
         }
     }
+    
+    
 }
 
 void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
@@ -682,6 +692,19 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
             for (int k=0;k<permutation[i].size();++k)
             {
                 vals[k] = beliefs[beliefs_offsets[i]+nn*permutation[i][k]+idx2];
+            }
+        }
+    }
+    
+    // write out the beliefs
+    for (index_t i = 0; i < nt; ++i)
+    {
+        index_t nn = neighbor_count[i];
+        for (index_t idx2=0;idx2<nn;++idx2)
+        {
+            for (int s=0;s<q;++s)
+            {
+                beliefs[beliefs_offsets[i]+nn*s+idx2] = vals[s];
             }
         }
     }
