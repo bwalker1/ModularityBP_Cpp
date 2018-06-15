@@ -700,19 +700,22 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
             }
         }
     }
-    
+   //maybe i'm missing something here but vals is a vector of length q?
+   //wouldn't this just set all of the beliefs to be the same for each node?
+   //see above swap
     // write out the beliefs
-    for (index_t i = 0; i < nt; ++i)
-    {
-        index_t nn = neighbor_count[i];
-        for (index_t idx2=0;idx2<nn;++idx2)
-        {
-            for (int s=0;s<q;++s)
-            {
-                beliefs[beliefs_offsets[i]+nn*s+idx2] = vals[s];
-            }
-        }
-    }
+//    for (index_t i = 0; i < nt; ++i)
+//    {
+//        index_t nn = neighbor_count[i];
+//        for (index_t idx2=0;idx2<nn;++idx2)
+//        {
+//            for (int s=0;s<q;++s)
+//            {
+//                beliefs[beliefs_offsets[i]+nn*s+idx2] = vals[s];
+//            }
+//        }
+//    }
+
 }
 
 double BP_Modularity::compute_bstar(double omega_in,int q_in)
