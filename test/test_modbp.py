@@ -261,7 +261,7 @@ def test_community_swapping_ml():
 	c = 16
 	ep = .05
 	ntrials = 1
-	omega = .5
+	omega = 4
 	gamma = 1.0
 	nblocks = q
 
@@ -280,31 +280,33 @@ def test_community_swapping_ml():
 
 
 		mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
-									align_communities_across_layers=False)
+									align_communities_across_layers=True)
 
 		bstars = [mlbp.get_bstar(q_, omega) for q_ in range(2, qmax + 1)]
 		betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
-		bstar = mlbp.get_bstar(q_, omega)
+		bstar = mlbp.get_bstar(qmax, omega)
 		for beta in [bstar]: #just run at bstar.
 			mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
 			print("Group mapping")
 			print(mlbp.marginal_index_to_close_marginals[0])
-			print(mlbp.marginal_to_comm_number[0])
 			print(mlbp._groupmap_to_permutation_vector(0))
-			print('Test permutation sweep.')
-			mlbp_rm = mlbp.retrieval_modularities
-			old_part=mlbp.partitions[0].copy() #before change
-			old_transformed=np.zeros(len(old_part))
-			mlbp._perform_permuation_sweep(0) # permute all layers
-			print('AMI after permutation sweep')
-			print(skm.adjusted_mutual_info_score(old_part,mlbp.partitions[0]))
-			# print('old',old_part)
-			# print('new',mlbp.partitions[0])
-			for layer in mlbp.layers_unique:
-				cinds=np.where(mlbp.layer_vec==layer)[0]
-				old_transformed[cinds]=map( lambda x : mlbp._permutation_vectors[0][layer][x] ,old_part[cinds])
-			print('AMI of old transformed with new ',
-				  skm.adjusted_mutual_info_score(old_transformed,mlbp.partitions[0]))
+
+			# print(mlbp.marginal_to_comm_number[0])
+			# print(mlbp._groupmap_to_permutation_vector(0))
+			# print('Test permutation sweep.')
+			# mlbp_rm = mlbp.retrieval_modularities
+			# old_part=mlbp.partitions[0].copy() #before change
+			# old_transformed=np.zeros(len(old_part))
+			# mlbp._perform_permuation_sweep(0) # permute all layers
+			# print('AMI after permutation sweep')
+			# print(skm.adjusted_mutual_info_score(old_part,mlbp.partitions[0]))
+			# # print('old',old_part)
+			# # print('new',mlbp.partitions[0])
+			# for layer in mlbp.layers_unique:
+			# 	cinds=np.where(mlbp.layer_vec==layer)[0]
+			# 	old_transformed[cinds]=map( lambda x : mlbp._permutation_vectors[0][layer][x] ,old_part[cinds])
+			# print('AMI of old transformed with new ',
+			# 	  skm.adjusted_mutual_info_score(old_transformed,mlbp.partitions[0]))
 			plt.close()
 			f, a = plt.subplots(1, 2, figsize=(6, 3))
 			a = plt.subplot(1, 2, 1)

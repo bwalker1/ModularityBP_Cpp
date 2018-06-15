@@ -64,9 +64,10 @@ public:
     
     void permute_beliefs(vector<vector<index_t> > permutation);
     void merge_communities(vector<index_t> merges);
+
 private:
 
-    void shuffleBeliefs(vector<vector<double>> in_beliefs);
+//    void shuffleBeliefs(vector<vector<double>> in_beliefs);
     void initializeBeliefs();
     void initializeTheta();
     void normalize(vector<double> & beliefs, index_t i);

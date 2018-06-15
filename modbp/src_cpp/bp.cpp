@@ -527,11 +527,11 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
 
 
 
-void shuffleBeliefs(vector<vector<double>> in_beliefs){
-    //rearrange each of outgoing beliefs for each node
-    //according to permutation vector
-    //input is a n by q vector
-}
+//void shuffleBeliefs(vector<vector<double>> in_beliefs){
+//    //rearrange each of outgoing beliefs for each node
+//    //according to permutation vector
+//    //input is a n by q vector
+//}
 
 void BP_Modularity::initializeBeliefs() { 
     // set starting value of beliefs
@@ -663,25 +663,30 @@ void BP_Modularity::merge_communities(vector<index_t> merges)
 
 void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
 {
+    //
     // go through each layer and apply the permutation described to it
-    if (permutation.size() != q)
+    if (permutation.size() != nt)
     {
-        fprintf(stderr,("Permutation vector list has wrong length %d != %d \n"),permutation.size(),q);
+        fprintf(stderr,("Permutation vector list has wrong length %d != %d \n"),permutation.size(),nt);
         return;
     }
-    vector<double> vals(q);
+    vector<double> vals(q); //storage for current beliefs
     for (index_t i = 0; i < nt; ++i)
     {
+
         index_t nn = neighbor_count[i];
-        for (index_t idx2=0;idx2<nn;++idx2)
+        for (index_t idx2=0; idx2<nn ;++idx2)
         {
-            for (int s=0;s<q;++s)
-            {
-                vals[s] = beliefs[beliefs_offsets[i]+nn*s+idx2];
-            }
+            //copy beliefs into temp based on permutation order
+            //i.e. the new kth belief is given by kth value of permutation vector
             for (int k=0;k<permutation[i].size();++k)
             {
                 vals[k] = beliefs[beliefs_offsets[i]+nn*permutation[i][k]+idx2];
+            }
+            //go back through and copy back over onto beliefs reordered
+            for (int k=0;k<permutation[i].size();++k)
+            {
+                beliefs[beliefs_offsets[i]+nn*k+idx2]=vals[k];
             }
         }
     }

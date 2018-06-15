@@ -126,14 +126,18 @@ class ModularityBP():
 		logging.debug('time: {:.4f}'.format(time()-t))
 		t=time()
 
+		if self.use_effective:
+			self._merge_communities_bp(self.nruns)
+
 		if self._align_communities_across_layers:
 			logging.debug('aligning communities across layers')
 			self._perform_permuation_sweep(self.nruns) # modifies partition directly
 			logging.debug('time: {:.4f}'.format(time() - t))
 			t = time()
+			self._switch_beliefs_bp(self.nruns)
+
 		#We perform the merger and the swap on the BP side and then rerun
-		# self._merge_communities_bp(self.nruns)
-		# self._switch_beliefs_bp(self.nruns)
+
 		# iters = self._bpmod.run(niter)
 		# cmargs = np.array(self._bpmod.return_marginals())
 		# self.marginals[self.nruns] = cmargs
@@ -351,8 +355,15 @@ class ModularityBP():
 		revmap={}
 		for i,comset in enumerate(commsets):
 			for val in comset:
+				#we use the minimum community mapped so that must number of communities
+				#will retain mapping.
 				revmap[val]=np.min(list(comset))
 
+		#remap to those in the range from 0 to len(commsets)
+		available=set(range(len(commsets))).difference(set(revmap.values()))
+		for k,val in revmap.items():
+			if val >= len(commsets):
+				revmap[k]=available.pop()
 		self.marginal_to_comm_number[ind] = revmap
 
 	def _groupmap_to_permutation_vector(self,ind):
@@ -432,7 +443,8 @@ class ModularityBP():
 		final_permutation_dict = [ ]
 		for i,layer in enumerate(layers):
 			lay_inds=np.where(self.layer_vec==layer)[0]
-			partvals=np.unique(self.partitions[ind])
+			#all the possible community labels
+			partvals=np.unique(self.marginal_to_comm_number[ind].values())
 			#map to itself
 			final_permutation_dict.append(dict(zip(partvals,partvals)))
 		return final_permutation_dict
@@ -693,11 +705,11 @@ class ModularityBP():
 		M=len(np.unique(self.marginal_to_comm_number[ind].values()))
 		outarray=np.zeros((N,M)) #layers by #communites (after combining)
 
-		numcoms=len(self.marginal_to_comm_number[ind].values())
+		numcoms=len(set(self.marginal_to_comm_number[ind].values()))
 
 		for i,layer in enumerate(layers):
 
-			currow=range(numcoms)
+			currow = range(numcoms)
 			#use the final mapping dictionary to map each of the communities in this layer
 			currow = map ( lambda  x : self._permutation_vectors[ind][layer][x],currow)
 			outarray[i,:]=currow
