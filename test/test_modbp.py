@@ -261,7 +261,7 @@ def test_community_swapping_ml():
 	c = 16
 	ep = .05
 	ntrials = 1
-	omega = 4
+	omega = 2
 	gamma = 1.0
 	nblocks = q
 
@@ -286,7 +286,7 @@ def test_community_swapping_ml():
 		betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
 		bstar = mlbp.get_bstar(qmax, omega)
 		for beta in [bstar]: #just run at bstar.
-			mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+			mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega)
 			print("Group mapping")
 			print(mlbp.marginal_index_to_close_marginals[0])
 			print(mlbp._groupmap_to_permutation_vector(0))
