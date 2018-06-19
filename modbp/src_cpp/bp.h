@@ -61,9 +61,13 @@ public:
     void setVerbose(bool in) { verbose = in; };
     
     double compute_bstar(double omega_in,int q_in);
+    
+    void permute_beliefs(vector<vector<index_t> > permutation);
+    void merge_communities(vector<index_t> merges);
+
 private:
 
-    void shuffleBeliefs(vector<vector<double>> in_beliefs);
+//    void shuffleBeliefs(vector<vector<double>> in_beliefs);
     void initializeBeliefs();
     void initializeTheta();
     void normalize(vector<double> & beliefs, index_t i);
@@ -133,6 +137,8 @@ private:
 	void compute_marginal(index_t i, bool do_bfe_contribution = false);
     
     bool verbose;
+    
+    unsigned long iter;
 };
 
 #endif /* bp_hpp */

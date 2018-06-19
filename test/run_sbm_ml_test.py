@@ -15,7 +15,7 @@ import traceback
 #clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
 clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
-# python run_sbm_ml_test.py 100 2 10 .1 5 .1 2 0.5 1.0
+# python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 
 def main():
     # generate a graph and then run it some number of times
@@ -30,7 +30,6 @@ def main():
     gamma = float(sys.argv[9])
 
     nblocks = q
-    assert 1==2,"testing error"
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
@@ -55,12 +54,10 @@ def main():
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
-        bstar = mlbp.get_bstar(q, omega)
-
-        bstars = [mlbp.get_bstar(q, omega) for q in range(2, qmax + 1)]
-        betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
+        bstars = [mlbp.get_bstar(q_i, omega) for q_i in [2, qmax]]
+        betas = np.linspace(bstars[0], bstars[-1], 3*len(qmax-2))
         for beta in betas:
-            mlbp.run_modbp(beta=bstar, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+            mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
         # these are the non-trivial ones
@@ -113,5 +110,5 @@ def pydebug(type, value, tb):
         # traceback.print_tb(tb,file=fh)
 
 if __name__=='__main__':
-        sys.excepthook=pydebug
+        # sys.excepthook=pydebug
         sys.exit(main())

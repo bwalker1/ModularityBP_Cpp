@@ -139,7 +139,8 @@ long BP_Modularity::run(unsigned long maxIters)
     change = 1;
     //unsigned long maxIters = 100;
     bool converged = false;
-    for (unsigned long iter = 0; iter < maxIters; ++iter)
+    iter = 0;
+    for (iter = 0; iter < maxIters; ++iter)
     {
         step();
         
@@ -195,6 +196,14 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
         
         Z += marginals[q*i + s];
+        
+        assert(Z > 0);
+        assert(!isnan(Z));
+        
+        if (!(Z > 0 && !isnan(Z)))
+        {
+            //printf("Z is not correct\n");
+        }
     }
     if (do_bfe_contribution)
     {
@@ -203,8 +212,15 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
     // normalize
     for (index_t s = 0; s < q; ++s)
     {
-        marginals[q*i + s] /= Z;
-        
+        if (Z > 0)
+        {
+            marginals[q*i + s] /= Z;
+        }
+        else
+        {
+            marginals[q*i + s] = 1.0/q;
+        }
+        assert(!isnan(marginals[q*i + s]));
     }
 }
 
@@ -225,7 +241,16 @@ void BP_Modularity::step()
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
-        index_t i = order[node_idx];
+        index_t i;
+        if (iter%2 == 0)
+        {
+            i = order[node_idx];
+        }
+        else
+        {
+            i = node_idx;
+        }
+        
         index_t t = layer_membership[i];
         const index_t nn = neighbor_count[i];
         if (nn==0) continue;
@@ -246,7 +271,7 @@ void BP_Modularity::step()
             }
         }
         // if we changed any nodes, set this to true so we know we haven't converged
-        changed = true;
+        //changed = true;
         change += local_change;
         
         // we should update the nodes contribution to theta
@@ -328,7 +353,7 @@ void BP_Modularity::step()
                 index_t k = neighbors[neighbors_offsets[i]+idx];
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
-                
+                assert(!isnan(scratch[nn*s+idx]));
                 beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
             }
         }
@@ -377,7 +402,16 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
         }
         for (size_t s = 0; s < q;++s)
         {
-            beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
+            assert(sum==1);
+            if (sum > 0)
+            {
+                beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
+            }
+            else
+            {
+                beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q;
+            }
+            assert(!isnan(beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q));
         }
     }
 }
@@ -493,22 +527,47 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
 
 
 
-void shuffleBeliefs(vector<vector<double>> in_beliefs){
-    //rearrange each of outgoing beliefs for each node
-    //according to permutation vector
-    //input is a n by q vector
-}
+//void shuffleBeliefs(vector<vector<double>> in_beliefs){
+//    //rearrange each of outgoing beliefs for each node
+//    //according to permutation vector
+//    //input is a n by q vector
+//}
 
 void BP_Modularity::initializeBeliefs() { 
     // set starting value of beliefs
     // generate values for each state and then normalize
     normal_distribution<double> eps_dist(0,0.1);
-    for (size_t idx = 0;idx<q*total_edges;++idx)
+    /*
+    for (index_t idx=0;idx<n;++idx)
     {
-        double val = eps_dist(rng);
-        beliefs[idx] = truncate(1.0/q + val,q);
+        const index_t nn = neighbor_count[idx];
+        
+        bool group1 =((idx-(n/nt)*layer_membership[idx])) < (n*1.0/(2.0*nt));
+        
+        for (size_t s = 0; s < q; ++s)
+        {
+            for (index_t idx2 = 0; idx2 < nn; ++ idx2)
+            {
+                index_t k = neighbors[neighbors_offsets[idx]+idx2];
+                const index_t nnk = neighbor_count[k];
+                index_t idx_out = neighbors_reversed[neighbors_offsets[idx]+idx2];
+                beliefs[beliefs_offsets[idx]+nn*s+idx2] = int(group1);
+                //printf("%f\n",beliefs[beliefs_offsets[k]+nnk*s+idx_out]);
+            }
+        }
+    }
+    */
+    //compute_marginals();
+    for (index_t i=0;i<n;++i)
+    {
+        //printf("%f\n",marginals[i]);
     }
     
+    for (index_t i=0;i<beliefs.size();++i)
+    {
+        beliefs[i] = truncate(1.0/q + eps_dist(rng),q);
+    }
+
     for (index_t i=0;i<n;++i)
     {
         normalize(beliefs,i);
@@ -580,6 +639,83 @@ double sp(double beta, double omega, double q, double c)
     double temp1 = eb - 1 + q;
     double temp2 = ewb- 1 + q;
     return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
+}
+
+void BP_Modularity::merge_communities(vector<index_t> merges)
+{
+    // figure out the new number of communities
+    index_t q_new = *max_element(merges.begin(),merges.end());
+    index_t q_old = q;
+    vector<double> beliefs_temp(beliefs);
+    setq(q_new);
+    
+    // zero out beliefs
+    for (index_t i=0;i<beliefs.size();++i)
+    {
+        beliefs[i] = 0;
+    }
+    
+    // write in correct values for beliefs
+    for (index_t i=0;i<n;++i)
+    {
+        index_t nn = neighbor_count[i];
+        for (int s=0;s<q_old;++s)
+        {
+            for (index_t idx2=0;idx2<nn;++idx2)
+            {
+                beliefs[q_new*i+merges[s]] += beliefs_temp[beliefs_offsets[i]+nn*s+idx2];
+            }
+        }
+    }
+    
+    
+}
+
+void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
+{
+    //
+    // go through each layer and apply the permutation described to it
+    if (permutation.size() != nt)
+    {
+        fprintf(stderr,("Permutation vector list has wrong length %d != %d \n"),permutation.size(),nt);
+        return;
+    }
+    vector<double> vals(q); //storage for current beliefs
+    for (index_t i = 0; i < nt; ++i)
+    {
+
+        index_t nn = neighbor_count[i];
+        for (index_t idx2=0; idx2<nn ;++idx2)
+        {
+            //copy beliefs into temp based on permutation order
+            //i.e. the new kth belief is given by kth value of permutation vector
+            for (int k=0;k<permutation[i].size();++k)
+            {
+                vals[k] = beliefs[beliefs_offsets[i]+nn*permutation[i][k]+idx2];
+            }
+            //go back through and copy back over onto beliefs reordered
+            for (int k=0;k<permutation[i].size();++k)
+            {
+                beliefs[beliefs_offsets[i]+nn*k+idx2]=vals[k];
+            }
+        }
+    }
+   //maybe i'm missing something here but vals is a vector of length q?
+   //wouldn't this just set all of the beliefs to be the same for each node?
+   //see above swap
+    // write out the beliefs
+//    for (index_t i = 0; i < nt; ++i)
+//    {
+//        index_t nn = neighbor_count[i];
+//        for (index_t idx2=0;idx2<nn;++idx2)
+//        {
+//            for (int s=0;s<q;++s)
+//            {
+//                beliefs[beliefs_offsets[i]+nn*s+idx2] = vals[s];
+//            }
+//        }
+//    }
+
 }
 
 double BP_Modularity::compute_bstar(double omega_in,int q_in)

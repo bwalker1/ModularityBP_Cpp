@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from .ModularityBP import ModularityBP
 from .InferenceBP import InferenceBP
 from .GenerateGraphs import RandomERGraph,RandomSBMGraph,MultilayerSBM,MultilayerGraph

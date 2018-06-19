@@ -58,7 +58,7 @@ class RandomSBMGraph(RandomGraph):
         """
         if block_sizes is None:
             block_sizes = [int(n / (1.0 * comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0] - 1)]
-            block_sizes += [n - np.sum(block_sizes)]  # make sure it sums to one
+            block_sizes += [int(n - np.sum(block_sizes))]  # make sure it sums to one
 
         if graph is not None:
             self.graph=graph
@@ -71,13 +71,13 @@ class RandomSBMGraph(RandomGraph):
             self.graph = ig.Graph.SBM(n=n, pref_matrix=comm_prob_mat, block_sizes=list(block_sizes), directed=False,loops=False)
 
         self.use_gcc=use_gcc
-        self.block_sizes=np.array(block_sizes)
+        self.block_sizes=np.array(block_sizes,dtype=int)
         self.comm_prob_mat=comm_prob_mat
 
 
             #nodes are assigned on bases of block
         block=[]
-        for i,blk in enumerate(block_sizes):
+        for i,blk in enumerate(self.block_sizes):
             block+=[i for _ in range(blk)]
         self.graph.vs['block']=block
 
@@ -189,7 +189,7 @@ class MultilayerGraph():
             for ei,ej in self.intralayer_edges:
                 if ei in node_inds or ej in node_inds:
                     if not (ei>=min_ind and ej>=min_ind):
-                        print('problem ')
+                        raise AssertionError('edge indicies not in layer {:d},{:d}'.format(ei,ej))
                     celist.append((ei-min_ind,ej-min_ind))
             layers.append(self._create_graph_from_elist(len(node_inds),celist))
         return layers
@@ -427,8 +427,8 @@ class MultilayerSBM():
         for i in range(self.nlayers-1):
             cnet=self.layer_sbms[i]
             cnetnxt=self.layer_sbms[i+1]
-            cedge=np.array(zip(range(offset,offset+cnet.n),
-                               range(offset+cnet.n,offset+2*cnet.n)))
+            cedge=np.array(list(zip(range(offset,offset+cnet.n),
+                               range(offset+cnet.n,offset+2*cnet.n))))
             interedges[offset:offset+cnet.n,:]=cedge
 
             offset+=cnet.n
@@ -454,6 +454,8 @@ class MultilayerSBM():
         m_offset=0 #for indexing
         for i in np.arange(self.nlayers):
             c_layernet=self.layer_sbms[i]
+            if c_layernet.m==0:
+                continue #no edges in this layer
             c_elist=c_layernet.get_edgelist()
             intraedges[m_offset:m_offset+c_layernet.m,:]=np.array(c_elist)+offset
             offset+=c_layernet.n

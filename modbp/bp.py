@@ -166,6 +166,12 @@ class BP_Modularity(_object):
 
     def compute_bstar(self, omega_in, q_in):
         return _bp.BP_Modularity_compute_bstar(self, omega_in, q_in)
+
+    def permute_beliefs(self, permutation):
+        return _bp.BP_Modularity_permute_beliefs(self, permutation)
+
+    def merge_communities(self, merges):
+        return _bp.BP_Modularity_merge_communities(self, merges)
     __swig_destroy__ = _bp.delete_BP_Modularity
     __del__ = lambda self: None
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
@@ -511,6 +517,119 @@ class IntArray(_object):
     __del__ = lambda self: None
 IntArray_swigregister = _bp.IntArray_swigregister
 IntArray_swigregister(IntArray)
+
+class IntMatrix(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, IntMatrix, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, IntMatrix, name)
+    __repr__ = _swig_repr
+
+    def iterator(self):
+        return _bp.IntMatrix_iterator(self)
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        return _bp.IntMatrix___nonzero__(self)
+
+    def __bool__(self):
+        return _bp.IntMatrix___bool__(self)
+
+    def __len__(self):
+        return _bp.IntMatrix___len__(self)
+
+    def __getslice__(self, i, j):
+        return _bp.IntMatrix___getslice__(self, i, j)
+
+    def __setslice__(self, *args):
+        return _bp.IntMatrix___setslice__(self, *args)
+
+    def __delslice__(self, i, j):
+        return _bp.IntMatrix___delslice__(self, i, j)
+
+    def __delitem__(self, *args):
+        return _bp.IntMatrix___delitem__(self, *args)
+
+    def __getitem__(self, *args):
+        return _bp.IntMatrix___getitem__(self, *args)
+
+    def __setitem__(self, *args):
+        return _bp.IntMatrix___setitem__(self, *args)
+
+    def pop(self):
+        return _bp.IntMatrix_pop(self)
+
+    def append(self, x):
+        return _bp.IntMatrix_append(self, x)
+
+    def empty(self):
+        return _bp.IntMatrix_empty(self)
+
+    def size(self):
+        return _bp.IntMatrix_size(self)
+
+    def swap(self, v):
+        return _bp.IntMatrix_swap(self, v)
+
+    def begin(self):
+        return _bp.IntMatrix_begin(self)
+
+    def end(self):
+        return _bp.IntMatrix_end(self)
+
+    def rbegin(self):
+        return _bp.IntMatrix_rbegin(self)
+
+    def rend(self):
+        return _bp.IntMatrix_rend(self)
+
+    def clear(self):
+        return _bp.IntMatrix_clear(self)
+
+    def get_allocator(self):
+        return _bp.IntMatrix_get_allocator(self)
+
+    def pop_back(self):
+        return _bp.IntMatrix_pop_back(self)
+
+    def erase(self, *args):
+        return _bp.IntMatrix_erase(self, *args)
+
+    def __init__(self, *args):
+        this = _bp.new_IntMatrix(*args)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+
+    def push_back(self, x):
+        return _bp.IntMatrix_push_back(self, x)
+
+    def front(self):
+        return _bp.IntMatrix_front(self)
+
+    def back(self):
+        return _bp.IntMatrix_back(self)
+
+    def assign(self, n, x):
+        return _bp.IntMatrix_assign(self, n, x)
+
+    def resize(self, *args):
+        return _bp.IntMatrix_resize(self, *args)
+
+    def insert(self, *args):
+        return _bp.IntMatrix_insert(self, *args)
+
+    def reserve(self, n):
+        return _bp.IntMatrix_reserve(self, n)
+
+    def capacity(self):
+        return _bp.IntMatrix_capacity(self)
+    __swig_destroy__ = _bp.delete_IntMatrix
+    __del__ = lambda self: None
+IntMatrix_swigregister = _bp.IntMatrix_swigregister
+IntMatrix_swigregister(IntMatrix)
 
 class Array(_object):
     __swig_setmethods__ = {}

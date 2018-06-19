@@ -41,8 +41,9 @@ if __name__ == "__main__":
         print trial
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges,ml_sbm.layer_vec,  ml_sbm.interedges, comm_vec=ml_sbm.get_all_layers_block())
-        mlbp = modbp.ModularityBP(mlgraph=mgraph)
-        mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=500, reset=True)
+        mlbp = modbp.ModularityBP(mlgraph=mgraph, align_communities_across_layers=False)
+        mlbp.run_modbp(q=q, beta=0, omega=omega, resgamma=gamma, niter=1000, reset=True)
+        print mlbp.marginals[0]
         accuracy += mlbp.retrieval_modularities.loc[0,'Accuracy']
         ami += mlbp.retrieval_modularities.loc[0,'AMI']
         ami_avg += mlbp.retrieval_modularities.loc[0,'AMI_layer_avg']
@@ -52,6 +53,9 @@ if __name__ == "__main__":
     ami /= ntrials
     ami_avg /= ntrials
     ret_mod /= ntrials
+    
+    mlbp.plot_communities(0)
+    plt.show()
     
     f = open("{:s}/data/eps{:f}eta{:f}gamma{:f}omega{:f}.dat".format(expanduser("~"),ep,eta,gamma,omega),"wb")
     f.write("{:f} {:f} {:f} {:f} {:f} {:f} {:f} {:f}\n".format(ep,eta,gamma,omega,accuracy,ami,ami_avg, ret_mod))

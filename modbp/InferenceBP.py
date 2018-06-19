@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+
 import numpy as np
 import igraph as ig
 from future.utils import iteritems,iterkeys
+
 from collections import Hashable
-from GenerateGraphs import MultilayerGraph
+from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
 from .bp import BP_Inference,PairVector,IntArray
 import itertools
