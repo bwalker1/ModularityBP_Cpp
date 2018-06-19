@@ -198,9 +198,9 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         Z += marginals[q*i + s];
         
         assert(Z > 0);
-        assert(!isnan(Z));
+        assert(!::isnan(Z));
         
-        if (!(Z > 0 && !isnan(Z)))
+        if (!(Z > 0 && !::isnan(Z)))
         {
             //printf("Z is not correct\n");
         }
@@ -220,7 +220,7 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         {
             marginals[q*i + s] = 1.0/q;
         }
-        assert(!isnan(marginals[q*i + s]));
+        assert(! ::isnan(marginals[q*i + s]));
     }
 }
 
@@ -353,7 +353,7 @@ void BP_Modularity::step()
                 index_t k = neighbors[neighbors_offsets[i]+idx];
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
-                assert(!isnan(scratch[nn*s+idx]));
+                assert(!::isnan(scratch[nn*s+idx]));
                 beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
             }
         }
@@ -411,7 +411,7 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
             {
                 beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q;
             }
-            assert(!isnan(beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q));
+            assert(!::isnan(beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q));
         }
     }
 }

@@ -263,7 +263,7 @@ class ModularityBP():
 									  inter_edgelist=self._interedgelistpv,
 									  _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
 									   omega=omega,transform=False)
-		return self._bpmod.compute_bstar(omega,q)
+		return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
 
 	def _get_retrieval_modularity(self,nrun=None):
 		"""
