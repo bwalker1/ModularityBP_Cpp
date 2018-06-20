@@ -647,6 +647,7 @@ void BP_Modularity::merge_communities(vector<index_t> merges)
     index_t q_new = *max_element(merges.begin(),merges.end());
     index_t q_old = q;
     vector<double> beliefs_temp(beliefs);
+    vector<index_t> beliefs_offsets_temp(beliefs_offsets);
     setq(q_new);
     
     // zero out beliefs
@@ -663,7 +664,7 @@ void BP_Modularity::merge_communities(vector<index_t> merges)
         {
             for (index_t idx2=0;idx2<nn;++idx2)
             {
-                beliefs[q_new*i+merges[s]] += beliefs_temp[beliefs_offsets[i]+nn*s+idx2];
+                beliefs[beliefs_offsets[i]+q_new*i+merges[s]] += beliefs_temp[beliefs_offsets_temp[i]+nn*s+idx2];
             }
         }
     }
