@@ -110,13 +110,22 @@ class ModularityBP():
 		# in case c++ class calculated b*
 		if beta==0:
 			beta = self._bpmod.getBeta();
+
+		if self._align_communities_across_layers:
+			iters_per_run=niter//4 #somewhat arbitrary divisor
+		else:
+			iters_per_run=niter # run as many times as possible on first run.
 		logging.debug('time: {:.4f}'.format(time()-t))
 		t=time()
 		logging.debug('Running modbp')
-		iters=self._bpmod.run(niter)
+		converged=False
+		iters=self._bpmod.run(iters_per_run)
 		cmargs=np.array(self._bpmod.return_marginals())
 		logging.debug('time: {:.4f}'.format(time()-t))
 		t=time()
+
+		if iters<iters_per_run:
+			converged=True
 		self.marginals[self.nruns]=cmargs
 		#Calculate effective group size and get partitions
 		logging.debug('Combining marginals')
@@ -126,25 +135,40 @@ class ModularityBP():
 		logging.debug('time: {:.4f}'.format(time()-t))
 		t=time()
 
-		if self.use_effective:
-			self._merge_communities_bp(self.nruns)
 
-		if self._align_communities_across_layers:
+		if self._align_communities_across_layers and iters<niter: #we only do this if it converged in first place
 			logging.debug('aligning communities across layers')
-			self._perform_permuation_sweep(self.nruns) # modifies partition directly
+			nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 			logging.debug('time: {:.4f}'.format(time() - t))
 			t = time()
-			self._switch_beliefs_bp(self.nruns)
-
+			cnt=0
+			while not (nsweeps==0 and converged==True) and not iters>niter:
+				logging.debug("rerunning modbp with realigned:")
+				self._switch_beliefs_bp(self.nruns)
+				#can't go more than the alloted number of runs
+				citers = self._bpmod.run(iters_per_run)
+				iters+=citers
+				if citers<iters_per_run: #it converged
+					converged=True
+				logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
+				t = time()
+				cmargs = np.array(self._bpmod.return_marginals())
+				self.marginals[self.nruns] = cmargs
+				# Calculate effective group size and get partitions
+				self._get_community_distances(self.nruns)  # sets values in method
+				cpartition = self._get_partition(self.nruns, self.use_effective)
+				self.partitions[self.nruns] = cpartition
+				if self.use_effective:
+					q_new = self._merge_communities_bp(self.nruns)
+					q = q_new
+				cnt+=1
+				# logging.debug('aligning communities across layers')
+				nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
+				# logging.debug('time: {:.4f}'.format(time() - t))
+				logging.debug('nsweeps: {:d}'.format(nsweeps))
 		#We perform the merger and the swap on the BP side and then rerun
-
-		# iters = self._bpmod.run(niter)
-		# cmargs = np.array(self._bpmod.return_marginals())
-		# self.marginals[self.nruns] = cmargs
-		# # Calculate effective group size and get partitions
-		# self._get_community_distances(self.nruns)  # sets values in method
-		# cpartition = self._get_partition(self.nruns, self.use_effective)
-		# self.partitions[self.nruns] = cpartition
+		if iters>=niter:
+			logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
 
 
 
@@ -153,7 +177,7 @@ class ModularityBP():
 		self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
 		self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
 		self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
-
+		self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
 		retmod=self._get_retrieval_modularity(self.nruns)
 		bethe_energy=self._bpmod.compute_bethe_free_energy()
 		self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
@@ -239,7 +263,7 @@ class ModularityBP():
 									  inter_edgelist=self._interedgelistpv,
 									  _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
 									   omega=omega,transform=False)
-		return self._bpmod.compute_bstar(omega,q)
+		return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
 
 	def _get_retrieval_modularity(self,nrun=None):
 		"""
@@ -457,7 +481,8 @@ class ModularityBP():
 		Repeat until no more flips are performed
 
 		:param ind: partition to perform permutation on
-		:return:
+		:return: number of sweeps performed. To keep track of whether \
+		any layers were actually shuffled.
 		"""
 		max_iters=100
 		niters=0
@@ -519,6 +544,7 @@ class ModularityBP():
 			for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
 				self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
 			niters+=1
+		return niters
 
 		# plt.close()
 		# f, a = plt.subplots(1, 2, figsize=(6, 3))
@@ -733,7 +759,7 @@ class ModularityBP():
 		"""
 
 		perm_vec_c=IntMatrix(self._create_all_layers_permuation_vector(ind).astype(int))
-		#TODO
+
 		self._bpmod.permute_beliefs(perm_vec_c)
 
 
