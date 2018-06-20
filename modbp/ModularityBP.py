@@ -179,6 +179,7 @@ class ModularityBP():
 		self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
 		self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
 		retmod=self._get_retrieval_modularity(self.nruns)
+		logging.debug('calculating bethe_free energy')
 		bethe_energy=self._bpmod.compute_bethe_free_energy()
 		self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
 		self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
@@ -263,6 +264,7 @@ class ModularityBP():
 									  inter_edgelist=self._interedgelistpv,
 									  _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
 									   omega=omega,transform=False)
+		logging.debug('Computing bstar {:.4f},{:d}'.format(omega,int(q)))
 		return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
 
 	def _get_retrieval_modularity(self,nrun=None):
@@ -388,7 +390,7 @@ class ModularityBP():
 		valsremap={}
 		#use this dict to ensure that all vals are remapped consistently
 
-		for val in list(set(revmap.values())):
+		for k,val in list(set(revmap.items())):
 			if val >= len(commsets):
 				if val not in valsremap:
 					valsremap[val]=available.pop()
