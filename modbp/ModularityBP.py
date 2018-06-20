@@ -384,10 +384,15 @@ class ModularityBP():
 				revmap[val]=np.min(list(comset))
 
 		#remap to those in the range from 0 to len(commsets)
-		available=set(range(len(commsets))).difference(set(revmap.values()))
-		for k,val in revmap.items():
+		available=set(np.arange(len(commsets))).difference(set(revmap.values()))
+		valsremap={}
+		#use this dict to ensure that all vals are remapped consistently
+
+		for val in list(set(revmap.values())):
 			if val >= len(commsets):
-				revmap[k]=available.pop()
+				if val not in valsremap:
+					valsremap[val]=available.pop()
+				revmap[k]=valsremap[val]
 		self.marginal_to_comm_number[ind] = revmap
 
 	def _groupmap_to_permutation_vector(self,ind):
