@@ -724,7 +724,6 @@ double sp(double beta, double omega, double q, double c)
 
 double BP_Modularity::compute_bstar(double omega_in,int q_in)
 {
-    fprintf(stderr,"entering compute bstar\n");
     // currently this assumes multiplex graph
     
     // compute c - decide on the right way

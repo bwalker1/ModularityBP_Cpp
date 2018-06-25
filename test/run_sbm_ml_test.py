@@ -18,6 +18,7 @@ clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 
 def main():
+
     # generate a graph and then run it some number of times
     n = int(sys.argv[1])
     q = int(sys.argv[2])
@@ -28,14 +29,13 @@ def main():
     ntrials = int(sys.argv[7])
     omega = float(sys.argv[8])
     gamma = float(sys.argv[9])
-
     nblocks = q
     pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
     pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
     prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
     output = pd.DataFrame(columns=['ep', 'eta', 'beta', 'resgamma', 'omega', 'niters',
                                    'AMI', 'AMI_layer_avg', 'retrieval_modularity', 'bethe_free_energy',
-                                   'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial'])
+                                   'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged'])
 
 
     finoutdir = os.path.join(clusterdir, 'test/modbpdata/SBM_test_data_n{:}_q{:d}_nt{:}'.format(n, q, ntrials))
@@ -55,27 +55,28 @@ def main():
 
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in [2, qmax]]
-        betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
+        # betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
+        betas=bstars
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
         # these are the non-trivial ones
-        minidx = mlbp_rm[mlbp_rm['niters'] < 1000][
+        minidx = mlbp_rm[mlbp_rm['converged'] == True][
             'retrieval_modularity']  # & ~mlbp_rm['is_trivial'] ]['retrieval_modularity']
         cind = output.shape[0]
 
         if minidx.shape[0] == 0:
-            output.loc[cind, ['ep', 'eta', 'resgamma', 'omega']] = [ep, eta, gamma, omega]
+            output.loc[cind, ['ep', 'eta', 'resgamma', 'omega','converged']] = [ep, eta, gamma, omega,False]
             output.loc[cind, ['niters']] = 1000
             continue
         minidx = minidx.idxmax()
 
         output.loc[cind, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']] = \
+                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']] = \
             mlbp_rm.loc[
                 minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-                         'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial']]
+                         'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
 
     output.to_csv(outfile)

@@ -14,7 +14,7 @@ import seaborn as sbn
 from time import time
 import os,pickle,gzip
 import logging
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
 class ModularityBP():
 	"""
@@ -88,6 +88,7 @@ class ModularityBP():
 		:return:
 		"""
 		assert(q>0),"q must be > 0"
+		q_orig=q #before collapsing
 		t=time()
 		logging.debug("Creating c++ modbp object")
 		if self._bpmod is None:
@@ -167,12 +168,12 @@ class ModularityBP():
 				# logging.debug('time: {:.4f}'.format(time() - t))
 				logging.debug('nsweeps: {:d}'.format(nsweeps))
 		#We perform the merger and the swap on the BP side and then rerun
-		if iters>=niter:
+		#if iters>=niter:
 			logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
 
 
 
-		self.retrieval_modularities.loc[self.nruns, 'q'] = q
+		self.retrieval_modularities.loc[self.nruns, 'q'] = q_orig
 		self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
 		self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
 		self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
@@ -264,7 +265,7 @@ class ModularityBP():
 									  inter_edgelist=self._interedgelistpv,
 									  _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
 									   omega=omega,transform=False)
-		logging.debug('Computing bstar {:.4f},{:d}'.format(omega,int(q)))
+
 		return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
 
 	def _get_retrieval_modularity(self,nrun=None):
@@ -354,6 +355,7 @@ class ModularityBP():
 		except KeyError:
 			raise KeyError("Cannot find partition with index {}".format(ind))
 
+		#get direcly from the mariginals
 		q=cmarginal.shape[1]
 
 		distmat=np.zeros((q,q))
@@ -395,6 +397,7 @@ class ModularityBP():
 				if val not in valsremap:
 					valsremap[val]=available.pop()
 				revmap[k]=valsremap[val]
+
 		self.marginal_to_comm_number[ind] = revmap
 
 	def _groupmap_to_permutation_vector(self,ind):
