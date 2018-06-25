@@ -254,9 +254,9 @@ def test_modbp_interface():
 			#print mlbp.retrieval_modularities
 
 def test_community_swapping_ml():
-	n = 512
+	n = 100
 	q = 2
-	nlayers = 40
+	nlayers = 5
 	eta = .1
 	c = 16
 	ep = .05

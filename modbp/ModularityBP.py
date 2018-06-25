@@ -179,6 +179,7 @@ class ModularityBP():
 		self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
 		self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
 		retmod=self._get_retrieval_modularity(self.nruns)
+		logging.debug('calculating bethe_free energy')
 		bethe_energy=self._bpmod.compute_bethe_free_energy()
 		self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
 		self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
@@ -263,6 +264,7 @@ class ModularityBP():
 									  inter_edgelist=self._interedgelistpv,
 									  _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
 									   omega=omega,transform=False)
+		logging.debug('Computing bstar {:.4f},{:d}'.format(omega,int(q)))
 		return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
 
 	def _get_retrieval_modularity(self,nrun=None):
@@ -384,10 +386,15 @@ class ModularityBP():
 				revmap[val]=np.min(list(comset))
 
 		#remap to those in the range from 0 to len(commsets)
-		available=set(range(len(commsets))).difference(set(revmap.values()))
-		for k,val in revmap.items():
+		available=set(np.arange(len(commsets))).difference(set(revmap.values()))
+		valsremap={}
+		#use this dict to ensure that all vals are remapped consistently
+
+		for k,val in list(set(revmap.items())):
 			if val >= len(commsets):
-				revmap[k]=available.pop()
+				if val not in valsremap:
+					valsremap[val]=available.pop()
+				revmap[k]=valsremap[val]
 		self.marginal_to_comm_number[ind] = revmap
 
 	def _groupmap_to_permutation_vector(self,ind):
@@ -750,6 +757,7 @@ class ModularityBP():
 		"""
 		merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
 		self._bpmod.merge_communities(merge_vec)
+		return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
 	def _switch_beliefs_bp(self, ind):
 		"""

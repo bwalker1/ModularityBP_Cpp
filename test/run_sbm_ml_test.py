@@ -55,7 +55,7 @@ def main():
 
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in [2, qmax]]
-        betas = np.linspace(bstars[0], bstars[-1], 3*len(qmax-2))
+        betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities

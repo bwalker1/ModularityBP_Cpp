@@ -621,32 +621,13 @@ void BP_Modularity::initializeTheta() {
     }
 }
 
-double s(double beta, double omega, double q, double c)
-{
-    double eb = exp(beta);
-    double ewb = exp(omega*beta);
-    
-    double temp1 = ((eb-1)/(eb-1+q));
-    double temp2 = ((ewb-1)/(ewb-1+q));
-    return c*temp1*temp1 + 2*temp2*temp2;
-}
-
-double sp(double beta, double omega, double q, double c)
-{
-    double eb = exp(beta);
-    double ewb = exp(omega*beta);
-    
-    double temp1 = eb - 1 + q;
-    double temp2 = ewb- 1 + q;
-    return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
-}
-
 void BP_Modularity::merge_communities(vector<index_t> merges)
 {
     // figure out the new number of communities
-    index_t q_new = *max_element(merges.begin(),merges.end());
+    index_t q_new = *max_element(merges.begin(),merges.end()) + 1;
     index_t q_old = q;
     vector<double> beliefs_temp(beliefs);
+    vector<index_t> beliefs_offsets_temp(beliefs_offsets);
     setq(q_new);
     
     // zero out beliefs
@@ -663,7 +644,10 @@ void BP_Modularity::merge_communities(vector<index_t> merges)
         {
             for (index_t idx2=0;idx2<nn;++idx2)
             {
-                beliefs[q_new*i+merges[s]] += beliefs_temp[beliefs_offsets[i]+nn*s+idx2];
+                index_t idx_1 = beliefs_offsets[i]+nn*merges[s]+idx2;
+                index_t idx_2 = beliefs_offsets_temp[i]+nn*s+idx2;
+
+                beliefs[idx_1] += beliefs_temp[idx_2];
             }
         }
     }
@@ -718,8 +702,29 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
 
 }
 
+double s(double beta, double omega, double q, double c)
+{
+    double eb = exp(beta);
+    double ewb = exp(omega*beta);
+    
+    double temp1 = ((eb-1)/(eb-1+q));
+    double temp2 = ((ewb-1)/(ewb-1+q));
+    return c*temp1*temp1 + 2*temp2*temp2;
+}
+
+double sp(double beta, double omega, double q, double c)
+{
+    double eb = exp(beta);
+    double ewb = exp(omega*beta);
+    
+    double temp1 = eb - 1 + q;
+    double temp2 = ewb- 1 + q;
+    return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
+}
+
 double BP_Modularity::compute_bstar(double omega_in,int q_in)
 {
+    fprintf(stderr,"entering compute bstar\n");
     // currently this assumes multiplex graph
     
     // compute c - decide on the right way
@@ -732,6 +737,7 @@ double BP_Modularity::compute_bstar(double omega_in,int q_in)
     for (int i=0;i<n;++i)
     {
         double nn = neighbor_count[i];
+
         if (layer_membership[i] == 0)
         {
             nn -= 1;
@@ -808,6 +814,5 @@ double BP_Modularity::compute_bstar(double omega_in,int q_in)
             return (xl + xr)/2;
         }
     }
-    
     return (xl+xr)/2;
 }
