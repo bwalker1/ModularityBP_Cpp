@@ -137,39 +137,39 @@ class ModularityBP():
 		t=time()
 
 
-		if self._align_communities_across_layers and iters<niter: #we only do this if it converged in first place
+		if self._align_communities_across_layers and iters<niter:
 			logging.debug('aligning communities across layers')
 			nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 			logging.debug('time: {:.4f}'.format(time() - t))
 			t = time()
-			cnt=0
-			while not (nsweeps==0 and converged==True) and not iters>niter:
-				logging.debug("rerunning modbp with realigned:")
-				self._switch_beliefs_bp(self.nruns)
-				#can't go more than the alloted number of runs
-				citers = self._bpmod.run(iters_per_run)
-				iters+=citers
-				if citers<iters_per_run: #it converged
-					converged=True
-				logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
-				t = time()
-				cmargs = np.array(self._bpmod.return_marginals())
-				self.marginals[self.nruns] = cmargs
-				# Calculate effective group size and get partitions
-				self._get_community_distances(self.nruns)  # sets values in method
-				cpartition = self._get_partition(self.nruns, self.use_effective)
-				self.partitions[self.nruns] = cpartition
-				if self.use_effective:
-					q_new = self._merge_communities_bp(self.nruns)
-					q = q_new
-				cnt+=1
-				# logging.debug('aligning communities across layers')
-				nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
-				# logging.debug('time: {:.4f}'.format(time() - t))
-				logging.debug('nsweeps: {:d}'.format(nsweeps))
-		#We perform the merger and the swap on the BP side and then rerun
-		#if iters>=niter:
-			logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
+		# 	cnt=0
+		# 	while not (nsweeps==0 and converged==True) and not iters>niter:
+		# 		logging.debug("rerunning modbp with realigned:")
+		# 		self._switch_beliefs_bp(self.nruns)
+		# 		#can't go more than the alloted number of runs
+		# 		citers = self._bpmod.run(iters_per_run)
+		# 		iters+=citers
+		# 		if citers<iters_per_run: #it converged
+		# 			converged=True
+		# 		logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
+		# 		t = time()
+		# 		cmargs = np.array(self._bpmod.return_marginals())
+		# 		self.marginals[self.nruns] = cmargs
+		# 		# Calculate effective group size and get partitions
+		# 		self._get_community_distances(self.nruns)  # sets values in method
+		# 		cpartition = self._get_partition(self.nruns, self.use_effective)
+		# 		self.partitions[self.nruns] = cpartition
+		# 		if self.use_effective:
+		# 			q_new = self._merge_communities_bp(self.nruns)
+		# 			q = q_new
+		# 		cnt+=1
+		# 		# logging.debug('aligning communities across layers')
+		# 		nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
+		# 		# logging.debug('time: {:.4f}'.format(time() - t))
+		# 		logging.debug('nsweeps: {:d}'.format(nsweeps))
+		# #We perform the merger and the swap on the BP side and then rerun
+		# #if iters>=niter:
+		# 	logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
 
 
 
