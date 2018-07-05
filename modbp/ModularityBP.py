@@ -14,7 +14,8 @@ import seaborn as sbn
 from time import time
 import os,pickle,gzip
 import logging
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
 class ModularityBP():
 	"""
@@ -89,6 +90,11 @@ class ModularityBP():
 		"""
 		assert(q>0),"q must be > 0"
 		q_orig=q #before collapsing
+		self.retrieval_modularities.loc[self.nruns, 'q'] = q_orig
+		self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
+		self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
+		self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
+
 		t=time()
 		logging.debug("Creating c++ modbp object")
 		if self._bpmod is None:
@@ -133,51 +139,65 @@ class ModularityBP():
 		self._get_community_distances(self.nruns) #sets values in method
 		cpartition=self._get_partition(self.nruns,self.use_effective)
 		self.partitions[self.nruns]=cpartition
+		if self.use_effective:
+			q_new = self._merge_communities_bp(self.nruns)
+			q = q_new
 		logging.debug('time: {:.4f}'.format(time()-t))
 		t=time()
+
+		# if self._align_communities_across_layers and iters<niter:
+		# 	logging.debug('aligning communities across layers')
+		# 	# print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
+		# 	#                                                    self._get_retrieval_modularity(self.nruns)))
+		# 	nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
+
 
 
 		if self._align_communities_across_layers and iters<niter:
 			logging.debug('aligning communities across layers')
+			# print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
+			#                                                    self._get_retrieval_modularity(self.nruns)))
 			nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
+
 			logging.debug('time: {:.4f}'.format(time() - t))
 			t = time()
-		# 	cnt=0
-		# 	while not (nsweeps==0 and converged==True) and not iters>niter:
-		# 		logging.debug("rerunning modbp with realigned:")
-		# 		self._switch_beliefs_bp(self.nruns)
-		# 		#can't go more than the alloted number of runs
-		# 		citers = self._bpmod.run(iters_per_run)
-		# 		iters+=citers
-		# 		if citers<iters_per_run: #it converged
-		# 			converged=True
-		# 		logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
-		# 		t = time()
-		# 		cmargs = np.array(self._bpmod.return_marginals())
-		# 		self.marginals[self.nruns] = cmargs
-		# 		# Calculate effective group size and get partitions
-		# 		self._get_community_distances(self.nruns)  # sets values in method
-		# 		cpartition = self._get_partition(self.nruns, self.use_effective)
-		# 		self.partitions[self.nruns] = cpartition
-		# 		if self.use_effective:
-		# 			q_new = self._merge_communities_bp(self.nruns)
-		# 			q = q_new
-		# 		cnt+=1
-		# 		# logging.debug('aligning communities across layers')
-		# 		nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
-		# 		# logging.debug('time: {:.4f}'.format(time() - t))
-		# 		logging.debug('nsweeps: {:d}'.format(nsweeps))
+			cnt=0
+			while not (nsweeps==0 and converged==True) and not iters>niter:
+				#plots for debugging
+				logging.debug("rerunning modbp with realigned:")
+				self._switch_beliefs_bp(self.nruns)
+				#can't go more than the alloted number of runs
+				# citers = self._bpmod.run(iters_per_run)
+				# self._bpmod.step()
+				citers=100
+				iters+=citers
+				if citers<iters_per_run: #it converged
+					converged=True
+				logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
+				t = time()
+				cmargs = np.array(self._bpmod.return_marginals())
+				self.marginals[self.nruns] = cmargs
+				# Calculate effective group size and get partitions
+				self._get_community_distances(self.nruns)  # sets values in method
+				cpartition = self._get_partition(self.nruns, self.use_effective)
+				self.partitions[self.nruns] = cpartition
+				if self.use_effective:
+					q_new = self._merge_communities_bp(self.nruns)
+					q = q_new
+				cnt+=1
+
+				nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
+
+				# logging.debug('time: {:.4f}'.format(time() - t))
+				logging.debug('nsweeps: {:d}'.format(nsweeps))
 		# #We perform the merger and the swap on the BP side and then rerun
-		# #if iters>=niter:
-		# 	logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
+		if iters>=niter:
+			logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
 
 
 
-		self.retrieval_modularities.loc[self.nruns, 'q'] = q_orig
-		self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
+
 		self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
-		self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
-		self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
 		self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
 		retmod=self._get_retrieval_modularity(self.nruns)
 		logging.debug('calculating bethe_free energy')
@@ -401,6 +421,14 @@ class ModularityBP():
 		self.marginal_to_comm_number[ind] = revmap
 
 	def _groupmap_to_permutation_vector(self,ind):
+		"""
+		Create vector that denotes communities that should be collapsed . \
+		Each element of the array is the new community label for that index . \
+		I.e [ 0, 0 , 1 , 2] Denotes a collpase from 4 communities to 3 where \
+		the 0th and 1st old communities are merged into a single set of marginals.
+		:param ind:
+		:return:
+		"""
 		revgroupmap=self.marginal_to_comm_number[ind]
 
 		outarray=np.arange(np.max(revgroupmap.keys())+1)
@@ -732,7 +760,9 @@ class ModularityBP():
 	def _create_all_layers_permuation_vector(self,ind):
 		"""
 		We use the dictionary representation to create the permuation vector to pass into \
-		the modularity bp\
+		the modularity bp\.  This is organized such that each row represents the current layer \
+		And each position has the new position it is supposed to map to .  Ie [ 1 ,  ... ] \
+		denotes that the zeroeth belief becomes the first belief (marginal) .
 		:param ind:
 		:return:
 		"""
@@ -762,15 +792,19 @@ class ModularityBP():
 		self._bpmod.merge_communities(merge_vec)
 		return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
+	def create_test_permutation_vector(self):
+		tmap={0:1,1:2,2:3,3:0} #cyclic permutation
+		out=np.array([ np.array(map(lambda x: tmap[x] ,range(4))) for _ in range(self.nlayers)])
+		return out
+
 	def _switch_beliefs_bp(self, ind):
 		"""
 		This switches the belefs.  Should only be called after _perform_permutation_sweep
 		:param ind: modbp run index
 		:returns: permutes the beliefs or marginals
 		"""
-
-		perm_vec_c=IntMatrix(self._create_all_layers_permuation_vector(ind).astype(int))
-
+		perm_vec_c=self._create_all_layers_permuation_vector(ind).astype(int)
+		perm_vec_c=IntMatrix(perm_vec_c)
 		self._bpmod.permute_beliefs(perm_vec_c)
 
 
@@ -799,7 +833,7 @@ class ModularityBP():
 			return com_matrix
 
 
-		cinds=np.where(np.isin(self.layer_vec,layers))
+		cinds=np.where(np.isin(self.layer_vec,layers))[0]
 		if ind is None: #use baseline
 			assert self.graph.comm_vec is not None, "Must specify ground truth com_vec for graph"
 			cpart=self.graph.comm_vec
@@ -822,7 +856,10 @@ class ModularityBP():
 		ax.grid('off')
 		ax.pcolormesh(part_mat,cmap=cmap,vmin=vmin,vmax=vmax)
 
-
+		numswitched=self.get_number_nodes_switched_all_layers(ind=ind,percent=True)
+		numswitched=numswitched[np.where(np.isin(self.layers_unique,layers))[0]] #filter for layers selected
+		for i,num in enumerate(numswitched):
+			ax.text(s="{:.2f}".format(num),x=i,y=-1,fontdict={"fontsize":9,'color':'white'})
 
 		ax.set_xticks(range(0,len(layers)))
 		ax.set_xticklabels(layers)

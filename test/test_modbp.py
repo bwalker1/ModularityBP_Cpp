@@ -254,15 +254,15 @@ def test_modbp_interface():
 			#print mlbp.retrieval_modularities
 
 def test_community_swapping_ml():
-	n = 100
+	n = 250
 	q = 2
-	nlayers = 5
-	eta = .1
-	c = 16
-	ep = .05
+	nlayers = 20
+	eta = 0.0
+	c = 10
+	ep = .1
 	ntrials = 1
-	omega = 2
-	gamma = 1.0
+	omega = 2.0
+	gamma = .5
 	nblocks = q
 
 	pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
@@ -287,6 +287,7 @@ def test_community_swapping_ml():
 		bstar = mlbp.get_bstar(qmax, omega)
 		for beta in [bstar]: #just run at bstar.
 			mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega)
+
 			print("Group mapping")
 			print(mlbp.marginal_index_to_close_marginals[0])
 			print(mlbp._groupmap_to_permutation_vector(0))
@@ -316,8 +317,64 @@ def test_community_swapping_ml():
 			plt.show()
 
 
+def test_cpp_permutation():
+	n = 200
+	q = 2
+	nlayers = 20
+	eta = 0.0
+	c = 10
+	ep = .1
+	ntrials = 1
+	omega = 2.0
+	gamma = .5
+	nblocks = q
+
+	pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
+	pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
+	prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
+	output = pd.DataFrame(columns=['ep', 'eta', 'beta', 'resgamma', 'omega', 'niters',
+	                               'AMI', 'AMI_layer_avg', 'retrieval_modularity', 'bethe_free_energy',
+	                               'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial'])
+
+	qmax = 2
+
+	ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
+	mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
+	                               comm_vec=ml_sbm.get_all_layers_block())
+
+	mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
+	                          align_communities_across_layers=False)
+
+	bstar = mlbp.get_bstar(qmax, omega)
+
+	mlbp.run_modbp(beta=bstar, niter=2000, q=qmax, resgamma=gamma, omega=omega)
+	plt.close()
+	f, a = plt.subplots(1, 1)
+	mlbp.plot_communities(0, ax=a)
+	plt.show()
+	mlbp._perform_permuation_sweep(ind=0)
+
+	plt.close()
+	f, a = plt.subplots(1, 1)
+	mlbp.plot_communities(0, ax=a)
+	plt.show()
+
+
+
+	mlbp._switch_beliefs_bp(0)
+	cmargs = np.array(mlbp._bpmod.return_marginals())
+	mlbp.marginals[0] = cmargs
+	# Calculate effective group size and get partitions
+	mlbp._get_community_distances(0)  # sets values in method
+	cpartition = mlbp._get_partition(0, True)
+	mlbp.partitions[0] = cpartition
+
+	plt.close()
+	f, a = plt.subplots(1, 1)
+	mlbp.plot_communities(0, ax=a)
+	plt.show()
 
 def main():
-	test_community_swapping_ml()
+	test_cpp_permutation()
 if __name__=='__main__':
 	main()

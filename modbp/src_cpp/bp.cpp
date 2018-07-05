@@ -665,7 +665,7 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
         return;
     }
     vector<double> vals(q); //storage for current beliefs
-    for (index_t i = 0; i < nt; ++i)
+    for (index_t i = 0; i < nt; ++i) //iterate through layers (nt)
     {
 
         index_t nn = neighbor_count[i];
