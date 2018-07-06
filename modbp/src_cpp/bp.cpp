@@ -665,20 +665,21 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
         return;
     }
     vector<double> vals(q); //storage for current beliefs
-    for (index_t i = 0; i < nt; ++i) //iterate through layers (nt)
+    size_t c_layer_ind;
+    for (index_t i = 0; i < n; ++i) //iterate through all nodes (n)
     {
-
+        c_layer_ind=layer_membership[i];
         index_t nn = neighbor_count[i];
         for (index_t idx2=0; idx2<nn ;++idx2)
         {
             //copy beliefs into temp based on permutation order
             //i.e. the new kth belief is given by kth value of permutation vector
-            for (int k=0;k<permutation[i].size();++k)
+            for (int k=0;k<permutation[c_layer_ind].size();++k)
             {
-                vals[k] = beliefs[beliefs_offsets[i]+nn*permutation[i][k]+idx2];
+                vals[k] = beliefs[beliefs_offsets[i]+nn*permutation[c_layer_ind][k]+idx2];
             }
             //go back through and copy back over onto beliefs reordered
-            for (int k=0;k<permutation[i].size();++k)
+            for (int k=0;k<permutation[c_layer_ind].size();++k)
             {
                 beliefs[beliefs_offsets[i]+nn*k+idx2]=vals[k];
             }

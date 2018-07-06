@@ -1,5 +1,6 @@
 from __future__ import division
 from context import modbp
+from context import IntMatrix
 from time import time
 import numpy as np
 import igraph as ig
@@ -321,7 +322,7 @@ def test_cpp_permutation():
 	n = 200
 	q = 2
 	nlayers = 20
-	eta = 0.0
+	eta = 0.00
 	c = 10
 	ep = .1
 	ntrials = 1
@@ -348,12 +349,14 @@ def test_cpp_permutation():
 	bstar = mlbp.get_bstar(qmax, omega)
 
 	mlbp.run_modbp(beta=bstar, niter=2000, q=qmax, resgamma=gamma, omega=omega)
+	#after first run with no realignment
 	plt.close()
 	f, a = plt.subplots(1, 1)
 	mlbp.plot_communities(0, ax=a)
 	plt.show()
 	mlbp._perform_permuation_sweep(ind=0)
-
+	mlbp._switch_beliefs_bp(0)
+	# #after realignment
 	plt.close()
 	f, a = plt.subplots(1, 1)
 	mlbp.plot_communities(0, ax=a)
@@ -361,14 +364,17 @@ def test_cpp_permutation():
 
 
 
-	mlbp._switch_beliefs_bp(0)
+	#
+	#this should just flip the marginals
+	tmap={0:1,1:0}
+	out=np.array([ np.array(map(lambda x: tmap[x] ,range(2))) for _ in range(mlbp.nlayers)])
+	mlbp._bpmod.permute_beliefs(IntMatrix(out))
 	cmargs = np.array(mlbp._bpmod.return_marginals())
 	mlbp.marginals[0] = cmargs
 	# Calculate effective group size and get partitions
 	mlbp._get_community_distances(0)  # sets values in method
 	cpartition = mlbp._get_partition(0, True)
 	mlbp.partitions[0] = cpartition
-
 	plt.close()
 	f, a = plt.subplots(1, 1)
 	mlbp.plot_communities(0, ax=a)

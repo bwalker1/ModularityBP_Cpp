@@ -167,9 +167,7 @@ class ModularityBP():
 				logging.debug("rerunning modbp with realigned:")
 				self._switch_beliefs_bp(self.nruns)
 				#can't go more than the alloted number of runs
-				# citers = self._bpmod.run(iters_per_run)
-				# self._bpmod.step()
-				citers=100
+				citers = self._bpmod.run(iters_per_run)
 				iters+=citers
 				if citers<iters_per_run: #it converged
 					converged=True
@@ -792,10 +790,6 @@ class ModularityBP():
 		self._bpmod.merge_communities(merge_vec)
 		return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
-	def create_test_permutation_vector(self):
-		tmap={0:1,1:2,2:3,3:0} #cyclic permutation
-		out=np.array([ np.array(map(lambda x: tmap[x] ,range(4))) for _ in range(self.nlayers)])
-		return out
 
 	def _switch_beliefs_bp(self, ind):
 		"""
