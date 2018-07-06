@@ -14,8 +14,8 @@ import seaborn as sbn
 from time import time
 import os,pickle,gzip
 import logging
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
 class ModularityBP():
 	"""
@@ -128,7 +128,7 @@ class ModularityBP():
 		converged=False
 		iters=self._bpmod.run(iters_per_run)
 		cmargs=np.array(self._bpmod.return_marginals())
-		logging.debug('time: {:.4f}'.format(time()-t))
+		logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
 		t=time()
 
 		if iters<iters_per_run:
