@@ -11,12 +11,12 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-# clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
-
+# python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
 def main():
 
     # generate a graph and then run it some number of times
@@ -45,6 +45,8 @@ def main():
                            "sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_omega{:.2f}_gamma{:.2f}.csv".format(n, q, nlayers,
                                                                                                          eta, ep, omega,
                                                                                                          gamma))
+
+    np.random.seed(0)
     qmax = 2 * q
     for trial in range(ntrials):
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
@@ -54,7 +56,7 @@ def main():
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
-        bstars = [mlbp.get_bstar(q_i, omega) for q_i in [2, qmax]]
+        bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(2, qmax+1)]
         # betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
         betas=bstars
         for beta in betas:

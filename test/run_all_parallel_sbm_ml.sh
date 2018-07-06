@@ -2,12 +2,12 @@ for gamma in 0.5 1 1.5
 do
     for omega in 0 1 2
     do
-        for eta in $(seq 0.0 0.05 1.01)
+        for eta in $(seq 0.0 0.04 .52)
         do
-            for eps in $(seq 0.0 0.05 1.01)
+            for eps in $(seq 0.0 0.04 .52)
             do
                 #echo "python rungraph.py 512 2 40 ${eta} 16 ${eps} 100 ${omega} ${gamma}"
-                sbatch -t 500 -n 1 -o test.out -p general --wrap="python run_sbm_ml_test.py 512 2 40 ${eta} 16 ${eps} 100 ${omega} ${gamma}"
+                sbatch -t 100 -n 1 -o run_sbm_many.out -p general --wrap="python run_sbm_ml_test.py 250 2 20 ${eta} 10 ${eps} 20 ${omega} ${gamma}"
             done
         done
     done
