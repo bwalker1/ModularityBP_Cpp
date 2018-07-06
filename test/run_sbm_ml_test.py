@@ -1,5 +1,6 @@
 from __future__ import division
-from context import modbp
+# from context import modbp
+import modbp
 import numpy as np
 import seaborn as sbn
 import pandas as pd
