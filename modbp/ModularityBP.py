@@ -119,12 +119,12 @@ class ModularityBP():
 			beta = self._bpmod.getBeta();
 
 		if self._align_communities_across_layers:
-			iters_per_run=niter//4 #somewhat arbitrary divisor
+			iters_per_run=niter #somewhat arbitrary divisor
 		else:
 			iters_per_run=niter # run as many times as possible on first run.
 		logging.debug('time: {:.4f}'.format(time()-t))
 		t=time()
-		logging.debug('Running modbp')
+		logging.debug('Running modbp at beta={:.3f}'.format(beta))
 		converged=False
 		iters=self._bpmod.run(iters_per_run)
 		cmargs=np.array(self._bpmod.return_marginals())
@@ -139,7 +139,8 @@ class ModularityBP():
 		self._get_community_distances(self.nruns) #sets values in method
 		cpartition=self._get_partition(self.nruns,self.use_effective)
 		self.partitions[self.nruns]=cpartition
-		if self.use_effective:
+
+  		if self.use_effective:
 			q_new = self._merge_communities_bp(self.nruns)
 			q = q_new
 		logging.debug('time: {:.4f}'.format(time()-t))
@@ -159,7 +160,7 @@ class ModularityBP():
 			#                                                    self._get_retrieval_modularity(self.nruns)))
 			nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
-			logging.debug('time: {:.4f}'.format(time() - t))
+			logging.debug('time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
 			t = time()
 			cnt=0
 			while not (nsweeps==0 and converged==True) and not iters>niter:
