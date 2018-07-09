@@ -12,9 +12,9 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+#clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
-#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
@@ -47,8 +47,8 @@ def main():
                                                                                                          eta, ep, omega,
                                                                                                          gamma))
 
-    np.random.seed(0)
     qmax = 2 * q
+    qmax = q
     for trial in range(ntrials):
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
