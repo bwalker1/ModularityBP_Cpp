@@ -48,7 +48,7 @@ def main():
                                                                                                          gamma))
 
     qmax = 2 * q
-    qmax = q
+    #qmax = q
     for trial in range(ntrials):
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
@@ -59,10 +59,16 @@ def main():
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(2, qmax+1)]
         # betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
-        betas=bstars
+        betas=[mlbp.get_bstar(q,omega)]
+        #betas=bstars
         for beta in betas:
-            mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=500, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
+            print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
+            plt.close()
+            f,a=plt.subplots(1,1)
+            mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a)
+            plt.show()
 
         # these are the non-trivial ones
         minidx = mlbp_rm[mlbp_rm['converged'] == True][

@@ -322,7 +322,7 @@ def test_cpp_permutation():
 	n = 200
 	q = 2
 	nlayers = 20
-	eta = 0.00
+	eta = 0.01
 	c = 10
 	ep = .1
 	ntrials = 1
