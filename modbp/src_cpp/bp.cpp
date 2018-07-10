@@ -18,8 +18,43 @@
 #include <algorithm>
 using namespace std;
 
+double poly_log(double in)
+{
+    double val;
+    double coeffs1_1[] = {0.124184264611831,-0.853766819206338, 2.50438266967193, -4.13223140495868,4.54545454545455,-2.18802315352901};
+    double coeffs1_5[] = {0.0263374485596708,-0.246913580246914,0.987654320987654,-2.22222222222222,3.33333333333333,-1.87786822522517};
+    double coeffs1_8[] = {0.0105844298802689,-0.119074836153026,0.571559213534522,-1.54320987654321,2.77777777777778,-1.69554666843122};
+    if (in < 2.1)
+    {
+        double* coeffs;
+        if (in < 1.3)
+        {
+            coeffs = coeffs1_1;
+        }
+        else if (in < 1.7)
+        {
+            coeffs = coeffs1_5;
+        }
+        else
+        {
+            coeffs = coeffs1_8;
+        }
+        val = coeffs[0];
+        for (int i=1;i<6;++i)
+        {
+            val *= in;
+            val += coeffs[i];
+        }
+    }
+    else
+    {
+        val = log(in);
+    }
+    return val;
+}
+
 inline double d_exp(double in) { return exp(in); };
-inline double d_log(double in) { printf("%f\n",in);return log(in); };
+inline double d_log(double in) { return poly_log(in); };
 
 double truncate(const double in, const int q)
 {
