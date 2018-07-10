@@ -18,6 +18,8 @@
 #include <algorithm>
 using namespace std;
 
+inline double d_exp(double in) { return exp(in); };
+inline double d_log(double in) { printf("%f\n",in);return log(in); };
 
 double truncate(const double in, const int q)
 {
@@ -135,7 +137,16 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
 
 long BP_Modularity::run(unsigned long maxIters)
 {
-    
+    for (int iter=0;iter<maxIters;++iter)
+    {
+        step();
+    }
+    return maxIters;
+}
+/*long BP_Modularity::run(unsigned long maxIters)
+{
+    if (verbose)
+        printf("Running modbp\n");
     change = 1;
     //unsigned long maxIters = 100;
     bool converged = false;
@@ -165,7 +176,7 @@ long BP_Modularity::run(unsigned long maxIters)
     return maxIters+1;
     
     
-}
+}*/
 
 void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
 {
@@ -183,17 +194,17 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             if (type==true)
             {
                 // intralayer contribution
-                add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                add = d_log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
             }
             else
             {
                 // interlayer contribution
-                add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                add = d_log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
             }
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
+        marginals[q*i+s] = d_exp(nn*theta[t][s] + marginals[q*i+s]);
         
         Z += marginals[q*i + s];
         
@@ -207,7 +218,7 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
     }
     if (do_bfe_contribution)
     {
-        bfe += log(Z);
+        bfe += d_log(Z);
     }
     // normalize
     for (index_t s = 0; s < q; ++s)
@@ -302,17 +313,17 @@ void BP_Modularity::step()
                     if (type==true)
                     {
                         // intralayer contribution
-                        add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                        add = d_log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
                     }
                     else
                     {
                         // interlayer contribution
-                        add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                        add = d_log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
                     }
                     scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
-                scratch[nn*s+idx] = exp(nn*theta[t][s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = d_exp(nn*theta[t][s] + scratch[nn*s+idx]);
             }
         }
         
@@ -327,7 +338,7 @@ void BP_Modularity::step()
             }
             if (compute_bfe)
             {
-                bfe -= log(sum);
+                bfe -= d_log(sum);
             }
             if (sum > 0)
             {
@@ -402,7 +413,7 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
         }
         for (size_t s = 0; s < q;++s)
         {
-            assert(sum==1);
+            //assert(sum==1);
             if (sum > 0)
             {
                 beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
@@ -411,7 +422,7 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
             {
                 beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q;
             }
-            assert(!::isnan(beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q));
+            //assert(!::isnan(beliefs[beliefs_offsets[i]+nn*s+idx2] = 1.0/q));
         }
     }
 }
@@ -447,8 +458,8 @@ double BP_Modularity::compute_bethe_free_energy()
 double BP_Modularity::compute_factorized_free_energy()
 {
     //Calculate the bethe free energy of the factorized state ( each node uniform on all communities)
-    //log(1-1/q-exp(beta))
-    double bffe=log(1-1.0/q - exp(beta));
+    //d_log(1-1/q-d_exp(beta))
+    double bffe=d_log(1-1.0/q - d_exp(beta));
     return bffe;
 }
 
@@ -516,8 +527,8 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     {
         beta = compute_bstar(omega,q);
     }
-    scale = exp(beta)-1;
-    scaleOmega = exp(beta*omega)-1;
+    scale = d_exp(beta)-1;
+    scaleOmega = d_exp(beta*omega)-1;
     if (init_beliefs)
         initializeBeliefs();
     if (init_theta)
@@ -705,8 +716,8 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
 
 double s(double beta, double omega, double q, double c)
 {
-    double eb = exp(beta);
-    double ewb = exp(omega*beta);
+    double eb = d_exp(beta);
+    double ewb = d_exp(omega*beta);
     
     double temp1 = ((eb-1)/(eb-1+q));
     double temp2 = ((ewb-1)/(ewb-1+q));
@@ -715,8 +726,8 @@ double s(double beta, double omega, double q, double c)
 
 double sp(double beta, double omega, double q, double c)
 {
-    double eb = exp(beta);
-    double ewb = exp(omega*beta);
+    double eb = d_exp(beta);
+    double ewb = d_exp(omega*beta);
     
     double temp1 = eb - 1 + q;
     double temp2 = ewb- 1 + q;

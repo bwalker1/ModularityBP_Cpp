@@ -1,0 +1,2 @@
+,ep,eta,beta,resgamma,omega,niters,AMI,AMI_layer_avg,retrieval_modularity,bethe_free_energy,Accuracy,Accuracy_layer_avg,qstar,num_coms,is_trivial,converged
+0,0.1,0.1,0.80045903558960085,1.0,0.5,399.0,0.89667999769084139,0.90954746567544875,0.41695249241804438,2.2464976333071855,0.97199999999999998,0.97199999999999998,2.0,2.0,False,True

@@ -11,15 +11,18 @@ import os
 import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
+import logging
 
 #clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp"
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
 def main():
-
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    
     # generate a graph and then run it some number of times
     n = int(sys.argv[1])
     q = int(sys.argv[2])
