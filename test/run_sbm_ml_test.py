@@ -12,9 +12,9 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-#clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
@@ -59,16 +59,16 @@ def main():
         # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(2, qmax+1)]
         # betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
-        betas=[mlbp.get_bstar(q,omega)]
-        #betas=bstars
+        #betas=[mlbp.get_bstar(q,omega)]
+        betas=bstars
         for beta in betas:
-            mlbp.run_modbp(beta=beta, niter=500, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
-            print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
-            plt.close()
-            f,a=plt.subplots(1,1)
-            mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a)
-            plt.show()
+            # print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
+            # plt.close()
+            # f,a=plt.subplots(1,1)
+            # mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a)
+            # plt.show()
 
         # these are the non-trivial ones
         minidx = mlbp_rm[mlbp_rm['converged'] == True][
@@ -87,8 +87,10 @@ def main():
                 minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
+        with open(outfile,'a') as fh: #writeout as we go
+			output.to_csv(outfile,header=False)
 
-    output.to_csv(outfile)
+
     return 0
 
 
