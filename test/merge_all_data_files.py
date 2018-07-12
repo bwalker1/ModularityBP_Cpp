@@ -29,18 +29,20 @@ def main(pargs=None):
     else:
         outfile=args.outfilename 
     allfiles=os.listdir(args.input)
-    outdf=pd.DataFrame()
+    # outdf=pd.DataFrame()
     for i,file in enumerate(allfiles):
         if not re.search('\.csv',file):
             continue #only append csv files
         cfile=os.path.join(args.input,file)
         c_df=pd.read_csv(cfile,index_col=0)
         if i==0:
-            outdf=c_df
+            with open(outfile,'a') as fh:
+                c_df.save(outfile,header=True)
         else:
-            outdf=pd.concat([outdf,c_df])
-    print ('writing file to {:}'.format(outfile))
-    outdf.to_csv(outfile)
+            with open(outfile,'a') as fh:
+                c_df.save(outfile,header=False)
+    # print ('writing file to {:}'.format(outfile))
+    # outdf.to_csv(outfile)
     return 0
 
 if __name__=='__main__':
