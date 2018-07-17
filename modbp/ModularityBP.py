@@ -14,8 +14,8 @@ import seaborn as sbn
 from time import time
 import os,pickle,gzip
 import logging
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
 
 class ModularityBP():
 	"""
@@ -140,7 +140,7 @@ class ModularityBP():
 		cpartition=self._get_partition(self.nruns,self.use_effective)
 		self.partitions[self.nruns]=cpartition
 
-  		if self.use_effective:
+		if self.use_effective:
 			q_new = self._merge_communities_bp(self.nruns)
 			q = q_new
 		logging.debug('time: {:.4f}'.format(time()-t))
@@ -149,7 +149,7 @@ class ModularityBP():
 		# if self._align_communities_across_layers and iters<niter:
 		# 	logging.debug('aligning communities across layers')
 		# 	# print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
-		# 	#                                                    self._get_retrieval_modularity(self.nruns)))
+		# 	#													self._get_retrieval_modularity(self.nruns)))
 		# 	nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
 
@@ -157,7 +157,7 @@ class ModularityBP():
 		if self._align_communities_across_layers and iters<niter:
 			logging.debug('aligning communities across layers')
 			# print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
-			#                                                    self._get_retrieval_modularity(self.nruns)))
+			#													self._get_retrieval_modularity(self.nruns)))
 			nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
 			logging.debug('time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
