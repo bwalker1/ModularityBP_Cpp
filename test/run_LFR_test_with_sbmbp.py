@@ -9,15 +9,15 @@ import re
 import os
 import sklearn.metrics as skm
 
-clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+#clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
 finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma2_beta1_k4')
 
 
-def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=None):
+def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=None, multiplex = False):
     rprefix=np.random.randint(100000)
-    multiplex = False
     if multiplex:
         if orig is None or layers is None:
             raise ValueError("orig and layers must be set to generate multiplex network.")
@@ -65,19 +65,19 @@ def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=No
                 m[i,1] += n*m[i,0]
                 m[i,2] += n*m[i,0]
             if layer==0:
-                elist = m[:,[1:2]] - 1
+                elist = m[:,[1,2]] - 1
                 comvec = cv[1]
                 layer_vec = np.zeros(n)
             else:
-                elist = np.concatenate((elist,m[:,[1:2]] - 1))
+                elist = np.concatenate((elist,m[:,[1,2]] - 1))
                 comvec = np.concatenate((comvec,cv[1]))
                 layer_vec = np.concatenate((layer_vec,layer*np.ones(n))
     else:
-        elist = pd.read_table('{:d}network.dat'.format(rprefix), header=None).sort_values(
-            by=0).as_matrix() - 1  # have to subtract 1 to get it to work
-        # elist=elist[:elist.shape[0]/2,:]
-        comvec = pd.read_table('{:d}community.dat'.format(rprefix), header=None).sort_values(by=0).as_matrix()[:, 1] - 1
-        layer_vec=[0 for _ in range(nfin)]
+         elist = pd.read_table('{:d}network.dat'.format(rprefix), header=None).sort_values(
+             by=0).as_matrix() - 1  # have to subtract 1 to get it to work
+         # elist=elist[:elist.shape[0]/2,:]
+         comvec = pd.read_table('{:d}community.dat'.format(rprefix), header=None).sort_values(by=0).as_matrix()[:, 1] - 1
+         layer_vec=[0 for _ in range(nfin)]
     nfin=len(comvec)
     mgraph = modbp.MultilayerGraph(intralayer_edges=elist, layer_vec=layer_vec,
                                    comm_vec=comvec)
