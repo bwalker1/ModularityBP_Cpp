@@ -15,33 +15,71 @@ clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma2_beta1_k4')
 
 
-def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True):
-    benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
+def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=None):
     rprefix=np.random.randint(100000)
-    parameters = [
-        benchmarkfile,
-        "-N", '{:d}'.format(n),
-        '-k', '{:.4f}'.format(c),
-        '-maxk', '{:d}'.format(mk),
-        '-mu', '{:.4f}'.format(ep),
-        '-t1', '2', #gamma
-        '-t2', '1', #beta
-        '-minc', '200',
-        '-maxc', '300',
-       '-w','{:d}'.format(rprefix)
-    ]
+    multiplex = False
+    if multiplex:
+        if orig is None or layers is None:
+            raise ValueError("orig and layers must be set to generate multiplex network.")
+        benchmarkfile = os.path.join(clusterdir,'MultiplexBenchmark/benchmark')
+        parameters = [
+            benchmarkfile,
+            "-N", '{:d}'.format(n),
+            '-k', '{:.4f}'.format(c),
+            '-maxk', '{:d}'.format(mk),
+            '-mu', '{:.4f}'.format(ep),
+            '-t1', '2', #gamma
+            '-t2', '1', #beta
+            '-minc', '200',
+            '-maxc', '300',
+            '-Orig','{:d}'.format(orig),
+            '-L','{:d}'.format(layers)
+        ]
+    else:
+        benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
+        parameters = [
+            benchmarkfile,
+            "-N", '{:d}'.format(n),
+            '-k', '{:.4f}'.format(c),
+            '-maxk', '{:d}'.format(mk),
+            '-mu', '{:.4f}'.format(ep),
+            '-t1', '2', #gamma
+            '-t2', '1', #beta
+            '-minc', '200',
+            '-maxc', '300',
+           '-w','{:d}'.format(rprefix)
+        ]
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
         raise RuntimeError("creating LFR failed : {:}".format(stderr))
-
-    elist = pd.read_table('{:d}network.dat'.format(rprefix), header=None).sort_values(
-        by=0).as_matrix() - 1  # have to subtract 1 to get it to work
-    # elist=elist[:elist.shape[0]/2,:]
-    comvec = pd.read_table('{:d}community.dat'.format(rprefix), header=None).sort_values(by=0).as_matrix()[:, 1] - 1
+        
+    # get the output network back into python
+    if multiplex:
+        for layer in xrange(0,layers):
+            tb = pd.read_table('level_node_node_weight.edges',delimiter=' ',skiprows=1,header=None)
+            m = tb[[0,1,2]].sort_values(by=[1,2]).as_matrix()
+            cv = pd.read_table('community_layer_{:d}'.format(layer),delimiter=' ',header=None)
+            for i in len(m):
+                m[i,1] += n*m[i,0]
+                m[i,2] += n*m[i,0]
+            if layer==0:
+                elist = m[:,[1:2]] - 1
+                comvec = cv[1]
+                layer_vec = np.zeros(n)
+            else:
+                elist = np.concatenate((elist,m[:,[1:2]] - 1))
+                comvec = np.concatenate((comvec,cv[1]))
+                layer_vec = np.concatenate((layer_vec,layer*np.ones(n))
+    else:
+        elist = pd.read_table('{:d}network.dat'.format(rprefix), header=None).sort_values(
+            by=0).as_matrix() - 1  # have to subtract 1 to get it to work
+        # elist=elist[:elist.shape[0]/2,:]
+        comvec = pd.read_table('{:d}community.dat'.format(rprefix), header=None).sort_values(by=0).as_matrix()[:, 1] - 1
+        layer_vec=[0 for _ in range(nfin)]
     nfin=len(comvec)
-    mgraph = modbp.MultilayerGraph(intralayer_edges=elist, layer_vec=[0 for _ in range(nfin)],
+    mgraph = modbp.MultilayerGraph(intralayer_edges=elist, layer_vec=layer_vec,
                                    comm_vec=comvec)
     cgraph = mgraph.layers[0]
     coms = np.unique(cgraph.vs['block'])
