@@ -88,11 +88,11 @@ def main():
                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
         if trial==0:
-            with open(outfile,'a') as fh:
+            with open(outfile,'w') as fh:
                 output.to_csv(fh,'w',header=True)
         else:
             with open(outfile,'a') as fh: #writeout as we go
-                output.to_csv(outfile,header=False)
+                output.iloc[-1, :].to_csv(fh, header=False)
 
 
     return 0
