@@ -2,6 +2,7 @@ import numpy as np
 import sklearn.metrics as skm
 import igraph as ig
 import itertools  as it
+import scipy.sparse as scispa
 
 
 class RandomGraph():
@@ -229,6 +230,7 @@ class MultilayerGraph():
 
 
     def get_layer_edgecounts(self):
+        """2*m for undicted networks"""
         ecounts=[]
         for i in range(self.nlayers):
             ecounts.append(np.sum(self.get_intralayer_degrees(i)))
@@ -320,6 +322,21 @@ class MultilayerGraph():
             else:
                 la_amis.append( (len(cinds)/(1.0*self.n))*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
         return np.sum(la_amis)
+
+    def _to_sparse(self,edgelist):
+        if edgelist.shape[1]>2 : #assume data is 3rd
+            data=edgelist[:,2]
+        else:
+            data=np.array([1.0 for _ in range(edgelist.shape[0])])
+        row_ind=edgelist[:,0]
+        col_ind=edgelist[:,1]
+        N=self.n
+        return scispa.csr_matrix((data,(row_ind,col_ind)),shape=(N,N),dtype=float)
+
+    def to_scipy_csr(self):
+        A_sparse=self._to_sparse(self.intralayer_edges)
+        C_sparse=self._to_sparse(self.interlayer_edges)
+        return (A_sparse,C_sparse)
 
 class MultilayerSBM():
 

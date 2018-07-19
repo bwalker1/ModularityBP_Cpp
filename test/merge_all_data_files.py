@@ -38,10 +38,10 @@ def main(pargs=None):
         c_df=pd.read_csv(cfile,index_col=0)
         if i==0:
             with open(outfile,'a') as fh:
-                c_df.save(outfile,header=True)
+                c_df.to_csv(fh,header=True)
         else:
             with open(outfile,'a') as fh:
-                c_df.save(outfile,header=False)
+                c_df.to_csv(fh,header=False)
     # print ('writing file to {:}'.format(outfile))
     # outdf.to_csv(outfile)
     return 0
