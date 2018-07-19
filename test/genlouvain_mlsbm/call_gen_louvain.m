@@ -1,11 +1,9 @@
-function call_gen_louvain(input_file,output_file)
+function call_gen_louvain(input_file,output_file,gamma,coupling)
     load(input_file);
     A=sparse(A);
     A=A+A';
     C=C+C';
     sum(sum(A))
-    gamma=1.0;
-    coupling=1.0;
     k=sum(A)';
     twom=sum(k);
     P=k*k'/twom;

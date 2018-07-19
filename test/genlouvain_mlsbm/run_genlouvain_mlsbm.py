@@ -65,7 +65,9 @@ def main():
         scio.savemat(scio_outfile, {"A": A, "C": C})
         parameters = [call_matlabfile,
                       scio_outfile,
-                      matlaboutput
+                      matlaboutput,
+                      "{:.4f}".format(gamma),
+                      "{:.4f}".format(omega)
                       ]
         process = Popen(parameters, stderr=PIPE, stdout=PIPE)
         stdout, stderr = process.communicate()
@@ -87,7 +89,7 @@ def main():
                 output.to_csv(fh,header=True)
         elif trial>0:
             with open(outfile,'a') as fh: #writeout as we go
-                output.iloc[-1,:].to_csv(fh,header=False)
+                output.iloc[[-1],:].to_csv(fh,header=False)
         try:
             os.remove(scio_outfile)
         except:

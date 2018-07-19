@@ -12,7 +12,7 @@ export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-mas
 
 #X="addpath $matlab_func_file;"$'\n'
 
-X="call_gen_louvain('${1}','${2}')"
+X="call_gen_louvain('${1}','${2}','${3}','${4}')"
 dir=${1%/*} #get directory of input file 
 base=${1##*/}
 #echo ${X}
