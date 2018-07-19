@@ -85,7 +85,6 @@ def main():
         cind=output.shape[0]
         output.loc[cind, [ 'resgamma','omega','AMI', 'AMI_layer_avg']]= gamma,omega,ami,ami_layer_avg
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
-        print(outfile)
         if trial==0:
             with open(outfile,'w') as fh:
                 output.to_csv(fh,header=True)
