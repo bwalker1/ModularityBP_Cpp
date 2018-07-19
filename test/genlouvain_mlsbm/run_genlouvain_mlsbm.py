@@ -53,18 +53,15 @@ def main():
                                                                                                          eta, ep, omega,
                                                                                                          gamma))
 
-    qmax = 2 * q
-    #qmax = q
+
     for trial in range(ntrials):
         ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
         mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
                                        comm_vec=ml_sbm.get_all_layers_block())
-        mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
-        outmatfile="sbm_graph.m"
 
         A, C = mgraph.to_scipy_csr()
-        scio_outfile = os.path.join(matlaboutdir, 'sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_trial{:}.mat'.format(n,q,nlayers,eta,ep,trial))
-        matlaboutput = os.path.join(matlaboutdir, 'sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_trial{:}_output.mat'.format(n,q,nlayers,eta,ep,trial))
+        scio_outfile = os.path.join(matlaboutdir, 'sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_omega{:.3f}_gamma{:.3f}_trial{:}.mat'.format(n,q,nlayers,eta,ep,omega,gamma,trial))
+        matlaboutput = os.path.join(matlaboutdir, 'sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_omega{:.3f}_gamma{:.3f}_trial{:}_output.mat'.format(n,q,nlayers,eta,ep,omega,gamma,trial))
         scio.savemat(scio_outfile, {"A": A, "C": C})
         parameters = [call_matlabfile,
                       scio_outfile,
@@ -83,14 +80,14 @@ def main():
         ami_layer_avg=mgraph.get_accuracy_layer_averaged_with_communities(S)
 
         cind=output.shape[0]
-        output.loc[cind, [ 'resgamma','omega','AMI', 'AMI_layer_avg']]= gamma,omega,ami,ami_layer_avg
-        output.loc[cind, ['ep', 'eta']] = [ep, eta]
+        output.loc[cind, [ 'ep','eta','resgamma','omega','AMI', 'AMI_layer_avg']]= ep,eta,gamma,omega,ami,ami_layer_avg
+        # output.loc[cind, ['ep', 'eta']] = [ep, eta]
         if trial==0:
             with open(outfile,'w') as fh:
                 output.to_csv(fh,header=True)
-        else:
+        elif trial>0:
             with open(outfile,'a') as fh: #writeout as we go
-                output.to_csv(fh,header=False)
+                output.iloc[-1,:].to_csv(fh,header=False)
         try:
             os.remove(scio_outfile)
         except:
