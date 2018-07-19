@@ -91,7 +91,14 @@ def main():
         else:
             with open(outfile,'a') as fh: #writeout as we go
                 output.to_csv(fh,header=False)
-
+        try:
+            os.remove(scio_outfile)
+        except:
+            print('could not remove {}'.format(scio_outfile))
+        try:
+            os.remove(matlaboutput)
+        except:
+            print('could not remove {}'.format(matlaboutput))
 
     return 0
 
