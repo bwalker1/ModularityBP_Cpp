@@ -74,8 +74,8 @@ def main():
         process.wait()
         if process.returncode != 0:
             print("matlab call failed")
-        print(stderr)
-        print(stdout)
+        #print(stderr)
+        #print(stdout)
 
         S = scio.loadmat(matlaboutput)['S'][:,0]
         ami=mgraph.get_AMI_with_communities(S)
