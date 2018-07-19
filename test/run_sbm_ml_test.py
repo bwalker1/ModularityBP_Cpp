@@ -87,8 +87,12 @@ def main():
                 minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
-        with open(outfile,'a') as fh: #writeout as we go
-			output.to_csv(outfile,header=False)
+        if trial==0:
+            with open(outfile,'a') as fh:
+                output.to_csv(fh,'w',header=True)
+        else:
+            with open(outfile,'a') as fh: #writeout as we go
+                output.to_csv(outfile,header=False)
 
 
     return 0

@@ -1,0 +1,1 @@
+call_gen_louvain('/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/genlouvain_mlsbm/matlab_transfer_file/matlab_sbm_test.mat','/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/genlouvain_mlsbm/matlab_command_output.mat.m')
