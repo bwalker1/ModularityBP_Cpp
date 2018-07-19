@@ -1,7 +1,9 @@
 #!/bin/bash
 
 #matlab_exec=/Applications/MATLAB_R2016b.app/bin/matlab
-matlab_exec=/nas/longleaf/apps/matlab/2017a/bin/matlab
+#matlab_exec=/nas/longleaf/apps/matlab/2017a/bin/matlab
+module add matlab
+matlab_exec=matlab
 homedir='/nas/longleaf/home/wweir'
 
 matlab_func_file="${homeddir}/ModBP_gh/ModularityBP_Cpp/test/genlouvain_mlsbm/run_gen_louvain.m"

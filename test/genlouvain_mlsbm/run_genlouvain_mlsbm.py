@@ -45,7 +45,7 @@ def main():
                                    'AMI', 'AMI_layer_avg', 'modularity'])
 
 
-    finoutdir = os.path.join(clusterdir, 'test/modbpdata/genlouvain/SBM_test_data_n{:}_q{:d}_nt{:}'.format(n, q, ntrials))
+    finoutdir = os.path.join(clusterdir, 'test/genlouvain_mlsbm/sbm_test_data/SBM_test_data_n{:}_q{:d}_nt{:}'.format(n, q, ntrials))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
     outfile = os.path.join(finoutdir,
