@@ -1,10 +1,13 @@
 #!/bin/bash
 
-#matlab_exec=/Applications/MATLAB_R2016b.app/bin/matlab
-#matlab_exec=/nas/longleaf/apps/matlab/2017a/bin/matlab
+
 module add matlab
 matlab_exec=matlab
 homedir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp'
+
+#for local testing
+#matlab_exec=/Applications/MATLAB_R2016b.app/bin/matlab
+#homedir='/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp'
 
 matlab_func_file="${homeddir}/test/genlouvain_mlsbm/run_gen_louvain.m"
 export MATLABPATH="${homedir}/test/genlouvain_mlsbm/"
@@ -12,7 +15,7 @@ export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-mas
 
 #X="addpath $matlab_func_file;"$'\n'
 
-X="call_gen_louvain('${1}','${2}','${3}','${4}')"
+X="call_gen_louvain('${1}','${2}',${3},${4})"
 dir=${1%/*} #get directory of input file 
 base=${1##*/}
 #echo ${X}
