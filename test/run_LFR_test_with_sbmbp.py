@@ -15,13 +15,15 @@ clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
 finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma2_beta1_k4')
 
+# arch = "elf64"
+arch = "x86_64"
 
 def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=None, multiplex = False):
 	rprefix=np.random.randint(100000)
 	if multiplex:
 		if orig is None or layers is None:
 			raise ValueError("orig and layers must be set to generate multiplex network.")
-		benchmarkfile = os.path.join(clusterdir,'MultiplexBenchmark/benchmark')
+		benchmarkfile = os.path.join(clusterdir,'MultiplexBenchmark/benchmark.'+arch)
 		parameters = [
 			benchmarkfile,
 			"-N", '{:d}'.format(n),
@@ -36,7 +38,7 @@ def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=No
 			'-L','{:d}'.format(layers)
 		]
 	else:
-		benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark')
+		benchmarkfile = os.path.join(clusterdir,'binary_networks/benchmark.'+arch)
 		parameters = [
 			benchmarkfile,
 			"-N", '{:d}'.format(n),
@@ -195,8 +197,13 @@ def main():
 
 			mlbp_rm = mlbp.retrieval_modularities
 
-
-		minidx = mlbp_rm[ mlbp_rm['niters']<1000 & mlbp_rm['is_trivial'] == False]['retrieval_modularity'].idxmax()
+		#print(mlbp_rm['niters']<1000 & mlbp_rm['is_trivial'] == False)
+		print (mlbp_rm['is_trivial'])
+		selection = ([x[0] and x[1] for x in zip(mlbp_rm['niters']<1000, mlbp_rm['is_trivial'] == False)])
+		print(selection)
+		print(mlbp_rm[ selection ]['retrieval_modularity'])
+		minidx = mlbp_rm[ selection ]['retrieval_modularity'].idxmax()
+		
 
 		cind=output.shape[0]
 		if len(mlbp_rm[mlbp_rm['niters'] < 1000]) == 0:  # none converged !
