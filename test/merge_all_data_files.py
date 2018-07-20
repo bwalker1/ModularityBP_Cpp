@@ -18,7 +18,7 @@ def main(pargs=None):
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--input_dir',dest='input',type=str,
                         default=default_dir)
-    parser.add_argument('--prefix',dist='prefix',type=str,default=None)
+    parser.add_argument('--prefix',dest='prefix',type=str,default=None)
     parser.add_argument('--output_file',dest='outfilename',type=str,default=None)
     
     if pargs is None:
