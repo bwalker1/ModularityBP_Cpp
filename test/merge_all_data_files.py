@@ -19,6 +19,7 @@ def main(pargs=None):
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--input_dir',dest='input',type=str,
                         default=default_dir)
+    parser.add_argument('--prefix',dist='prefix',type=str,default=None)
     parser.add_argument('--output_file',dest='outfilename',type=str,default=None)
     
     if pargs is None:
@@ -27,6 +28,8 @@ def main(pargs=None):
         args=parser.parse_args(pargs)
     if args.outfilename is None:
 	outfile='merged_all_{:}'.format(args.input.split('/')[-1])
+    if args.prefix is not None:
+        outfile=args.prefix+"_"+outfile
     else:
         outfile=args.outfilename 
     allfiles=os.listdir(args.input)
