@@ -3,6 +3,8 @@ import sklearn.metrics as skm
 import igraph as ig
 import itertools  as it
 import scipy.sparse as scispa
+import matplotlib.pyplot as plt
+import seaborn as sbn
 
 
 class RandomGraph():
@@ -337,6 +339,59 @@ class MultilayerGraph():
         A_sparse=self._to_sparse(self.intralayer_edges)
         C_sparse=self._to_sparse(self.interlayer_edges)
         return (A_sparse,C_sparse)
+
+    def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):
+        """
+
+        :param ind:
+        :param layers:
+        :return:
+        """
+
+        if layers is None:
+            layers = np.unique(self.layer_vec)
+
+        def get_partition_matrix(partition, layer_vec):
+            # assumes partiton in same ordering for each layer
+            vals = np.unique(layer_vec)
+            nodeperlayer = len(layer_vec) / len(vals)
+            com_matrix = np.zeros((nodeperlayer, len(vals)))
+            for i, val in enumerate(vals):
+                cind = np.where(layer_vec == val)[0]
+                ccoms = partition[cind]
+                com_matrix[:, i] = ccoms
+            return com_matrix
+
+        cinds = np.where(np.isin(self.layer_vec, layers))[0]
+        if comvec is None:  # use baseline
+            assert self.comm_vec is not None, "Must specify ground truth com_vec for graph"
+            cpart = self.comm_vec
+        else:
+            cpart = comvec
+
+        vmin = np.min(cpart)
+        vmax = np.max(cpart)
+
+        clayer_vec = self.layer_vec[cinds]
+        part_mat = get_partition_matrix(cpart, clayer_vec)
+
+        if ax is None:
+            ax = plt.axes()
+
+        if cmap is None:
+            cmap = sbn.cubehelix_palette(as_cmap=True)
+
+        ax.grid('off')
+        ax.pcolormesh(part_mat, cmap=cmap, vmin=vmin, vmax=vmax)
+
+        # numswitched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
+        # numswitched = numswitched[np.where(np.isin(self.layers_unique, layers))[0]]  # filter for layers selected
+        # for i, num in enumerate(numswitched):
+        #     ax.text(s="{:.2f}".format(num), x=i, y=-1, fontdict={"fontsize": 9, 'color': 'white'})
+
+        ax.set_xticks(range(0, len(layers)))
+        ax.set_xticklabels(layers)
+        return ax
 
 class MultilayerSBM():
 
