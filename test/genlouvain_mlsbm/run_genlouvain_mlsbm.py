@@ -79,10 +79,10 @@ def main():
 
         S = scio.loadmat(matlaboutput)['S'][:,0]
         ami=mgraph.get_AMI_with_communities(S)
-        ami_layer_avg=mgraph.get_accuracy_layer_averaged_with_communities(S)
-
+        ami_layer_avg=mgraph.get_AMI_layer_avg_with_communities(S)
+        mod=modbp.calc_modularity(mgraph,partition=S,resgamma=gamma,omega=omega)
         cind=output.shape[0]
-        output.loc[cind, [ 'ep','eta','resgamma','omega','AMI', 'AMI_layer_avg']]= ep,eta,gamma,omega,ami,ami_layer_avg
+        output.loc[cind, [ 'ep','eta','resgamma','omega','AMI', 'AMI_layer_avg','modularity']]= ep,eta,gamma,omega,ami,ami_layer_avg,mod
         # output.loc[cind, ['ep', 'eta']] = [ep, eta]
         if trial==0:
             with open(outfile,'w') as fh:
