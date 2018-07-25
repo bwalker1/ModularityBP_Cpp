@@ -61,7 +61,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     {
         weighted = false;
     }
-    fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
+    //fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
     eps = 1e-8;
     computed_marginals = false;
     typedef pair<index_t, bool> ibpair;
@@ -158,7 +158,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
             neighbors_reversed[neighbor_c++] = neighbor_offset_map[edges[i][j].target][i];
         }
     }
-    fprintf(stderr,"Finished primary initialization\n");
+    //fprintf(stderr,"Finished primary initialization\n");
     reinit();
     
     compute_bfe = false;
