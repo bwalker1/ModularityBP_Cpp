@@ -98,8 +98,10 @@ class ModularityBP():
         t=time()
         #logging.debug("Creating c++ modbp object")
         if self._bpmod is None:
-            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,intra_edgeweight=self._cpp_intra_weights,
-                                        intra_edgelist=self._intraedgelistpv,
+            print("Creating c++ modbp object")
+            print(list(self._cpp_intra_weights))
+            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
+                                        intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       resgamma=resgamma,omega=omega,transform=False,verbose=True)

@@ -51,7 +51,7 @@ public:
     edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL)), edge_weights(intra_edgeweight)
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     if (intra_edgeweight.size() > 0)
     {
@@ -61,6 +61,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     {
         weighted = false;
     }
+    fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
     eps = 1e-8;
     computed_marginals = false;
     typedef pair<index_t, bool> ibpair;
@@ -112,6 +113,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     neighbors_offsets.resize(n+1);
     neighbors_type.resize(total_edges);
     
+    edge_weights.resize(total_edges);
     scaleEdges.resize(total_edges);
     
     marginals.resize(q*n);
@@ -156,7 +158,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
             neighbors_reversed[neighbor_c++] = neighbor_offset_map[edges[i][j].target][i];
         }
     }
-    
+    fprintf(stderr,"Finished primary initialization\n");
     reinit();
     
     compute_bfe = false;
@@ -341,6 +343,10 @@ void BP_Modularity::step()
                         // intralayer contribution
                         if (weighted)
                         {
+                            if (neighbors_offsets[i]+idx2 >= scaleEdges.size())
+                            {
+                                fprintf(stderr,"index violation: %d %d\n",neighbors_offsets[i]+idx2, scaleEdges.size());
+                            }
                             add = log(1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
                         }
                         else
