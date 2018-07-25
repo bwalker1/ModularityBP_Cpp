@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false);
+	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false);
 
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -66,6 +66,7 @@ public:
     void merge_communities(vector<index_t> merges);
 
 private:
+    bool weighted;
 
 //    void shuffleBeliefs(vector<vector<double>> in_beliefs);
     void initializeBeliefs();
@@ -77,7 +78,7 @@ private:
 
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
-
+    vector<double> edge_weights;
 
     // private variables
     vector<double> beliefs;
@@ -123,6 +124,7 @@ private:
     vector<index_t> order;
 
     double scale, scaleOmega;
+    vector<double> scaleEdges;  // weighted graph has scale varying for each edge
     double prefactor;
     
     double eps;

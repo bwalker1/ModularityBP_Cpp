@@ -41,14 +41,30 @@ void print_array(double *arr, index_t n)
     printf("\n");
 }
 
-
-
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+struct edge_data
 {
+public:
+    index_t target;
+    bool type;
+    double weight;
+
+    edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
+};
+
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL)), edge_weights(intra_edgeweight)
+{
+    if (intra_edgeweight.size() > 0)
+    {
+        weighted = true;
+    }
+    else
+    {
+        weighted = false;
+    }
     eps = 1e-8;
     computed_marginals = false;
     typedef pair<index_t, bool> ibpair;
-    vector<vector< ibpair > > edges(n);
+    vector<vector< edge_data > > edges(n);
     uniform_real_distribution<double> pdist(0,1);
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
@@ -57,12 +73,22 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     // TODO: go through all input edges and put them into the data structure along with categorization of their edge type
 
 
-    for (auto p : intra_edgelist)
+    for (index_t k=0;k<intra_edgelist.size();++k)
     {
+        auto p = intra_edgelist[k];
+        double w;
+        if (weighted)
+        {
+            w = intra_edgeweight[k];
+        }
+        else
+        {
+            w = 1;
+        }
         index_t i = p.first;
         index_t j = p.second;
-        edges[i].push_back(ibpair(j,true));
-        edges[j].push_back(ibpair(i,true));
+        edges[i].push_back(edge_data(j,true,1));
+        edges[j].push_back(edge_data(i,true,1));
 
         num_edges[layer_membership[i]] += 2;
         total_edges += 2;
@@ -72,8 +98,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     {
         index_t i = p.first;
         index_t j = p.second;
-        edges[i].push_back(ibpair(j,false));
-        edges[j].push_back(ibpair(i,false));
+        edges[i].push_back(edge_data(j,false,1));
+        edges[j].push_back(edge_data(i,false,1));
         total_edges += 2;
     }
 
@@ -85,6 +111,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     neighbors_reversed.resize(total_edges);
     neighbors_offsets.resize(n+1);
     neighbors_type.resize(total_edges);
+
+    scaleEdges.resize(total_edges);
 
     marginals.resize(q*n);
     marginals_old.resize(q*n);
@@ -113,9 +141,10 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
         for (index_t j=0;j<edges[i].size();++j)
         {
             //assert(neighbor_c < num_edges);
-            neighbors_type[neighbor_c] = edges[i][j].second;
-            neighbors[neighbor_c++] = edges[i][j].first;
-            neighbor_offset_map[i][edges[i][j].first] = j;
+            edge_weights[neighbor_c] = edges[i][j].weight;
+            neighbors_type[neighbor_c] = edges[i][j].type;
+            neighbors[neighbor_c++] = edges[i][j].target;
+            neighbor_offset_map[i][edges[i][j].target] = j;
         }
     }
     scratch.resize(max_degree*q);
@@ -124,7 +153,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     {
         for (int j=0;j<edges[i].size();++j)
         {
-            neighbors_reversed[neighbor_c++] = neighbor_offset_map[edges[i][j].first][i];
+            neighbors_reversed[neighbor_c++] = neighbor_offset_map[edges[i][j].target][i];
         }
     }
 
@@ -183,7 +212,15 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             if (type==true)
             {
                 // intralayer contribution
-                add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                // intralayer contribution
+                if (weighted)
+                {
+                    add = log(1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                }
+                else
+                {
+                    add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                }
             }
             else
             {
@@ -302,7 +339,14 @@ void BP_Modularity::step()
                     if (type==true)
                     {
                         // intralayer contribution
-                        add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                        if (weighted)
+                        {
+                            add = log(1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                        }
+                        else
+                        {
+                            add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                        }
                     }
                     else
                     {
@@ -517,6 +561,15 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
         beta = compute_bstar(omega,q);
     }
     scale = exp(beta)-1;
+
+    if (weighted)
+    {
+        for (index_t i=0;i<total_edges;++i)
+        {
+            scaleEdges[i] = exp(beta*edge_weights[i])-1;
+        }
+    }
+
     scaleOmega = exp(beta*omega)-1;
     if (init_beliefs)
         initializeBeliefs();
