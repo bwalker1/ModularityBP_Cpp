@@ -23,10 +23,10 @@ int main(int argc, const char * argv[]) {
     int q = 5;
     double omega = 1;
     //BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false);
-    BP_Modularity bp(vector<index_t>(),vector<pair<index_t,index_t> >(),vector<pair<index_t,index_t> >(), n,1,q,1,omega,1.0,false,false);
+    /*BP_Modularity bp(vector<index_t>(),vector<pair<index_t,index_t> >(),vector<pair<index_t,index_t> >(), n,1,q,1,omega,1.0,false,false);
     printf("Starting computation\n");
     clock_t start = clock();
     //printf("%f\n",bp.compute_bstar());
     clock_t finish = clock()-start;
-    printf("%f seconds elapsed\n",double(finish)/double(CLOCKS_PER_SEC));
+    printf("%f seconds elapsed\n",double(finish)/double(CLOCKS_PER_SEC));*/
 }
