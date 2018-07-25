@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, layer_membership, intra_edgelist, inter_edgelist, _n, _nt, q, beta, omega=1.0, resgamma=1.0, verbose=False, transform=False):
-        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, inter_edgelist, _n, _nt, q, beta, omega, resgamma, verbose, transform)
+    def __init__(self, layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, beta, omega=1.0, resgamma=1.0, verbose=False, transform=False):
+        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, beta, omega, resgamma, verbose, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -631,118 +631,118 @@ class IntMatrix(_object):
 IntMatrix_swigregister = _bp.IntMatrix_swigregister
 IntMatrix_swigregister(IntMatrix)
 
-class Array(_object):
+class DoubleArray(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, Array, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, DoubleArray, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, Array, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, DoubleArray, name)
     __repr__ = _swig_repr
 
     def iterator(self):
-        return _bp.Array_iterator(self)
+        return _bp.DoubleArray_iterator(self)
     def __iter__(self):
         return self.iterator()
 
     def __nonzero__(self):
-        return _bp.Array___nonzero__(self)
+        return _bp.DoubleArray___nonzero__(self)
 
     def __bool__(self):
-        return _bp.Array___bool__(self)
+        return _bp.DoubleArray___bool__(self)
 
     def __len__(self):
-        return _bp.Array___len__(self)
+        return _bp.DoubleArray___len__(self)
 
     def __getslice__(self, i, j):
-        return _bp.Array___getslice__(self, i, j)
+        return _bp.DoubleArray___getslice__(self, i, j)
 
     def __setslice__(self, *args):
-        return _bp.Array___setslice__(self, *args)
+        return _bp.DoubleArray___setslice__(self, *args)
 
     def __delslice__(self, i, j):
-        return _bp.Array___delslice__(self, i, j)
+        return _bp.DoubleArray___delslice__(self, i, j)
 
     def __delitem__(self, *args):
-        return _bp.Array___delitem__(self, *args)
+        return _bp.DoubleArray___delitem__(self, *args)
 
     def __getitem__(self, *args):
-        return _bp.Array___getitem__(self, *args)
+        return _bp.DoubleArray___getitem__(self, *args)
 
     def __setitem__(self, *args):
-        return _bp.Array___setitem__(self, *args)
+        return _bp.DoubleArray___setitem__(self, *args)
 
     def pop(self):
-        return _bp.Array_pop(self)
+        return _bp.DoubleArray_pop(self)
 
     def append(self, x):
-        return _bp.Array_append(self, x)
+        return _bp.DoubleArray_append(self, x)
 
     def empty(self):
-        return _bp.Array_empty(self)
+        return _bp.DoubleArray_empty(self)
 
     def size(self):
-        return _bp.Array_size(self)
+        return _bp.DoubleArray_size(self)
 
     def swap(self, v):
-        return _bp.Array_swap(self, v)
+        return _bp.DoubleArray_swap(self, v)
 
     def begin(self):
-        return _bp.Array_begin(self)
+        return _bp.DoubleArray_begin(self)
 
     def end(self):
-        return _bp.Array_end(self)
+        return _bp.DoubleArray_end(self)
 
     def rbegin(self):
-        return _bp.Array_rbegin(self)
+        return _bp.DoubleArray_rbegin(self)
 
     def rend(self):
-        return _bp.Array_rend(self)
+        return _bp.DoubleArray_rend(self)
 
     def clear(self):
-        return _bp.Array_clear(self)
+        return _bp.DoubleArray_clear(self)
 
     def get_allocator(self):
-        return _bp.Array_get_allocator(self)
+        return _bp.DoubleArray_get_allocator(self)
 
     def pop_back(self):
-        return _bp.Array_pop_back(self)
+        return _bp.DoubleArray_pop_back(self)
 
     def erase(self, *args):
-        return _bp.Array_erase(self, *args)
+        return _bp.DoubleArray_erase(self, *args)
 
     def __init__(self, *args):
-        this = _bp.new_Array(*args)
+        this = _bp.new_DoubleArray(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
 
     def push_back(self, x):
-        return _bp.Array_push_back(self, x)
+        return _bp.DoubleArray_push_back(self, x)
 
     def front(self):
-        return _bp.Array_front(self)
+        return _bp.DoubleArray_front(self)
 
     def back(self):
-        return _bp.Array_back(self)
+        return _bp.DoubleArray_back(self)
 
     def assign(self, n, x):
-        return _bp.Array_assign(self, n, x)
+        return _bp.DoubleArray_assign(self, n, x)
 
     def resize(self, *args):
-        return _bp.Array_resize(self, *args)
+        return _bp.DoubleArray_resize(self, *args)
 
     def insert(self, *args):
-        return _bp.Array_insert(self, *args)
+        return _bp.DoubleArray_insert(self, *args)
 
     def reserve(self, n):
-        return _bp.Array_reserve(self, n)
+        return _bp.DoubleArray_reserve(self, n)
 
     def capacity(self):
-        return _bp.Array_capacity(self)
-    __swig_destroy__ = _bp.delete_Array
+        return _bp.DoubleArray_capacity(self)
+    __swig_destroy__ = _bp.delete_DoubleArray
     __del__ = lambda self: None
-Array_swigregister = _bp.Array_swigregister
-Array_swigregister(Array)
+DoubleArray_swigregister = _bp.DoubleArray_swigregister
+DoubleArray_swigregister(DoubleArray)
 
 # This file is compatible with both classic and new-style classes.
 
