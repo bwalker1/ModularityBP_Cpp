@@ -339,7 +339,10 @@ def test_cpp_permutation():
 	qmax = 4
 
 	ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
-	mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
+	weights=[2.0 for _ in range(len(ml_sbm.intraedges))]
+	e1,e2=zip(*ml_sbm.intraedges)
+	eweights=zip(e1,e2,weights)
+	mgraph = modbp.MultilayerGraph(eweights, ml_sbm.layer_vec, ml_sbm.interedges,
 	                               comm_vec=ml_sbm.get_all_layers_block())
 
 	mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,

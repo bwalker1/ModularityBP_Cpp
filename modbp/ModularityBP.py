@@ -5,7 +5,7 @@ from future.utils import iteritems,iterkeys
 from collections import Hashable
 from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
-from .bp import BP_Modularity,PairVector,IntArray,IntMatrix
+from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray
 import itertools
 import pandas as pd
 import scipy.optimize as sciopt
@@ -51,6 +51,7 @@ class ModularityBP():
         self.totaledgeweight=self.graph.totaledgeweight
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
+        self._cpp_intra_weights=self._get_cpp_intra_weights()
         self.layer_vec=self.graph.layer_vec
         self._layer_vec_ia=IntArray(self.layer_vec)
         self.layers_unique=sorted(np.unique(self.layer_vec))
@@ -97,8 +98,10 @@ class ModularityBP():
         t=time()
         #logging.debug("Creating c++ modbp object")
         if self._bpmod is None:
+            print("Creating c++ modbp object")
+            print(list(self._cpp_intra_weights))
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
-                                        intra_edgelist=self._intraedgelistpv,
+                                        intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       resgamma=resgamma,omega=omega,transform=False,verbose=True)
@@ -227,10 +230,19 @@ class ModularityBP():
 
         self.nruns+=1
 
-    def _get_edgelist(self):
-        edgelist=self.graph.get_edgelist()
-        edgelist.sort()
-        return edgelist
+    # def _get_edgelist(self):
+    #     edgelist=self.graph.get_edgelist()
+    #     if not self.graph.intralayer_weights is None:
+    #         elist_weights=sorted(zip(self.graph.),key=lambda (x):x[0],x[1])
+    #     edgelist.sort()
+    #     return edgelist
+
+    def _get_cpp_intra_weights(self):
+        if self.graph.unweighted:
+            return DoubleArray([])
+        else:
+            assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
+            return DoubleArray(self.graph.intralayer_weights)
 
     def _get_edgelistpv(self,inter=False):
         ''' Return PairVector swig wrapper version of edgelist'''
@@ -290,6 +302,7 @@ class ModularityBP():
         if self._bpmod is None:
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
                                         intra_edgelist=self._intraedgelistpv,
+                                      intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
                                        omega=omega,transform=False)
