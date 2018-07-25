@@ -7,6 +7,8 @@ import modbp
 import numpy as np
 import network_tools as nt
 import matplotlib.pyplot as plt
+import gzip
+import pickle
 
 
 def create_knn_from_adj(adj_mat, k, weight_func=None):
@@ -44,8 +46,8 @@ def main():
 
 
     A = sendata['A']
-    num2keep = 500
-    num2keep = A.shape[0]
+    num2keep = 50
+    #num2keep = A.shape[0]
     A = A[:num2keep,:num2keep]
     C = sendata['C']
     C= C[:num2keep,:num2keep]
@@ -91,7 +93,11 @@ def main():
                                     omega=omega,resgamma=gamma,reset=False)
 
         print()
+    with gzip.open("senate_partitions.gz",'wb') as fh:
+        pickle.dump(modbp_obj.partitions,fh)
+
     modrm=modbp_obj.retrieval_modularities
+    modrm.to_csv("senate_ret_mod_df.csv")
 
     return 0
 
