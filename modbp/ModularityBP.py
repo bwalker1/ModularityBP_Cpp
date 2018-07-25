@@ -909,26 +909,43 @@ def calc_modularity(graph,partition,resgamma,omega):
     Chat = 0
 
     def part_equal(x):
-        if partition[x[0]] == partition[x[1]]:
+        if partition[int(x[0])] == partition[int(x[1])]:
             if len(x)>2:
                 return x[2] #edge weights should be x[2]
             else:
-                return 1
+                return 1.0
         else:
-            return 0
+            return 0.0
 
     intra_edges=graph.intralayer_edges
-    inter_edges=graph.interlayer_edges
+    inter_edges = graph.interlayer_edges
+    # zip weights into the edges
+    if graph.intralayer_weights is not None:
+        temp=[]
+        for i,e in enumerate(intra_edges):
+            temp.append((e[0],e[1],graph.intralayer_weights[i]))
+        intra_edges=temp
+    if graph.interlayer_weights is not None:
+        temp=[]
+        for i,e in enumerate(inter_edges):
+            temp.append((e[0],e[1],graph.interlayer_weights[i]))
+        inter_edges=temp
 
     # For Ahat and Chat we simply iterate over the edges and count internal ones
     if len(intra_edges) > 0:
         Ahat = np.sum(np.apply_along_axis(func1d=part_equal, arr=intra_edges, axis=1))
     else:
         Ahat = 0
+    if not graph.is_directed:
+        Ahat=Ahat*2.0
+
     if len(inter_edges) > 0:
         Chat = np.sum(np.apply_along_axis(func1d=part_equal, arr=inter_edges, axis=1))
     else:
         Chat = 0
+
+    if not graph.is_directed:
+        Chat = Chat * 2.0
 
     # We calculate Phat a little differently since it requires degrees of all members of each group
     # store indices for each community together in dict
@@ -958,4 +975,5 @@ def calc_modularity(graph,partition,resgamma,omega):
                 cPmat = np.outer(cdeg, cdeg.T)
                 Phat += (np.sum(cPmat) / (2.0 * graph.intra_edge_counts[i]))
 
-    return (1.0 / (graph.totaledgeweight)) * (Ahat - resgamma * Phat + omega * Chat)
+    mu= 2.0*graph.totaledgeweight if not graph.is_directed else graph.totaledgeweight
+    return (1.0 / mu) * (Ahat - resgamma * Phat + omega * Chat)
