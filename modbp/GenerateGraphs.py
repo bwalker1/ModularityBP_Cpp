@@ -164,20 +164,31 @@ class MultilayerGraph():
         self.n=len(layer_vec)
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
+
+
+
+
+
         if interlayer_edges is None: #Assume that it is single layer
             self.interlayer_edges=np.zeros((0,2),dtype='int')
         else:
             self.interlayer_edges=interlayer_edges
-        self.interlayer_weights=None
-        self.intralayer_weights=None
+
         if len(self.interlayer_edges[0])>2:#weights are present
             self.interlayer_weights = [e[2] for e in self.interlayer_edges]
             self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
+        else:
+            self.interlayer_weights=[ 1.0 for _ in range(len(self.interlayer_edges))]
+
         if len(self.intralayer_edges[0]) > 2:  # weights are present
             self.intralayer_weights = [e[2] for e in self.intralayer_edges]
             self.intralayer_edges = [(e[0], e[1]) for e in self.intralayer_edges]
+        else:
+            self.intralayer_weights = [1.0 for _ in range(len(self.intralayer_edges))]
+
         if not self.is_directed:
-            self._prune_intra_edges_directed()  #make sure each edge is unique
+            self._prune_intra_edges_directed()  # make sure each edge is unique
+
         self.layer_vec=np.array(layer_vec)
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)
