@@ -1,6 +1,5 @@
 from __future__ import division
 from context import modbp
-from context import IntMatrix
 from time import time
 import numpy as np
 import igraph as ig
@@ -337,7 +336,7 @@ def test_cpp_permutation():
 	                               'AMI', 'AMI_layer_avg', 'retrieval_modularity', 'bethe_free_energy',
 	                               'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial'])
 
-	qmax = 2
+	qmax = 4
 
 	ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
 	mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,

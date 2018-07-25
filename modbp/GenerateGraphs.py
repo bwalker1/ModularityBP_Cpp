@@ -167,7 +167,14 @@ class MultilayerGraph():
             self.interlayer_edges=np.zeros((0,2),dtype='int')
         else:
             self.interlayer_edges=interlayer_edges
-
+        self.interlayer_weights=None
+        self.intralayer_weights=None
+        if len(self.interlayer_edges[0])>2:#weights are present
+            self.interlayer_weights = [e[2] for e in self.interlayer_edges]
+            self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
+        if len(self.intralayer_edges[0]) > 2:  # weights are present
+            self.intralayer_weights = [e[2] for e in self.intralayer_edges]
+            self.intralayer_edges = [(e[0], e[1]) for e in self.intralayer_edges]
         self.layer_vec=np.array(layer_vec)
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)
@@ -189,7 +196,8 @@ class MultilayerGraph():
             node_inds=set(node_inds) # hash for look up
             celist=[]
             #subtract this off so that number of nodes created in igraph is correct
-            for ei,ej in self.intralayer_edges:
+            for e in self.intralayer_edges:
+                ei,ej=e[0],e[1]
                 if ei in node_inds or ej in node_inds:
                     if not (ei>=min_ind and ej>=min_ind):
                         raise AssertionError('edge indicies not in layer {:d},{:d}'.format(ei,ej))
@@ -199,7 +207,10 @@ class MultilayerGraph():
 
 
     def _create_graph_from_elist(self,n,elist,simplify=True):
+        if len(elist[0])>2:
+            weights=[e[2] for e in elist]
         cgraph=ig.Graph(n=n,edges=elist,directed=False)
+
         if simplify:
             cgraph=cgraph.simplify(multiple=True)
         return cgraph
@@ -207,7 +218,8 @@ class MultilayerGraph():
     def _create_interlayeredges_by_layers(self):
         layers2edges={}
 
-        for i,j in self.interlayer_edges:
+        for e in self.interlayer_edges:
+            i,j=e[0],e[1]
             lay_i=self.layer_vec[i]
             lay_j=self.layer_vec[j]
             layers2edges[(lay_i,lay_j)]=layers2edges.get((lay_i,lay_j),[])+[(i,j)]
@@ -249,7 +261,8 @@ class MultilayerGraph():
 
     def get_interlayer_degrees(self):
         degrees=np.zeros(self.n)
-        for ei,ej in self.interlayer_edges:
+        for e in self.interlayer_edges:
+            ei,ej=e[0],e[1]
             degrees[ei]=degrees[ei]+1
             degrees[ej]=degrees[ej]+1
         return degrees
