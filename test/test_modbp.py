@@ -369,7 +369,6 @@ def test_cpp_permutation():
     #this should just flip the marginals
     tmap={0:1,1:0}
     out=np.array([ np.array(map(lambda x: tmap[x] ,range(2))) for _ in range(mlbp.nlayers)])
-    mlbp._bpmod.permute_beliefs(IntMatrix(out))
     cmargs = np.array(mlbp._bpmod.return_marginals())
     mlbp.marginals[0] = cmargs
     # Calculate effective group size and get partitions

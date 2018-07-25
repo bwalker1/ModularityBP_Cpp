@@ -744,6 +744,119 @@ class DoubleArray(_object):
 DoubleArray_swigregister = _bp.DoubleArray_swigregister
 DoubleArray_swigregister(DoubleArray)
 
+class Array(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Array, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Array, name)
+    __repr__ = _swig_repr
+
+    def iterator(self):
+        return _bp.Array_iterator(self)
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        return _bp.Array___nonzero__(self)
+
+    def __bool__(self):
+        return _bp.Array___bool__(self)
+
+    def __len__(self):
+        return _bp.Array___len__(self)
+
+    def __getslice__(self, i, j):
+        return _bp.Array___getslice__(self, i, j)
+
+    def __setslice__(self, *args):
+        return _bp.Array___setslice__(self, *args)
+
+    def __delslice__(self, i, j):
+        return _bp.Array___delslice__(self, i, j)
+
+    def __delitem__(self, *args):
+        return _bp.Array___delitem__(self, *args)
+
+    def __getitem__(self, *args):
+        return _bp.Array___getitem__(self, *args)
+
+    def __setitem__(self, *args):
+        return _bp.Array___setitem__(self, *args)
+
+    def pop(self):
+        return _bp.Array_pop(self)
+
+    def append(self, x):
+        return _bp.Array_append(self, x)
+
+    def empty(self):
+        return _bp.Array_empty(self)
+
+    def size(self):
+        return _bp.Array_size(self)
+
+    def swap(self, v):
+        return _bp.Array_swap(self, v)
+
+    def begin(self):
+        return _bp.Array_begin(self)
+
+    def end(self):
+        return _bp.Array_end(self)
+
+    def rbegin(self):
+        return _bp.Array_rbegin(self)
+
+    def rend(self):
+        return _bp.Array_rend(self)
+
+    def clear(self):
+        return _bp.Array_clear(self)
+
+    def get_allocator(self):
+        return _bp.Array_get_allocator(self)
+
+    def pop_back(self):
+        return _bp.Array_pop_back(self)
+
+    def erase(self, *args):
+        return _bp.Array_erase(self, *args)
+
+    def __init__(self, *args):
+        this = _bp.new_Array(*args)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+
+    def push_back(self, x):
+        return _bp.Array_push_back(self, x)
+
+    def front(self):
+        return _bp.Array_front(self)
+
+    def back(self):
+        return _bp.Array_back(self)
+
+    def assign(self, n, x):
+        return _bp.Array_assign(self, n, x)
+
+    def resize(self, *args):
+        return _bp.Array_resize(self, *args)
+
+    def insert(self, *args):
+        return _bp.Array_insert(self, *args)
+
+    def reserve(self, n):
+        return _bp.Array_reserve(self, n)
+
+    def capacity(self):
+        return _bp.Array_capacity(self)
+    __swig_destroy__ = _bp.delete_Array
+    __del__ = lambda self: None
+Array_swigregister = _bp.Array_swigregister
+Array_swigregister(Array)
+
 # This file is compatible with both classic and new-style classes.
 
 
