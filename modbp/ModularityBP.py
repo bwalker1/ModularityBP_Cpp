@@ -236,7 +236,7 @@ class ModularityBP():
     #     return edgelist
 
     def _get_cpp_intra_weights(self):
-        if self.graph.intralayer_weights is None:
+        if self.graph.unweighted:
             return DoubleArray([])
         else:
             assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"

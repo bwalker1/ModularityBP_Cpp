@@ -164,7 +164,7 @@ class MultilayerGraph():
         self.n=len(layer_vec)
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
-
+        self.unweighted=True
 
 
 
@@ -177,12 +177,14 @@ class MultilayerGraph():
         if len(self.interlayer_edges[0])>2:#weights are present
             self.interlayer_weights = [e[2] for e in self.interlayer_edges]
             self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
+            self.unweighted=False
         else:
             self.interlayer_weights=[ 1.0 for _ in range(len(self.interlayer_edges))]
 
         if len(self.intralayer_edges[0]) > 2:  # weights are present
             self.intralayer_weights = [e[2] for e in self.intralayer_edges]
             self.intralayer_edges = [(e[0], e[1]) for e in self.intralayer_edges]
+            self.unweighted=False
         else:
             self.intralayer_weights = [1.0 for _ in range(len(self.intralayer_edges))]
 
