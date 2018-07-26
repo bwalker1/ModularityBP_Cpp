@@ -39,8 +39,15 @@ def adjacency_to_edges(A):
     return zip(nnz_inds[0], nnz_inds[1], nnzvals)
 
 def main():
+    gamma=float(sys.argv[1])
+    omega=float(sys.argv[2])
 
     senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
+    #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+
+    senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
+    #senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+
     senate_data_file = os.path.join(senate_dir, 'multisenate0.5.mat')
     sendata = scio.loadmat(senate_data_file)
 
@@ -58,46 +65,44 @@ def main():
     sess2layer = dict(zip(sessions, range(len(sessions))))
     layer_vec = np.array(list(map(lambda x: sess2layer[x], sesid)))[:num2keep]
 
-    k=5
+    k=6
     A_knn = create_knn_from_adj(A, k,weight_func=lambda (x): x)
 
     intra_edges = adjacency_to_edges(A_knn)
     inter_edges = adjacency_to_edges(C)
 
 
-
-
-    A_gtools=nt.create_gt_graph_from_adj(A_knn)
-    for e in inter_edges:
-        cedge=A_gtools.add_edge(e[0],e[1])
-        A_gtools.ep['weight'][cedge]=1.0/10
-
-    A_gtools.save("senate_{}_knn.graphml.gz".format(k))
+    # A_gtools=nt.create_gt_graph_from_adj(A_knn)
+    # for e in inter_edges:
+    #     cedge=A_gtools.add_edge(e[0],e[1])
+    #     A_gtools.ep['weight'][cedge]=1.0/10
+    #
+    # A_gtools.save("senate_{}_knn.graphml.gz".format(k))
 
     mgraph = modbp.MultilayerGraph(interlayer_edges=inter_edges,
                                    intralayer_edges=intra_edges,
                                    layer_vec=layer_vec,directed=False)
     q_max_val = 20
-    gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
-    omega_vals = [0.0, 1, 2, 4, 8]
+    #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
+    #omega_vals = [0.0, 1, 2, 4, 8]
 
     modbp_obj = modbp.ModularityBP(mlgraph=mgraph,use_effective=True,align_communities_across_layers=True,
                                    accuracy_off=True,comm_vec=parties)
-    for gamma in gamma_vals:
-        print("gamma: {}".format(gamma),end=' , ')
-        for omega in omega_vals:
-            print('omega:{} '.format(omega),end=' , ')
-            bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(4,q_max_val,4)))
-            for beta in bstars:
-                modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2000,
-                                    omega=omega,resgamma=gamma,reset=False)
 
-        print()
-    with gzip.open("senate_partitions.gz",'wb') as fh:
+
+
+    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(4,q_max_val,4)))
+    for beta in bstars:
+        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2000,
+                            omega=omega,resgamma=gamma,reset=False)
+
+    if not os.path.exists(senate_out_dir):
+        os.makedirs(senate_out_dir)
+    with gzip.open(os.path.join(senate_out_dir,"senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma,omega)),'wb') as fh:
         pickle.dump(modbp_obj.partitions,fh)
 
     modrm=modbp_obj.retrieval_modularities
-    modrm.to_csv("senate_ret_mod_df.csv")
+    modrm.to_csv("senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma,omega))
 
     return 0
 
