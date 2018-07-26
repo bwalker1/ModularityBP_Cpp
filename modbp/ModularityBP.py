@@ -5,7 +5,7 @@ from future.utils import iteritems,iterkeys
 from collections import Hashable
 from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
-from .bp import BP_Modularity,PairVector,IntArray,IntMatrix
+from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray
 import itertools
 import pandas as pd
 import scipy.optimize as sciopt
@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import seaborn as sbn
 from time import time
 import os,pickle,gzip
-import logging
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
+#import #logging
+##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.DEBUG)
+##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.INFO)
 
 class ModularityBP():
     """
@@ -24,7 +24,7 @@ class ModularityBP():
 
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
                  intralayer_edgelist=None, layer_vec=None,
-                 accuracy_off=False, use_effective=False, comm_vec=None, align_communities_across_layers=True):
+                 accuracy_off=True, use_effective=False, comm_vec=None, align_communities_across_layers=True):
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
@@ -35,8 +35,7 @@ class ModularityBP():
                 self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
                                               interlayer_edges=np.zeros((0,2),dtype='int'),
                                               layer_vec=[0 for _ in range(mlgraph.vcount())])
-                if not comm_vec is None:
-                    self.graph.comm_vec=comm_vec
+
             else:
                 self.graph=mlgraph
         else:
@@ -44,14 +43,15 @@ class ModularityBP():
                 interlayer_edgelist=np.zeros((0,2),dtype='int')
             self.graph = MultilayerGraph(intralayer_edges=intralayer_edgelist,
                                          interlayer_edges=interlayer_edgelist,layer_vec=layer_vec)
-            if not comm_vec is None:
-                self.graph.comm_vec = comm_vec
 
+        if not comm_vec is None:
+            self.graph.comm_vec = comm_vec
         self.n=self.graph.n
         self.nlayers=self.graph.nlayers
         self.totaledgeweight=self.graph.totaledgeweight
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
+        self._cpp_intra_weights=self._get_cpp_intra_weights()
         self.layer_vec=self.graph.layer_vec
         self._layer_vec_ia=IntArray(self.layer_vec)
         self.layers_unique=sorted(np.unique(self.layer_vec))
@@ -96,10 +96,12 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
 
         t=time()
-        logging.debug("Creating c++ modbp object")
+        #logging.debug("Creating c++ modbp object")
         if self._bpmod is None:
+            #print("Creating c++ modbp object")
+            #print(list(self._cpp_intra_weights))
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
-                                        intra_edgelist=self._intraedgelistpv,
+                                        intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       resgamma=resgamma,omega=omega,transform=False,verbose=True)
@@ -122,20 +124,20 @@ class ModularityBP():
             iters_per_run=niter #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
-        logging.debug('time: {:.4f}'.format(time()-t))
+        #logging.debug('time: {:.4f}'.format(time()-t))
         t=time()
-        logging.debug('Running modbp at beta={:.3f}'.format(beta))
+        #logging.debug('Running modbp at beta={:.3f}'.format(beta))
         converged=False
         iters=self._bpmod.run(iters_per_run)
         cmargs=np.array(self._bpmod.return_marginals())
-        logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
+        #logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
         t=time()
 
         if iters<iters_per_run:
             converged=True
         self.marginals[self.nruns]=cmargs
         #Calculate effective group size and get partitions
-        logging.debug('Combining marginals')
+        #logging.debug('Combining marginals')
         self._get_community_distances(self.nruns) #sets values in method
         cpartition=self._get_partition(self.nruns,self.use_effective)
         self.partitions[self.nruns]=cpartition
@@ -143,11 +145,11 @@ class ModularityBP():
         if self.use_effective:
             q_new = self._merge_communities_bp(self.nruns)
             q = q_new
-        logging.debug('time: {:.4f}'.format(time()-t))
+        #logging.debug('time: {:.4f}'.format(time()-t))
         t=time()
 
         # if self._align_communities_across_layers and iters<niter:
-        #     logging.debug('aligning communities across layers')
+        #     #logging.debug('aligning communities across layers')
         #     # print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
         #     #                                                    self._get_retrieval_modularity(self.nruns)))
         #     nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
@@ -155,24 +157,24 @@ class ModularityBP():
 
 
         if self._align_communities_across_layers and iters<niter:
-            logging.debug('aligning communities across layers')
+            #logging.debug('aligning communities across layers')
             # print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
             #                                                    self._get_retrieval_modularity(self.nruns)))
             nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
-            logging.debug('time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
+            #logging.debug('time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
             while not (nsweeps==0 and converged==True) and not iters>niter:
                 #plots for debugging
-                logging.debug("rerunning modbp with realigned:")
+                #logging.debug("rerunning modbp with realigned:")
                 self._switch_beliefs_bp(self.nruns)
                 #can't go more than the alloted number of runs
                 citers = self._bpmod.run(iters_per_run)
                 iters+=citers
                 if citers<iters_per_run: #it converged
                     converged=True
-                logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
+                #logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
                 t = time()
                 cmargs = np.array(self._bpmod.return_marginals())
                 self.marginals[self.nruns] = cmargs
@@ -187,11 +189,12 @@ class ModularityBP():
 
                 nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
 
-                # logging.debug('time: {:.4f}'.format(time() - t))
-                logging.debug('nsweeps: {:d}'.format(nsweeps))
+                # #logging.debug('time: {:.4f}'.format(time() - t))
+                #logging.debug('nsweeps: {:d}'.format(nsweeps))
         # #We perform the merger and the swap on the BP side and then rerun
-        if iters>=niter:
-            logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
+        # if iters>=niter:
+        #    pass
+            #logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
 
 
 
@@ -199,7 +202,7 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
         self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
         retmod=self._get_retrieval_modularity(self.nruns)
-        logging.debug('calculating bethe_free energy')
+        #logging.debug('calculating bethe_free energy')
         bethe_energy=self._bpmod.compute_bethe_free_energy()
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
         self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
@@ -227,17 +230,35 @@ class ModularityBP():
 
         self.nruns+=1
 
-    def _get_edgelist(self):
-        edgelist=self.graph.get_edgelist()
-        edgelist.sort()
-        return edgelist
+    # def _get_edgelist(self):
+    #     edgelist=self.graph.get_edgelist()
+    #     if not self.graph.intralayer_weights is None:
+    #         elist_weights=sorted(zip(self.graph.),key=lambda (x):x[0],x[1])
+    #     edgelist.sort()
+    #     return edgelist
+
+    def _get_cpp_intra_weights(self):
+        if self.graph.unweighted:
+            return DoubleArray([])
+        else:
+            assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
+            return DoubleArray(self.graph.intralayer_weights)
 
     def _get_edgelistpv(self,inter=False):
         ''' Return PairVector swig wrapper version of edgelist'''
         if inter:
-            _edgelistpv = PairVector(self.interlayer_edges) #cpp wrapper for list
+            try: #fonud that type numpy.int
+                _edgelistpv = PairVector(self.interlayer_edges) #cpp wrapper for list
+            except NotImplementedError:
+                self.interlayer_edges=[ (int(e[0]),int(e[1])) for e in self.interlayer_edges]
+                _edgelistpv = PairVector(self.interlayer_edges)
         else:
-            _edgelistpv = PairVector(self.intralayer_edges)
+            try:
+                _edgelistpv = PairVector(self.intralayer_edges)
+            except NotImplementedError:
+                self.intralayer_edges = [(int(e[0]), int(e[1])) for e in self.intralayer_edges]
+                _edgelistpv = PairVector(self.intralayer_edges)
+
         return _edgelistpv
 
     def _get_partition(self,ind,use_effective=True):
@@ -281,6 +302,7 @@ class ModularityBP():
         if self._bpmod is None:
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
                                         intra_edgelist=self._intraedgelistpv,
+                                      intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
                                        omega=omega,transform=False)
@@ -337,8 +359,9 @@ class ModularityBP():
 
             if dist_kl <=thresh:
                 comb=groups[l].union(groups[k])
-                groups[k]=comb
-                groups[l]=comb
+                for val in comb: #have to update everyone's groups
+                    groups[val]=comb
+
 
         self.marginal_index_to_close_marginals[ind]=groups
 
@@ -361,7 +384,12 @@ class ModularityBP():
                     valsremap[val]=available.pop()
                 revmap[k]=valsremap[val]
 
+        if np.max(revmap.values())>=len(set(revmap.values())):
+            raise AssertionError
+
         self.marginal_to_comm_number[ind] = revmap
+
+
 
     def _groupmap_to_permutation_vector(self,ind):
         """
@@ -577,6 +605,39 @@ class ModularityBP():
     #             distmat[i,j]=np.sum(curpart[prev_inds[prevcom]]!=curcom)
     #     return distmat
 
+    def _get_previous_layer_inds_dict(self,layer):
+        """
+        returns 2 dictionaries, mapping the indices of the nodes in the previous layer to that \
+        in the current layer.
+        :return:
+        """
+        if layer==0: #nothing in the previous layer
+            return {},{}
+
+        if "interlayer_edge_dict" not in self.__dict__:
+            self.interlayer_edge_dict={}
+            for e in self.interlayer_edges:
+                ei,ej=e[0],e[1]
+                self.interlayer_edge_dict[ei]=self.interlayer_edge_dict.get(ei,[])+[ej]
+                self.interlayer_edge_dict[ej]=self.interlayer_edge_dict.get(ej,[])+[ei]
+
+        cur_inds=np.where(self.layer_vec==layer)[0]
+        prev_inds=np.where(self.layer_vec==(layer-1))[0]
+        prev2cur={}
+        cur2prev={}
+        for ind in prev_inds:
+            if ind in self.interlayer_edge_dict:
+                prev2cur[ind]=list(set(self.interlayer_edge_dict[ind]).intersection(cur_inds))
+
+        #construct mapping other direction
+        for prevind in prev2cur.keys():
+            for cind in prev2cur.get(prevind,[]):
+                cur2prev[cind]=list(set(cur2prev.get(cind,[])+[prevind]))
+
+        return cur2prev,prev2cur
+
+
+
     def _create_layer_permutation_single_layer(self,ind,layer):
         """
         Identify the permutation of community labels that minimizes the number\
@@ -592,6 +653,9 @@ class ModularityBP():
         layer_inds=np.where(self.layer_vec==layer)[0]
         prev_layer = layers[np.where(layers == layer)[0][0] - 1]
         prevind = np.where(self.layer_vec == prev_layer)[0]
+        cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
+        prev_inds=prev2cur_inds.keys()
+
         curpart = self.partitions[ind][cind]
         prevpart = self.partitions[ind][prevind]
         curcoms = np.unique(curpart)
@@ -602,12 +666,38 @@ class ModularityBP():
         prev_inds = {com: np.where(prevpart == com)[0] for com in prevcoms}
         cur_inds = {com: np.where(curpart == com)[0] for com in curcoms}
 
-        for i, prevcom in enumerate(prevcoms):
-            for j, curcom in enumerate(curcoms):
-                # how many of the currentl communities are not in the previous community
-                #plus how many of the previous communities are not in the current community
-                distmat[i, j] = np.sum(curpart[prev_inds[prevcom]] != curcom) + \
-                                np.sum(prevpart[cur_inds[curcom]] != prevcom)
+        prevcoms2_i=dict(zip(prevcoms,range(len(prevcoms))))
+        curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
+
+        for prev_ind in prev2cur_inds.keys():
+            pre_com=self.partitions[ind][prev_ind]
+            i=prevcoms2_i[pre_com]
+            for cur_ind in prev2cur_inds[prev_ind]:
+                cur_com=self.partitions[ind][cur_ind]
+                j=curcoms2_j[cur_com]
+                #distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+                distmat[ i , : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+                distmat[ i , j ]-=(1.0/len(prev2cur_inds[prev_ind]))
+        for cur_ind in cur2prev_inds.keys():
+            cur_com = self.partitions[ind][cur_ind]
+            j = curcoms2_j[cur_com]
+            for prev_ind in cur2prev_inds[cur_ind]:
+                prev_com = self.partitions[ind][prev_ind]
+                i = prevcoms2_i[prev_com]
+                # distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+                distmat[:, j] += (1.0 / len(cur2prev_inds[cur_ind]))
+                distmat[i, j] -= (1.0 / len(cur2prev_inds[cur_ind]))
+
+
+        #below works for multiplex, but not for more general multilayer topologies.
+        # for i, prevcom in enumerate(prevcoms):
+        #     for j, curcom in enumerate(curcoms):
+        #         # how many of the currentl communities are not in the previous community
+        #         #plus how many of the previous communities are not in the current community
+        #         #have to figure out which of the nodes from previous layer are actually in this layer
+        #         #(in the case where it's not multiplex)
+        #         distmat[i, j] = np.sum(curpart[prev_inds[prevcom]] != curcom) + \
+        #                         np.sum(prevpart[cur_inds[curcom]] != prevcom)
 
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
@@ -795,10 +885,10 @@ class ModularityBP():
         ax.grid('off')
         ax.pcolormesh(part_mat,cmap=cmap,vmin=vmin,vmax=vmax)
 
-        numswitched=self.get_number_nodes_switched_all_layers(ind=ind,percent=True)
-        numswitched=numswitched[np.where(np.isin(self.layers_unique,layers))[0]] #filter for layers selected
-        for i,num in enumerate(numswitched):
-            ax.text(s="{:.2f}".format(num),x=i,y=-1,fontdict={"fontsize":9,'color':'white'})
+        # numswitched=self.get_number_nodes_switched_all_layers(ind=ind,percent=True)
+        # # numswitched=numswitched[np.where(np.isin(self.layers_unique,layers))[0]] #filter for layers selected
+        # for i,num in enumerate(numswitched):
+        #     ax.text(s="{:.2f}".format(num),x=i,y=-1,fontdict={"fontsize":9,'color':'white'})
 
         ax.set_xticks(range(0,len(layers)))
         ax.set_xticklabels(layers)
@@ -821,26 +911,43 @@ def calc_modularity(graph,partition,resgamma,omega):
     Chat = 0
 
     def part_equal(x):
-        if partition[x[0]] == partition[x[1]]:
+        if partition[int(x[0])] == partition[int(x[1])]:
             if len(x)>2:
                 return x[2] #edge weights should be x[2]
             else:
-                return 1
+                return 1.0
         else:
-            return 0
+            return 0.0
 
     intra_edges=graph.intralayer_edges
-    inter_edges=graph.interlayer_edges
+    inter_edges = graph.interlayer_edges
+    # zip weights into the edges
+    if graph.intralayer_weights is not None:
+        temp=[]
+        for i,e in enumerate(intra_edges):
+            temp.append((e[0],e[1],graph.intralayer_weights[i]))
+        intra_edges=temp
+    if graph.interlayer_weights is not None:
+        temp=[]
+        for i,e in enumerate(inter_edges):
+            temp.append((e[0],e[1],graph.interlayer_weights[i]))
+        inter_edges=temp
 
     # For Ahat and Chat we simply iterate over the edges and count internal ones
-    if intra_edges.shape[0] > 0:
+    if len(intra_edges) > 0:
         Ahat = np.sum(np.apply_along_axis(func1d=part_equal, arr=intra_edges, axis=1))
     else:
         Ahat = 0
-    if inter_edges.shape[0] > 0:
+    if not graph.is_directed:
+        Ahat=Ahat*2.0
+
+    if len(inter_edges) > 0:
         Chat = np.sum(np.apply_along_axis(func1d=part_equal, arr=inter_edges, axis=1))
     else:
         Chat = 0
+
+    if not graph.is_directed:
+        Chat = Chat * 2.0
 
     # We calculate Phat a little differently since it requires degrees of all members of each group
     # store indices for each community together in dict
@@ -870,4 +977,5 @@ def calc_modularity(graph,partition,resgamma,omega):
                 cPmat = np.outer(cdeg, cdeg.T)
                 Phat += (np.sum(cPmat) / (2.0 * graph.intra_edge_counts[i]))
 
-    return (1.0 / (graph.totaledgeweight)) * (Ahat - resgamma * Phat + omega * Chat)
+    mu= 2.0*graph.totaledgeweight if not graph.is_directed else graph.totaledgeweight
+    return (1.0 / mu) * (Ahat - resgamma * Phat + omega * Chat)

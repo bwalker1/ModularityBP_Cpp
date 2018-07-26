@@ -15,9 +15,9 @@ import scipy.sparse as scispa
 import scipy.io as scio
 
 
-clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+#clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 #clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
-#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 matlaboutdir = os.path.join(clusterdir,"test/genlouvain_mlsbm/matlab_transfer_file")
 call_matlabfile = os.path.join(clusterdir,"test/genlouvain_mlsbm/call_matlab_genlouvain.sh")

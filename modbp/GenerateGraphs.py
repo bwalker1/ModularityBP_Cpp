@@ -158,15 +158,38 @@ class RandomSBMGraph(RandomGraph):
 
 class MultilayerGraph():
     """ """
-    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None):
+    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,directed=False):
 
 
         self.n=len(layer_vec)
         self.intralayer_edges=intralayer_edges
+        self.is_directed=directed
+        self.unweighted=True
+
+
+
+
         if interlayer_edges is None: #Assume that it is single layer
             self.interlayer_edges=np.zeros((0,2),dtype='int')
         else:
             self.interlayer_edges=interlayer_edges
+
+        if len(self.interlayer_edges[0])>2:#weights are present
+            self.interlayer_weights = [e[2] for e in self.interlayer_edges]
+            self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
+            self.unweighted=False
+        else:
+            self.interlayer_weights=[ 1.0 for _ in range(len(self.interlayer_edges))]
+
+        if len(self.intralayer_edges[0]) > 2:  # weights are present
+            self.intralayer_weights = [e[2] for e in self.intralayer_edges]
+            self.intralayer_edges = [(e[0], e[1]) for e in self.intralayer_edges]
+            self.unweighted=False
+        else:
+            self.intralayer_weights = [1.0 for _ in range(len(self.intralayer_edges))]
+
+        if not self.is_directed:
+            self._prune_intra_edges_directed()  # make sure each edge is unique
 
         self.layer_vec=np.array(layer_vec)
         self.layers=self._create_layer_graphs()
@@ -174,12 +197,37 @@ class MultilayerGraph():
         self.intradegrees=self.get_intralayer_degrees()
         self.interdegrees=self.get_interlayer_degrees()
         self.intra_edge_counts=self.get_layer_edgecounts()
-        self.totaledgeweight=np.sum(self.interdegrees)/2.0+np.sum(self.intradegrees)/2.0
+        if self.is_directed:
+            self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
+        else:
+            self.totaledgeweight=np.sum(self.interdegrees)/2.0+np.sum(self.intradegrees)/2.0
 
         self.comm_vec=comm_vec #for known community labels of nodes
         if self.comm_vec is not None:
             self._label_layers(self.comm_vec)
         self.interedgesbylayers=self._create_interlayeredges_by_layers()
+
+    def _prune_intra_edges_directed(self,):
+        eset={}
+        edge_inds2rm=[]
+        for i,e in enumerate(self.intralayer_edges): #note that we assume here BOTH ENTRIES will be the same if edges are duplicated
+            if e[0]<e[1]:
+                eset[(e[0], e[1])] = self.intralayer_weights[i]
+            else:
+                eset[(e[1], e[0])] = self.intralayer_weights[i]
+        edges=[]
+        weights=[]
+        for k,val in eset.items():
+            edges.append(k)
+            weights.append(val)
+
+        edge_weights=sorted(list(zip(edges,weights)),key=lambda(x):x[0])
+        edges,weights=zip(*edge_weights)
+        self.intralayer_edges=edges
+        self.intralayer_weights=weights
+
+
+
     def _create_layer_graphs(self):
         layers=[]
         uniq=np.unique(self.layer_vec)
@@ -188,26 +236,35 @@ class MultilayerGraph():
             min_ind=np.min(node_inds)
             node_inds=set(node_inds) # hash for look up
             celist=[]
+            cweights=[]
             #subtract this off so that number of nodes created in igraph is correct
-            for ei,ej in self.intralayer_edges:
+            for i,e in enumerate(self.intralayer_edges):
+                ei,ej=e[0],e[1]
+                weight = 1.0 if self.intralayer_weights is None else self.intralayer_weights[i]
                 if ei in node_inds or ej in node_inds:
                     if not (ei>=min_ind and ej>=min_ind):
                         raise AssertionError('edge indicies not in layer {:d},{:d}'.format(ei,ej))
                     celist.append((ei-min_ind,ej-min_ind))
-            layers.append(self._create_graph_from_elist(len(node_inds),celist))
+                    cweights.append(weight)
+            layers.append(self._create_graph_from_elist(len(node_inds),celist,cweights))
         return layers
 
 
-    def _create_graph_from_elist(self,n,elist,simplify=True):
+    def _create_graph_from_elist(self,n,elist,weights=None,simplify=True):
+
         cgraph=ig.Graph(n=n,edges=elist,directed=False)
+        if weights is not None:
+            cgraph.es['weight']=weights
         if simplify:
-            cgraph=cgraph.simplify(multiple=True)
+            cgraph=cgraph.simplify(multiple=True,combine_edges='sum')
+
         return cgraph
 
     def _create_interlayeredges_by_layers(self):
         layers2edges={}
 
-        for i,j in self.interlayer_edges:
+        for e in self.interlayer_edges:
+            i,j=e[0],e[1]
             lay_i=self.layer_vec[i]
             lay_j=self.layer_vec[j]
             layers2edges[(lay_i,lay_j)]=layers2edges.get((lay_i,lay_j),[])+[(i,j)]
@@ -232,10 +289,13 @@ class MultilayerGraph():
 
 
     def get_layer_edgecounts(self):
-        """2*m for undicted networks"""
+        """m for undirected networks"""
         ecounts=[]
         for i in range(self.nlayers):
-            ecounts.append(np.sum(self.get_intralayer_degrees(i)))
+            if self.is_directed:
+                ecounts.append(np.sum(self.get_intralayer_degrees(i)))
+            else:
+                ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
         return np.array(ecounts)
 
     def get_intralayer_degrees(self, i=None):
@@ -244,14 +304,19 @@ class MultilayerGraph():
         else:
             total_degrees=[]
             for i in range(len(self.layers)):
-                total_degrees.extend(list(self.layers[i].degree()))
-            return np.array(total_degrees)
+                if 'weight' in self.layers[i].es.attributes():
+                    total_degrees.extend(list(self.layers[i].strength(weights='weight')))
+                else:
+                    total_degrees.extend(list(self.layers[i].degrees()))
+        return np.array(total_degrees)
 
     def get_interlayer_degrees(self):
         degrees=np.zeros(self.n)
-        for ei,ej in self.interlayer_edges:
-            degrees[ei]=degrees[ei]+1
-            degrees[ej]=degrees[ej]+1
+        for i,e in enumerate(self.interlayer_edges):
+            ei,ej=e[0],e[1]
+            toadd=1 if self.interlayer_weights is None else self.interlayer_weights[i]
+            degrees[ei]=degrees[ei]+toadd
+            degrees[ej]=degrees[ej]+toadd
         return degrees
 
     def get_AMI_with_communities(self,labels):

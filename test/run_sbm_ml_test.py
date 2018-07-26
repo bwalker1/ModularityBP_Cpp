@@ -12,9 +12,8 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
-#clusterdir = "/nas02/home/w/w/wweir/ModBP_proj/ModularityBP_Cpp/"
-#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+#clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
@@ -64,11 +63,12 @@ def main():
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
-            # print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
-            # plt.close()
-            # f,a=plt.subplots(1,1)
-            # mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a)
-            # plt.show()
+            print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
+            plt.close()
+            f,a=plt.subplots(1,2)
+            mlbp.plot_communities(ax=a[0])
+            mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a[1])
+            plt.show()
 
         # these are the non-trivial ones
         minidx = mlbp_rm[mlbp_rm['converged'] == True][
