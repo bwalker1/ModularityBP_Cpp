@@ -42,19 +42,19 @@ def main():
     gamma=float(sys.argv[1])
     omega=float(sys.argv[2])
 
-    senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
-    #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
+    senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
-    senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
-    #senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    #senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
+    senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
     senate_data_file = os.path.join(senate_dir, 'multisenate0.5.mat')
     sendata = scio.loadmat(senate_data_file)
 
 
     A = sendata['A']
-    num2keep = 50
-    #num2keep = A.shape[0]
+    #num2keep = 50
+    num2keep = A.shape[0]
     A = A[:num2keep,:num2keep]
     C = sendata['C']
     C= C[:num2keep,:num2keep]
@@ -99,11 +99,11 @@ def main():
 
     if not os.path.exists(senate_out_dir):
         os.makedirs(senate_out_dir)
-    with gzip.open(os.path.join(senate_out_dir,"senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma,omega)),'wb') as fh:
+    with gzip.open(os.path.join(senate_out_dir,"zippe_partitions","senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma,omega)),'wb') as fh:
         pickle.dump(modbp_obj.partitions,fh)
 
     modrm=modbp_obj.retrieval_modularities
-    modrm.to_csv("senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma,omega))
+    modrm.to_csv(os.path.join(senate_out_dir,"senate_ret_mod_dfs","senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma,omega)))
 
     return 0
 
