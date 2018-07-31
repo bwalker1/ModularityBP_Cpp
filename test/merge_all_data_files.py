@@ -31,7 +31,7 @@ def main(pargs=None):
     if args.prefix is not None:
         outfile=args.prefix+"_"+outfile
     else:
-        outfile=args.outfilename
+        outfile=outfile
     print(outfile)
     allfiles=os.listdir(args.input)
     # outdf=pd.DataFrame()
@@ -41,7 +41,11 @@ def main(pargs=None):
         if not re.search('\.csv',file):
             continue #only append csv files
         cfile=os.path.join(args.input,file)
-        c_df=pd.read_csv(cfile,index_col=0)
+        try:
+			c_df=pd.read_csv(cfile,index_col=0)
+        except :
+		    print("unable to read file: {}".format(cfile))
+		    continue
         if i==0:
             with open(outfile,'w') as fh:
                 c_df.to_csv(fh,header=True)

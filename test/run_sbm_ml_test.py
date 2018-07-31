@@ -12,8 +12,8 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-#clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
@@ -92,7 +92,7 @@ def main():
                 output.to_csv(fh,'w',header=True)
         else:
             with open(outfile,'a') as fh: #writeout as we go
-                output.iloc[-1, :].to_csv(fh, header=False)
+                output.iloc[[-1], :].to_csv(fh, header=False)
 
 
     return 0
