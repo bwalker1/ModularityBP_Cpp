@@ -40,10 +40,8 @@ def adjacency_to_edges(A,directed=False):
             if nnz_inds[0][i]<nnz_inds[1][i]:
                 nnz_inds_kept[0].append(nnz_inds[0][i])
                 nnz_inds_kept[1].append(nnz_inds[1][i])
-    nnz_inds_kept[0]=np.array(nnz_inds_kept[0])
-    nnz_inds_kept[1]=np.array(nnz_inds_kept[1])
+        nnz_inds=(np.array(nnz_inds_kept[0]),np.array(nnz_inds_kept[1]))
 
-    nnz_inds=nnz_inds_kept
 
     nnzvals = np.array(A[nnz_inds])
     if len(nnzvals.shape) > 1:
@@ -78,10 +76,10 @@ def main():
     layer_vec = np.array(list(map(lambda x: sess2layer[x], sesid)))[:num2keep]
 
     k=6
-    A_knn = create_knn_from_adj(A, k,weight_func=lambda (x): x)
+    A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
 
-    #intra_edges = adjacency_to_edges(A_knn)
-    intra_edges = adjacency_to_edges(A)
+    intra_edges = adjacency_to_edges(A_knn)
+    #intra_edges = adjacency_to_edges(A)
     inter_edges = adjacency_to_edges(C)
 
 
@@ -95,6 +93,7 @@ def main():
     mgraph = modbp.MultilayerGraph(interlayer_edges=inter_edges,
                                    intralayer_edges=intra_edges,
                                    layer_vec=layer_vec,directed=False)
+
     q_max_val = 20
     #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
     #omega_vals = [0.0, 1, 2, 4, 8]
@@ -104,7 +103,7 @@ def main():
 
 
 
-    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(4,q_max_val,4)))
+    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val,2)))
     for beta in bstars:
         modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2000,
                             omega=omega,resgamma=gamma,reset=False)
