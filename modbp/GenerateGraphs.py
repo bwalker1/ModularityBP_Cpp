@@ -391,6 +391,7 @@ class MultilayerGraph():
         return np.sum(la_amis)
 
     def _to_sparse(self,edgelist):
+        edgelist=np.array(edgelist)
         if edgelist.shape[1]>2 : #assume data is 3rd
             data=edgelist[:,2]
         else:

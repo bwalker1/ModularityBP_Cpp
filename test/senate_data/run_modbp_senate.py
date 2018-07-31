@@ -31,8 +31,18 @@ def create_knn_from_adj(adj_mat, k, weight_func=None):
                 out_adj[ind, i] = vals[j]
     return out_adj
 
-def adjacency_to_edges(A):
+def adjacency_to_edges(A,directed=False):
     nnz_inds = np.nonzero(A)
+    if not directed: # filter out edges
+
+        nnz_inds_kept=[[],[]]
+        for i in range(len(nnz_inds[0])):
+            if nnz_inds[0][i]<nnz_inds[1][i]:
+                nnz_inds_kept[0].append(nnz_inds[0][i])
+                nnz_inds_kept[1].append(nnz_inds[1][i])
+
+    nnz_inds=nnz_inds_kept
+
     nnzvals = np.array(A[nnz_inds])
     if len(nnzvals.shape) > 1:
         nnzvals = nnzvals[0]  # handle scipy sparse types
