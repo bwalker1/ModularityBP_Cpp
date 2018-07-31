@@ -63,12 +63,12 @@ def main():
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
-            print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
-            plt.close()
-            f,a=plt.subplots(1,2)
-            mlbp.plot_communities(ax=a[0])
-            mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a[1])
-            plt.show()
+            # print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
+            # plt.close()
+            # f,a=plt.subplots(1,2)
+            # mlbp.plot_communities(ax=a[0])
+            # mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a[1])
+            # plt.show()
 
         # these are the non-trivial ones
         minidx = mlbp_rm[mlbp_rm['converged'] == True][
