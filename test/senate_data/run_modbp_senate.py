@@ -35,11 +35,13 @@ def adjacency_to_edges(A,directed=False):
     nnz_inds = np.nonzero(A)
     if not directed: # filter out edges
 
-        nnz_inds_kept=[[],[]]
+        nnz_inds_kept=([],[])
         for i in range(len(nnz_inds[0])):
             if nnz_inds[0][i]<nnz_inds[1][i]:
                 nnz_inds_kept[0].append(nnz_inds[0][i])
                 nnz_inds_kept[1].append(nnz_inds[1][i])
+    nnz_inds_kept[0]=np.array(nnz_inds_kept[0])
+    nnz_inds_kept[1]=np.array(nnz_inds_kept[1])
 
     nnz_inds=nnz_inds_kept
 
