@@ -31,8 +31,18 @@ def create_knn_from_adj(adj_mat, k, weight_func=None):
                 out_adj[ind, i] = vals[j]
     return out_adj
 
-def adjacency_to_edges(A):
+def adjacency_to_edges(A,directed=False):
     nnz_inds = np.nonzero(A)
+    if not directed: # filter out edges
+
+        nnz_inds_kept=[[],[]]
+        for i in range(len(nnz_inds[0])):
+            if nnz_inds[0][i]<nnz_inds[1][i]:
+                nnz_inds_kept[0].append(nnz_inds[0][i])
+                nnz_inds_kept[1].append(nnz_inds[1][i])
+
+    nnz_inds=nnz_inds_kept
+
     nnzvals = np.array(A[nnz_inds])
     if len(nnzvals.shape) > 1:
         nnzvals = nnzvals[0]  # handle scipy sparse types
@@ -42,11 +52,11 @@ def main():
     gamma=float(sys.argv[1])
     omega=float(sys.argv[2])
 
-    senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
-    #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
+    senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
-    senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
-    #senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    #senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
+    senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
     senate_data_file = os.path.join(senate_dir, 'multisenate0.5.mat')
     sendata = scio.loadmat(senate_data_file)

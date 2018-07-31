@@ -78,7 +78,15 @@ def main():
         #print(stdout)
 
         S = scio.loadmat(matlaboutput)['S'][:,0]
+        #modbp.ModularityBP(mlgraph=mgraph,align_communities_across_layers=True)
+        #modbp.partitions[0]=S
+        #modbp._perform_permuation_sweep(0)
         ami=mgraph.get_AMI_with_communities(S)
+        plt.close()
+        f,a=plt.subplots(1,2,figsize=(10,5))
+        mgraph.plot_communities(ax=a[0])
+        mgraph.plot_communities(S,ax=a[1])
+        plt.show()
         ami_layer_avg=mgraph.get_AMI_layer_avg_with_communities(S)
         mod=modbp.calc_modularity(mgraph,partition=S,resgamma=gamma,omega=omega)
         cind=output.shape[0]

@@ -30,7 +30,7 @@ def main(pargs=None):
     if args.prefix is not None:
         outfile=args.prefix+"_"+outfile
     else:
-        outfile=args.outfilename
+        outfile=args.outfile
     print(outfile)
     allfiles=os.listdir(args.input)
     # outdf=pd.DataFrame()
