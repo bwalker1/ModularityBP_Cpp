@@ -173,8 +173,9 @@ class MultilayerGraph():
             self.interlayer_edges=np.zeros((0,2),dtype='int')
         else:
             self.interlayer_edges=interlayer_edges
+        
 
-        if len(self.interlayer_edges[0])>2:#weights are present
+        if interlayer_edges is not None and len(self.interlayer_edges[0])>2:#weights are present
             self.interlayer_weights = [e[2] for e in self.interlayer_edges]
             self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
             self.unweighted=False

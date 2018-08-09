@@ -7,6 +7,7 @@ import sys
 from subprocess import Popen,PIPE
 import re
 import os
+import shutil
 import sklearn.metrics as skm
 
 #clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
@@ -51,7 +52,8 @@ def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=No
 			'-maxc', '300',
 		   '-w','{:d}'.format(rprefix)
 		]
-	process = Popen(parameters, stderr=PIPE, stdout=PIPE)
+	os.system("mkdir {:}".format(rprefix))
+	process = Popen(parameters, stderr=PIPE, stdout=PIPE, cwd = os.path.join(clusterdir,'test/{:}'.format(rprefix)))
 	stdout, stderr = process.communicate()
 
 	if process.returncode != 0:
@@ -59,30 +61,38 @@ def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=No
 		
 	# get the output network back into python
 	if multiplex:
+		tb = pd.read_table('{:}/level_node_node_weight.edges'.format(rprefix),delimiter=' ',skiprows=1,header=None)
+		m = tb[[0,1,2]].sort_values(by=[1,2]).as_matrix()
+		#print m
+		for i in xrange(len(m)):
+			m[i,1] += n*(m[i,0]-1)
+			m[i,2] += n*(m[i,0]-1)
+			
 		for layer in range(0,layers):
-			tb = pd.read_table('level_node_node_weight.edges',delimiter=' ',skiprows=1,header=None)
-			m = tb[[0,1,2]].sort_values(by=[1,2]).as_matrix()
-			cv = pd.read_table('community_layer_{:d}'.format(layer),delimiter=' ',header=None)
-			for i in len(m):
-				m[i,1] += n*m[i,0]
-				m[i,2] += n*m[i,0]
+			cv = pd.read_table('{:}/community_layer_{:d}'.format(rprefix,layer),delimiter="\t",header=None)
 			if layer==0:
 				elist = m[:,[1,2]] - 1
 				comvec = cv[1]
 				layer_vec = np.zeros(n)
+				inter_elist = np.zeros((0,2),dtype='int')
 			else:
 				elist = np.concatenate((elist,m[:,[1,2]] - 1))
 				comvec = np.concatenate((comvec,cv[1]))
 				layer_vec = np.concatenate((layer_vec,layer*np.ones(n)))
+				new_elist = np.transpose((np.array(range(n))+(layer-1)*n,np.array(range(n))+layer*n))
+				#print(new_elist)
+				inter_elist = np.concatenate((inter_elist,new_elist))
 	else:
 		 elist = pd.read_table('{:d}network.dat'.format(rprefix), header=None).sort_values(
 			 by=0).as_matrix() - 1  # have to subtract 1 to get it to work
 		 # elist=elist[:elist.shape[0]/2,:]
 		 comvec = pd.read_table('{:d}community.dat'.format(rprefix), header=None).sort_values(by=0).as_matrix()[:, 1] - 1
 		 layer_vec=[0 for _ in range(len(comvec))]
+		 inter_elist = None
 
 	nfin=len(comvec)
-	mgraph = modbp.MultilayerGraph(intralayer_edges=elist, layer_vec=layer_vec,
+	#print(inter_elist)
+	mgraph = modbp.MultilayerGraph(intralayer_edges=elist, interlayer_edges=inter_elist, layer_vec=layer_vec,
 								   comm_vec=comvec)
 	cgraph = mgraph.layers[0]
 	coms = np.unique(cgraph.vs['block'])
@@ -93,9 +103,11 @@ def create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=None,layers=No
 		cgraph = cgraph.components().giant()
 	for s in ['network.dat','community.dat','statistics.dat']:
 		f2del="{:d}{:}".format(rprefix,s)
-	#print (f2del)
-	if os.path.exists(f2del):
+		#print (f2del)
+		if os.path.exists(f2del):
 			os.remove(f2del)
+	if os.path.exists("{:}".format(rprefix)):
+		shutil.rmtree("{:}".format(rprefix))
 	return cgraph
 
 
@@ -181,7 +193,7 @@ def main():
 	print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
 	for trial in range(ntrials):
 
-		graph=create_lfr_graph(n=n, ep=ep, c=c, mk=10, use_gcc=True)
+		graph=create_lfr_graph(n=n, ep=ep, c=c, mk=10, use_gcc=True,layers=5,orig=3,multiplex=True)
 		ami_sbm=run_SBMBP_on_graph(graph)
 		cind = output.shape[0]
 		output.loc[cind,['beta','resgamma','niters','retrieval_modularity']]=[None,None,None,None]
@@ -218,4 +230,5 @@ def main():
 	return 0
 
 if __name__ == "__main__":
+	#create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
 	main()
