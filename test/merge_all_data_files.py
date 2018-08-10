@@ -44,6 +44,7 @@ def main(pargs=None):
         try:
 			c_df=pd.read_csv(cfile,index_col=0)
         except :
+
 		    print("unable to read file: {}".format(cfile))
 		    continue
         if i==0:

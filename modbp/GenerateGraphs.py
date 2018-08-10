@@ -157,9 +157,19 @@ class RandomSBMGraph(RandomGraph):
         return skm.accuracy_score(labels, self.block)
 
 class MultilayerGraph():
-    """ """
-    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,directed=False):
+    """
 
+    """
+
+    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,directed=False):
+        """
+
+        :param intralayer_edges:
+        :param layer_vec:
+        :param interlayer_edges:
+        :param comm_vec:
+        :param directed:
+        """
 
         self.n=len(layer_vec)
         self.intralayer_edges=intralayer_edges
@@ -168,20 +178,21 @@ class MultilayerGraph():
 
 
 
-
+        #create an vector length zero
         if interlayer_edges is None: #Assume that it is single layer
             self.interlayer_edges=np.zeros((0,2),dtype='int')
         else:
             self.interlayer_edges=interlayer_edges
+            #are interlayer weights presen
+            if len(self.interlayer_edges)>0 and len(self.interlayer_edges[0])>2:#weights are present
+                self.interlayer_weights = [e[2] for e in self.interlayer_edges]
+                self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
+                self.unweighted=False
+            else:
+                self.interlayer_weights=[ 1.0 for _ in range(len(self.interlayer_edges))]
 
-        if len(self.interlayer_edges[0])>2:#weights are present
-            self.interlayer_weights = [e[2] for e in self.interlayer_edges]
-            self.interlayer_edges = [ (e[0],e[1]) for e in self.interlayer_edges]
-            self.unweighted=False
-        else:
-            self.interlayer_weights=[ 1.0 for _ in range(len(self.interlayer_edges))]
-
-        if len(self.intralayer_edges[0]) > 2:  # weights are present
+        #are intralayer weights present
+        if len(self.intralayer_edges)>0 and len(self.intralayer_edges[0]) > 2:  # weights are present
             self.intralayer_weights = [e[2] for e in self.intralayer_edges]
             self.intralayer_edges = [(e[0], e[1]) for e in self.intralayer_edges]
             self.unweighted=False
