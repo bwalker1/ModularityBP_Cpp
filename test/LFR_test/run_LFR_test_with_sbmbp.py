@@ -17,8 +17,8 @@ clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/LFR_test"
 #clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
 
-# arch = "elf64"
-arch = "x86_64"
+arch = "elf64"
+#arch = "x86_64"
 
 # orig_layers=[(1,100),(2,50),(3,33),(4,25),(5,20),(6,17),(10,10),(20,5),(50,2)]
 #orig_layers=[(1,40),(2,20),(4,10),(5,8),(10,4),(20,2),(40,1)]
