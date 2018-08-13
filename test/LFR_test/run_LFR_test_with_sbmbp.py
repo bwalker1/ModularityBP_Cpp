@@ -11,7 +11,7 @@ import os
 import shutil
 import sklearn.metrics as skm
 
-clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/LFR_test"
 #clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 #clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
@@ -58,7 +58,7 @@ def create_lfr_graph(n=1000, ep=.1, c=10, mk=20, use_gcc=True,orig=None,layers=N
 		   '-w','{:d}'.format(rprefix)
 		]
 	os.system("mkdir {:}".format(rprefix))
-	process = Popen(parameters, stderr=PIPE, stdout=PIPE, cwd = os.path.join(clusterdir,'test/{:}'.format(rprefix)))
+	process = Popen(parameters, stderr=PIPE, stdout=PIPE, cwd = os.path.join(clusterdir,'{:}'.format(rprefix)))
 	stdout, stderr = process.communicate()
 
 	if process.returncode != 0:
