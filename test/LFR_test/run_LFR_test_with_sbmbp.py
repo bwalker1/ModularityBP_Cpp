@@ -241,7 +241,8 @@ def main():
 		cind = output.shape[0]
 		if len(ind2keep)>0:
 			minidx = mlbp_rm.iloc[ind2keep]['retrieval_modularity'].idxmax()
-			output.loc[cind,mlbp_rm.columns.values]=mlbp_rm.loc[minidx,:]
+			for col in mlbp_rm.columns.values:
+				output.loc[cind,col]=mlbp_rm.loc[minidx,col]
 		else:
 			output.loc[cind,'converged']=False
 			output.loc[cind,'niters']=1001
