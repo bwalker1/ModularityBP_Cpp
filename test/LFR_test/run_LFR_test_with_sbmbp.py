@@ -21,8 +21,8 @@ arch = "elf64"
 #arch = "x86_64"
 
 # orig_layers=[(1,100),(2,50),(3,33),(4,25),(5,20),(6,17),(10,10),(20,5),(50,2)]
-#orig_layers=[(1,40),(2,20),(4,10),(5,8),(10,4),(20,2),(40,1)]
-orig_layers=[(1,6),(2,3),(3,2),(6,1)] #for testing
+orig_layers=[(1,40),(2,20),(4,10),(5,8),(10,4),(20,2),(40,1)]
+#orig_layers=[(1,6),(2,3),(3,2),(6,1)] #for testing
 
 def create_lfr_graph(n=1000, ep=.1, c=10, mk=20, use_gcc=True,orig=None,layers=None, multiplex = False):
 	rprefix=np.random.randint(100000)
@@ -215,11 +215,12 @@ def main():
 
 	output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity','isSBM'])
 	outfile="{:}/LFR_test_n{:d}_eps{:.4f}_gamma{:.4f}_omega{:.4f}_origlayers{:d}x{:d}_trials{:d}.csv".format(finoutdir,n, ep, gamma,omega,orig,layers,ntrials,)
-	qmax=8
+	qmax=20
+	max_iters=2000
 	print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
 	for trial in range(ntrials):
 
-		graph=create_lfr_graph(n=n, ep=ep, c=c, mk=10, use_gcc=True,layers=layers,orig=orig,multiplex=True)
+		graph=create_lfr_graph(n=n, ep=ep, c=c, mk=20, use_gcc=True,layers=layers,orig=orig,multiplex=True)
 		# ami_sbm=run_SBMBP_on_graph(graph)
 		# cind = output.shape[0]
 		# output.loc[cind,['beta','resgamma','niters','retrieval_modularity']]=[None,None,None,None]
@@ -231,7 +232,7 @@ def main():
 		bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
 		betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
 		for beta in betas:
-			mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
+			mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, resgamma=gamma, omega=omega)
 
 			mlbp_rm = mlbp.retrieval_modularities
 
@@ -244,8 +245,10 @@ def main():
 			for col in mlbp_rm.columns.values:
 				output.loc[cind,col]=mlbp_rm.loc[minidx,col]
 		else:
+			for col in mlbp_rm.columns.values:
+				output.loc[cind,col]=np.nan
 			output.loc[cind,'converged']=False
-			output.loc[cind,'niters']=1001
+			output.loc[cind,'niters']=max_iters+1
 
 		output.loc[cind,'ep']=ep
 		output.loc[cind,'orig']=orig
