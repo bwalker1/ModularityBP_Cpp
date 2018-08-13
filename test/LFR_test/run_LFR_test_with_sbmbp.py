@@ -209,7 +209,7 @@ def main():
 	except IndexError:
 		ismultiplex=False
 
-	finoutdir = os.path.join(clusterdir, 'LFR_test_data_gamma2_beta1_k4_multilayer')
+	finoutdir = os.path.join(clusterdir, 'LFR_test_data_n{:d}_trials{:d}_gamma2_beta1_k{:d}_multilayer'.format(n,ntrials,c))
 	if not os.path.exists(finoutdir):
 		os.makedirs(finoutdir)
 
