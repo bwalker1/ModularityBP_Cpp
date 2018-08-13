@@ -89,7 +89,7 @@ def main():
         output.loc[cind, ['ep', 'eta']] = [ep, eta]
         if trial==0:
             with open(outfile,'w') as fh:
-                output.to_csv(fh,'w',header=True)
+                output.to_csv(fh,header=True)
         else:
             with open(outfile,'a') as fh: #writeout as we go
                 output.iloc[[-1], :].to_csv(fh, header=False)

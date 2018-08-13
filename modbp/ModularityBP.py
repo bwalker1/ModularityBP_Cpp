@@ -38,6 +38,7 @@ class ModularityBP():
 
             else:
                 self.graph=mlgraph
+
         else:
             if interlayer_edgelist is None:
                 interlayer_edgelist=np.zeros((0,2),dtype='int')
@@ -52,7 +53,7 @@ class ModularityBP():
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
         self._cpp_intra_weights=self._get_cpp_intra_weights()
-        self.layer_vec=self.graph.layer_vec
+        self.layer_vec=[int(i) for i in self.graph.layer_vec] #must be integers!
         self._layer_vec_ia=IntArray(self.layer_vec)
         self.layers_unique=sorted(np.unique(self.layer_vec))
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
