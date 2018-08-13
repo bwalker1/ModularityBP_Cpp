@@ -11,8 +11,8 @@ import os
 import shutil
 import sklearn.metrics as skm
 
-#clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 #clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
