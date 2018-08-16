@@ -14,7 +14,7 @@ import seaborn as sbn
 from time import time
 import os,pickle,gzip
 #import #logging
-##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.DEBUG)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.DEBUG)
 ##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.INFO)
 
 class ModularityBP():
@@ -53,8 +53,8 @@ class ModularityBP():
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
         self._cpp_intra_weights=self._get_cpp_intra_weights()
-        self.layer_vec=[int(i) for i in self.graph.layer_vec] #must be integers!
-        self._layer_vec_ia=IntArray(self.layer_vec)
+        self.layer_vec=np.array(self.graph.layer_vec)
+        self._layer_vec_ia=IntArray([int(i) for i in self.layer_vec])#must be integers!
         self.layers_unique=sorted(np.unique(self.layer_vec))
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
         self._align_communities_across_layers=align_communities_across_layers
@@ -193,10 +193,9 @@ class ModularityBP():
                 # #logging.debug('time: {:.4f}'.format(time() - t))
                 #logging.debug('nsweeps: {:d}'.format(nsweeps))
         # #We perform the merger and the swap on the BP side and then rerun
-        # if iters>=niter:
-        #    pass
+        if iters>=niter:
             #logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
-
+            pass
 
 
 
@@ -873,7 +872,7 @@ class ModularityBP():
         vmin=np.min(cpart)
         vmax=np.max(cpart)
 
-        clayer_vec=self.layer_vec[cinds]
+        clayer_vec=np.array(self.layer_vec)[cinds]
         part_mat=get_partition_matrix(cpart,clayer_vec)
 
         if ax is None:
