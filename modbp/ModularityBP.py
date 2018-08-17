@@ -9,6 +9,7 @@ from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray
 import itertools
 import pandas as pd
 import scipy.optimize as sciopt
+import scipy.stats as stats
 import matplotlib.pyplot as plt
 import seaborn as sbn
 from time import time
@@ -190,9 +191,12 @@ class ModularityBP():
 
                 nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
 
+            #final combined marginals
+
                 # #logging.debug('time: {:.4f}'.format(time() - t))
                 #logging.debug('nsweeps: {:d}'.format(nsweeps))
-        # #We perform the merger and the swap on the BP side and then rerun
+
+        # Perform the merger on the BP side before getting final marginals
         if iters>=niter:
             #logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
             pass
@@ -206,7 +210,7 @@ class ModularityBP():
         bethe_energy=self._bpmod.compute_bethe_free_energy()
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
         self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
-
+        self.retrieval_modularities.loc[self.nruns,'avg_entropy']=_get_avg_entropy(cmargs)
         _,cnts=np.unique(cpartition,return_counts=True)
         self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
 
@@ -817,7 +821,7 @@ class ModularityBP():
 
     def _merge_communities_bp(self,ind):
         """
-
+        Merge communities that have the same marginals across all of the nodes
         :param ind:
         :return:
         """
@@ -894,6 +898,12 @@ class ModularityBP():
         ax.set_xticklabels(layers)
         return ax
 
+def _get_avg_entropy(marginal):
+    """caculate normalized entropies from marginals"""
+    entropies=[]
+    for i in range(marginal.shape[0]):
+        entropies.append(stats.entropy(marginal[i])/np.log(marginal.shape[1]))
+    return np.mean(entropies)
 
 def calc_modularity(graph,partition,resgamma,omega):
     """
