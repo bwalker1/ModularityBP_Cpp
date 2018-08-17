@@ -114,7 +114,7 @@ def main():
     #create directories to save stuff. 
     partition_out=os.path.join(senate_out_dir,"zippe_partitions_knn10_unaligned")
     rm_df_out=os.path.join(senate_out_dir,"senate_ret_mod_dfs_knn10_unaligned")
-	if not os.path.exists(partition_out):
+    if not os.path.exists(partition_out):
         os.makedirs(partition_out)
     if not os.path.exists(rm_df_out):
         os.makedirs(rm_df_out)
