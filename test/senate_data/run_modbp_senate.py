@@ -75,7 +75,7 @@ def main():
     sess2layer = dict(zip(sessions, range(len(sessions))))
     layer_vec = np.array(list(map(lambda x: sess2layer[x], sesid)))[:num2keep]
 
-    k=6
+    k=10
     A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
 
     intra_edges = adjacency_to_edges(A_knn)
@@ -98,23 +98,32 @@ def main():
     #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
     #omega_vals = [0.0, 1, 2, 4, 8]
 
-    modbp_obj = modbp.ModularityBP(mlgraph=mgraph,use_effective=True,align_communities_across_layers=True,
+    modbp_obj = modbp.ModularityBP(mlgraph=mgraph,use_effective=True,align_communities_across_layers=False,
                                    accuracy_off=True,comm_vec=parties)
 
 
 
-    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val,2)))
+    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val,3)))
     for beta in bstars:
         modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2000,
                             omega=omega,resgamma=gamma,reset=False)
 
     if not os.path.exists(senate_out_dir):
         os.makedirs(senate_out_dir)
-    with gzip.open(os.path.join(senate_out_dir,"zippe_partitions","senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma,omega)),'wb') as fh:
+        
+    #create directories to save stuff. 
+    partition_out=os.path.join(senate_out_dir,"zippe_partitions_knn10_unaligned")
+    rm_df_out=os.path.join(senate_out_dir,"senate_ret_mod_dfs_knn10_unaligned")
+	if not os.path.exists(partition_out):
+        os.makedirs(partition_out)
+    if not os.path.exists(rm_df_out):
+        os.makedirs(rm_df_out)
+        
+    with gzip.open(os.path.join(partition_out,"senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma,omega)),'wb') as fh:
         pickle.dump(modbp_obj.partitions,fh)
 
     modrm=modbp_obj.retrieval_modularities
-    modrm.to_csv(os.path.join(senate_out_dir,"senate_ret_mod_dfs","senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma,omega)))
+    modrm.to_csv(os.path.join(rm_df_out,"senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma,omega)))
 
     return 0
 
