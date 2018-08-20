@@ -98,7 +98,7 @@ def main():
     #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
     #omega_vals = [0.0, 1, 2, 4, 8]
 
-    modbp_obj = modbp.ModularityBP(mlgraph=mgraph,use_effective=True,align_communities_across_layers=False,
+    modbp_obj = modbp.ModularityBP(mlgraph=mgraph,use_effective=True,align_communities_across_layers=True,
                                    accuracy_off=True,comm_vec=parties)
 
 
@@ -112,8 +112,8 @@ def main():
         os.makedirs(senate_out_dir)
         
     #create directories to save stuff. 
-    partition_out=os.path.join(senate_out_dir,"zippe_partitions_knn10_unaligned")
-    rm_df_out=os.path.join(senate_out_dir,"senate_ret_mod_dfs_knn10_unaligned")
+    partition_out=os.path.join(senate_out_dir,"zippe_partitions_knn10")
+    rm_df_out=os.path.join(senate_out_dir,"senate_ret_mod_dfs_knn10")
     if not os.path.exists(partition_out):
         os.makedirs(partition_out)
     if not os.path.exists(rm_df_out):
