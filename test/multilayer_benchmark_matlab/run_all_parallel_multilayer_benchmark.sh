@@ -10,8 +10,10 @@ for omega in "${omegas[@]}"
             do
             for eps in $(seq 0.0 .02 .6)
                 do
-	            echo "${eta} ${eps} ${gamma} ${omega}"
-                sbatch -t 500 -n 1 -o /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/test_mulitlayer_runs.txt -p general --wrap "python /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/run_multilayer_matlab_test.py 100 10.0 40 ${eps} ${eta} ${gamma} ${omega} 15"
+	            echo "${eps} ${gamma} ${omega}"
+                sbatch -t 20 -n 1 -o /nas/longleaf/home/wweir/test/multilayer_benchmark_matlab/test_mulitlayer_runs.txt -p general \
+                --wrap "python /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/run_multilayer_matlab_test.py\
+                500 5 10 ${eps} ${eta} ${omega} ${gamma} 2"
                 done
             done
         done
