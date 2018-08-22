@@ -16,7 +16,7 @@ import itertools
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab"
 #arch = "elf64"
 
-#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/multilayer_benchmark_matlab" #for testing locally
+# clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/multilayer_benchmark_matlab" #for testing locally
 
 #clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
@@ -24,7 +24,11 @@ clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer
 matlaboutdir = os.path.join(clusterdir,"/matlab_temp_files")
 call_matlabfile = os.path.join(clusterdir,"call_matlab_multilayer.sh")
 
-
+# def edges_to_adj(elist):
+#     elist=np.array(elist)
+#     max=np.max(elist)
+#     A=np.zeros((max,max))
+#     for i in range
 
 def adjacency_to_edges(A,offset=0):
     nnz_inds = np.nonzero(A)
@@ -63,7 +67,7 @@ def create_ml_graph_from_matlab(moutputfile,ismultiplex=True):
 
 
 
-def create_multiplex_graph(n=1000,nlayers=40, ep=.99,eta=.1, c=10, mk=20, use_gcc=True,orig=None,layers=None, multiplex = False,ncoms=2):
+def create_multiplex_graph(n=1000,nlayers=40, ep=.99,eta=.1, c=10, mk=20, use_gcc=True,orig=None,layers=None, ismultiplex = False,ncoms=2):
     rprefix=np.random.randint(100000)
     rprefix_dir=os.path.join(clusterdir,str(rprefix))
     if not os.path.exists(rprefix_dir):
@@ -83,7 +87,7 @@ def create_multiplex_graph(n=1000,nlayers=40, ep=.99,eta=.1, c=10, mk=20, use_gc
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
     process.wait()
-    mlgraph=create_ml_graph_from_matlab(moutputfile)
+    mlgraph=create_ml_graph_from_matlab(moutputfile,ismultiplex=ismultiplex)
     # for layer in mlgraph.layers:
     #     print ("k={:.4f}".format(2.0*layer.ecount()/layer.vcount()))
     # plt.close()
@@ -192,7 +196,7 @@ def main():
     for trial in range(ntrials):
 
         graph=create_multiplex_graph(n=n, ep=ep, eta=eta, c=c, mk=20, use_gcc=True,
-                                     nlayers=nlayers,multiplex=True,ncoms=ncoms)
+                                     nlayers=nlayers,ismultiplex=True,ncoms=ncoms)
         #graph.layers[0].save('test_LFR_onelayer.graphml.gz')
         # ami_sbm=run_SBMBP_on_graph(graph)
         # cind = output.shape[0]
@@ -212,7 +216,6 @@ def main():
             print(beta)
 
             # for debugging
-
             # plt.close()
             # f,a=plt.subplots(1,2,figsize=(8,4))
             # a=plt.subplot(1,2,1)
@@ -232,7 +235,8 @@ def main():
                 output.loc[cind,col]=mlbp_rm.loc[minidx,col]
         else:
             for col in mlbp_rm.columns.values:
-                output.loc[cind,col]=np.nan
+                #just take first one to get run information
+                output.loc[cind,['resgamma','omega','q','qstar']]==mlbp_rm.loc[0,['resgamma','omega','q','qstar']]
             output.loc[cind,'converged']=False
             output.loc[cind,'niters']=max_iters+1
 
