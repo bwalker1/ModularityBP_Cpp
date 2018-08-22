@@ -236,7 +236,7 @@ def main():
         else:
             for col in mlbp_rm.columns.values:
                 #just take first one to get run information
-                output.loc[cind,['resgamma','omega','q','qstar']]==mlbp_rm.iloc[0]['resgamma','omega','q','qstar']
+                output.loc[cind,['resgamma','omega','q','qstar']]=mlbp_rm.iloc[0]['resgamma','omega','q','qstar']
             output.loc[cind,'converged']=False
             output.loc[cind,'niters']=max_iters+1
 
