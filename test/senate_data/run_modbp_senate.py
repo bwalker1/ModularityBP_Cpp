@@ -105,7 +105,7 @@ def main():
 
     bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val,3)))
     for beta in bstars:
-        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2000,
+        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
                             omega=omega,resgamma=gamma,reset=False)
 
     if not os.path.exists(senate_out_dir):
