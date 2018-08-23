@@ -5,7 +5,7 @@ import pandas as pd
 import sys, os
 import modbp
 import numpy as np
-#import network_tools as nt
+import network_tools as nt
 import matplotlib.pyplot as plt
 import gzip
 import pickle
@@ -53,12 +53,12 @@ def main():
     omega=float(sys.argv[2])
 
     #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
-    senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
-    #senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
-    senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
+    #senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
-    senate_data_file = os.path.join(senate_dir, 'multisenate0.5.mat')
+    senate_data_file = os.path.join(senate_out_dir, 'multisenate0.5.mat')
     sendata = scio.loadmat(senate_data_file)
 
 
@@ -82,13 +82,12 @@ def main():
     #intra_edges = adjacency_to_edges(A)
     inter_edges = adjacency_to_edges(C)
 
+    A_gtools=nt.create_gt_graph_from_adj(A_knn)
+    for e in inter_edges:
+        cedge=A_gtools.add_edge(e[0],e[1])
+        A_gtools.ep['weight'][cedge]=1.0/10
 
-    # A_gtools=nt.create_gt_graph_from_adj(A_knn)
-    # for e in inter_edges:
-    #     cedge=A_gtools.add_edge(e[0],e[1])
-    #     A_gtools.ep['weight'][cedge]=1.0/10
-    #
-    # A_gtools.save("senate_{}_knn.graphml.gz".format(k))
+    A_gtools.save(os.path.join(senate_out_dir,"senate_{}_knn.graphml.gz".format(k)))
 
     mgraph = modbp.MultilayerGraph(interlayer_edges=inter_edges,
                                    intralayer_edges=intra_edges,

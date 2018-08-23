@@ -191,7 +191,7 @@ def main():
 
 
     qmax=8
-    max_iters=2000
+    max_iters=4000
     print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
     for trial in range(ntrials):
 
