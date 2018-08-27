@@ -232,7 +232,7 @@ class MultilayerGraph():
             edges.append(k)
             weights.append(val)
 
-        edge_weights=sorted(list(zip(edges,weights)),key=lambda(x):x[0])
+        edge_weights=sorted(list(zip(edges,weights)),key=lambda x:x[0])
         edges,weights=zip(*edge_weights)
         self.intralayer_edges=edges
         self.intralayer_weights=weights

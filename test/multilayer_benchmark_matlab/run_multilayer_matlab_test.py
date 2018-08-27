@@ -16,7 +16,7 @@ import itertools
 clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab"
 #arch = "elf64"
 
-# clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/multilayer_benchmark_matlab" #for testing locally
+#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/multilayer_benchmark_matlab" #for testing locally
 
 #clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
 # finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
@@ -206,13 +206,17 @@ def main():
         # output.loc[cind,'ep']=ep
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,
                                   comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(2, qmax)][:2]
+        bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, resgamma=gamma, omega=omega)
             mlbp_rm = mlbp.retrieval_modularities
             print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'AMI'])
+            print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'converged'])
+            print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'niters'])
+
+
             print(beta)
 
             # for debugging
@@ -227,13 +231,16 @@ def main():
             # plt.show()
 
 
-        ind2keep=np.where(np.logical_and(mlbp_rm['converged'],~mlbp_rm['is_trivial']))[0]
+        # ind2keep=np.where(np.logical_and(mlbp_rm['converged'],~mlbp_rm['is_trivial']))[0]
+        ind2keep=np.where(mlbp_rm['converged'])[0]#we switched to convergence as only criteria
+
         cind = output.shape[0]
         if len(ind2keep)>0:
             minidx = mlbp_rm.iloc[ind2keep]['retrieval_modularity'].idxmax()
             for col in mlbp_rm.columns.values:
                 output.loc[cind,col]=mlbp_rm.loc[minidx,col]
         else:
+
             for col in mlbp_rm.columns.values:
                 #just take first one to get run information
                 output.loc[cind,col]=mlbp_rm.iloc[0][col]
