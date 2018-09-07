@@ -180,7 +180,7 @@ def main():
     omega=float(sys.argv[6])
     gamma = float(sys.argv[7])
     ntrials= int(sys.argv[8])
-    ncoms=4
+    ncoms=2
 
     finoutdir = os.path.join(clusterdir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_k{:.2f}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,c,ncoms))
     if not os.path.exists(finoutdir):
@@ -190,8 +190,8 @@ def main():
     outfile="{:}/multiplex_test_n{:d}_L{:d}_eps{:.4f}_eta{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,ep,eta, gamma,omega,ntrials)
 
 
-    qmax=8
-    max_iters=4000
+    qmax=4
+    max_iters=2000
     print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
     for trial in range(ntrials):
 
@@ -204,7 +204,7 @@ def main():
         # output.loc[cind,'AMI']=ami_sbm
         # output.loc[cind,'isSBM']=True
         # output.loc[cind,'ep']=ep
-        mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,
+        mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities=False,
                                   comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
