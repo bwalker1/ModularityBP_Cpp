@@ -204,7 +204,7 @@ def main():
         # output.loc[cind,'AMI']=ami_sbm
         # output.loc[cind,'isSBM']=True
         # output.loc[cind,'ep']=ep
-        mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities=False,
+        mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities_across_layers=False,
                                   comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
@@ -212,9 +212,9 @@ def main():
         for beta in betas:
             mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, resgamma=gamma, omega=omega)
             mlbp_rm = mlbp.retrieval_modularities
-            print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'AMI'])
-            print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'converged'])
-            print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'niters'])
+            # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'AMI'])
+            # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'converged'])
+            # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'niters'])
 
 
             print(beta)
