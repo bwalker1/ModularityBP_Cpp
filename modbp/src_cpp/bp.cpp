@@ -306,7 +306,7 @@ void BP_Modularity::step()
             if (local_change < eps)
             {
                 // not enough change in incoming beliefs to warrant an update
-                //continue;
+                continue;
             }
         }
         // if we changed any nodes, set this to true so we know we haven't converged
@@ -412,6 +412,38 @@ void BP_Modularity::step()
     {
         compute_marginals(true);
         
+        // compute pair terms of bethe free energy
+        // note: this double counts edges so we have to divide by 2
+        for (index_t node_idx = 0;node_idx<n;++node_idx)
+        {
+            index_t i = node_idx;     // the id of the source node
+            // iterate over neighbors
+            const index_t nn = neighbor_count[i];
+            for (index_t idx=0; idx<nn; ++idx)
+            {
+                index_t k = neighbors[neighbors_offsets[i]+idx];    // the id of the target node
+                const index_t nnk = neighbor_count[k];
+                index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
+                double sum = 0;
+                // iterate over all states of first node
+                for (int s = 0; s < q;++s)
+                {
+                    // iterate over all states of second node
+                    for (int t = 0; t<q; ++t)
+                    {
+                        // belief from source to target
+                        double psi1 = beliefs[beliefs_offsets[i]+nn*s+idx];
+                        // belief from target to source
+                        double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
+                        // ternary operator for delta_st (Kronecker delta function)
+                        sum += exp(beta*(s==q?1:0))*psi1*psi2;
+                    }
+                }
+                // add contribution to bfe and divide by 2 to avoid double counting
+                bfe -= log(sum)/2;
+            }
+        }
+        
         for (index_t t=0;t<nt;++t)
         {
             double temp = 0;
@@ -422,7 +454,7 @@ void BP_Modularity::step()
             }
             bfe += beta/(2*num_edges[t]) * temp;
         }
-        bfe /= (beta*n);
+        bfe /= (n);
     }
     
     if (!fast_convergence)
