@@ -457,7 +457,7 @@ void BP_Modularity::step()
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
                         // ternary operator for delta_st (Kronecker delta function)
                   
-                        sum += (s==q?(scaleHere+1):1)*psi1*psi2;
+                        sum += (s==t?(scaleHere+1):1)*psi1*psi2;
 
                     }
                 }
