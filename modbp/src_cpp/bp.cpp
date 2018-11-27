@@ -424,26 +424,10 @@ void BP_Modularity::step()
                 index_t k = neighbors[neighbors_offsets[i]+idx];    // the id of the target node
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
-                double sum = 0;
-
-                // figure out our e^something
                 bool type = neighbors_type[neighbors_offsets[i]+idx];
-                double scaleHere;
-                if (type)
-                {
-                    if (weighted)
-                    {
-                        scaleHere = scaleEdges[neighbors_offsets[i]+idx];
-                    }
-                    else
-                    {
-                        scaleHere = scale;
-                    }
-                }
-                else
-                {
-                    scaleHere = scaleOmega;
-                }
+                double sum = 0;
+                double pairmarg_prefactor = 0;
+
 
                 // iterate over all states of first node
                 for (int s = 0; s < q;++s)
@@ -455,8 +439,25 @@ void BP_Modularity::step()
                         double psi1 = beliefs[beliefs_offsets[i]+nn*s+idx];
                         // belief from target to source
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
+                        if (type==true)
+                        {
+                        // intralayer contribution
+                            if (weighted)
+                            {
+                                pairmarg_prefactor = exp( beta * (s==t?1:0) * scaleEdges[neighbors_offsets[i]+idx] );
+                            }
+                            else
+                            {
+                                pairmarg_prefactor = exp( beta * (s==t?1:0));
+                            }
+                        }
+                        else //iterlayer connection ( not weighted )
+                        {
+                            pairmarg_prefactor = exp( beta * (s==t?1:0) * omega);
+                        }
+
                         // ternary operator for delta_st (Kronecker delta function)
-                        sum += (s==q?scaleHere:0)*psi1*psi2;
+                        sum += pairmarg_prefactor*psi1*psi2;
                     }
                 }
                 // add contribution to bfe and divide by 2 to avoid double counting
