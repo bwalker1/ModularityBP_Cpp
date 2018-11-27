@@ -425,6 +425,26 @@ void BP_Modularity::step()
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
                 double sum = 0;
+                
+                // figure out our e^something
+                bool type = neighbors_type[neighbors_offsets[i]+idx];
+                double scaleHere;
+                if (type)
+                {
+                    if (weighted)
+                    {
+                        scaleHere = scaleEdges[neighbors_offsets[i]+idx];
+                    }
+                    else
+                    {
+                        scaleHere = scale;
+                    }
+                }
+                else
+                {
+                    scaleHere = scaleOmega;
+                }
+                
                 // iterate over all states of first node
                 for (int s = 0; s < q;++s)
                 {
@@ -436,7 +456,7 @@ void BP_Modularity::step()
                         // belief from target to source
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
                         // ternary operator for delta_st (Kronecker delta function)
-                        sum += exp(beta*(s==q?1:0))*psi1*psi2;
+                        sum += (s==q?scaleHere:0)*psi1*psi2;
                     }
                 }
                 // add contribution to bfe and divide by 2 to avoid double counting
