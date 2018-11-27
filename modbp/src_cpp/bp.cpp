@@ -425,11 +425,7 @@ void BP_Modularity::step()
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
                 double sum = 0;
-<<<<<<< HEAD
-                
-=======
 
->>>>>>> parent of ca39491... correction for calculating bfe interlayer
                 // figure out our e^something
                 bool type = neighbors_type[neighbors_offsets[i]+idx];
                 double scaleHere;
@@ -460,7 +456,7 @@ void BP_Modularity::step()
                         // belief from target to source
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
                         // ternary operator for delta_st (Kronecker delta function)
-                        
+                  
                         sum += (s==q?(scaleHere+1):1)*psi1*psi2;
 
                     }
