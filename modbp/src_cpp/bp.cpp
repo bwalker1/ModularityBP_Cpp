@@ -456,7 +456,7 @@ void BP_Modularity::step()
                         // belief from target to source
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
                         // ternary operator for delta_st (Kronecker delta function)
-                        sum += (s==q?(scaleHere+1):0)*psi1*psi2;
+                        sum += (s==q?(scaleHere+1):1)*psi1*psi2;
                     }
                 }
                 // add contribution to bfe and divide by 2 to avoid double counting
