@@ -55,9 +55,11 @@ def main():
     #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
     #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
-    senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
-    #senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    #senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
+    senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
+    if not os.path.exists(senate_out_dir):
+        os.makedirs(senate_out_dir)
     senate_data_file = os.path.join(senate_out_dir, 'multisenate0.5.mat')
     sendata = scio.loadmat(senate_data_file)
 
@@ -75,11 +77,17 @@ def main():
     sess2layer = dict(zip(sessions, range(len(sessions))))
     layer_vec = np.array(list(map(lambda x: sess2layer[x], sesid)))[:num2keep]
 
-    k=10
-    A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
-    intra_edges = adjacency_to_edges(A_knn)
-    #intra_edges = adjacency_to_edges(A)
-    inter_edges = adjacency_to_edges(C)
+    k = 10
+    intra_edge_file=os.path.join("senate_knn_{:d}_intra_edgelist.pickle".format(k))
+    if os.path.exists(intra_edge_file):
+        with gzip.open(intra_edge_file) as fh:
+            intra_edges=pickle.load(fh)
+    else:
+        A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
+        intra_edges = adjacency_to_edges(A_knn)
+        #intra_edges = adjacency_to_edges(A)
+        inter_edges = adjacency_to_edges(C)
+
 
     # A_gtools=nt.create_gt_graph_from_adj(A_knn)
     # for e in inter_edges:
@@ -105,9 +113,7 @@ def main():
         modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
                             omega=omega,resgamma=gamma,reset=False)
 
-    if not os.path.exists(senate_out_dir):
-        os.makedirs(senate_out_dir)
-        
+
     #create directories to save stuff. 
     partition_out=os.path.join(senate_out_dir,"zippe_partitions_knn10")
     rm_df_out=os.path.join(senate_out_dir,"senate_ret_mod_dfs_knn10")
