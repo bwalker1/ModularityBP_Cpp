@@ -77,17 +77,15 @@ def main():
 
     k=10
     A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
-
     intra_edges = adjacency_to_edges(A_knn)
     #intra_edges = adjacency_to_edges(A)
     inter_edges = adjacency_to_edges(C)
 
-    A_gtools=nt.create_gt_graph_from_adj(A_knn)
-    for e in inter_edges:
-        cedge=A_gtools.add_edge(e[0],e[1])
-        A_gtools.ep['weight'][cedge]=1.0/10
-
-    A_gtools.save(os.path.join(senate_out_dir,"senate_{}_knn.graphml.gz".format(k)))
+    # A_gtools=nt.create_gt_graph_from_adj(A_knn)
+    # for e in inter_edges:
+    #     cedge=A_gtools.add_edge(e[0],e[1])
+    #     A_gtools.ep['weight'][cedge]=1.0/10
+    # A_gtools.save(os.path.join(senate_out_dir,"senate_{}_knn.graphml.gz".format(k)))
 
     mgraph = modbp.MultilayerGraph(interlayer_edges=inter_edges,
                                    intralayer_edges=intra_edges,

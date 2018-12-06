@@ -443,7 +443,7 @@ void BP_Modularity::step()
                 bfe -= log(sum)/2;
             }
         }
-        
+        //contribution of non-edges (i.e. from the null model)
         for (index_t t=0;t<nt;++t)
         {
             double temp = 0;
