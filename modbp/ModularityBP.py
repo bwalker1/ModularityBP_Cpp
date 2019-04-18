@@ -13,6 +13,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 import seaborn as sbn
 from time import time
+import warnings
 import os,pickle,gzip
 #import #logging
 #logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.DEBUG)
@@ -25,7 +26,8 @@ class ModularityBP():
 
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
                  intralayer_edgelist=None, layer_vec=None,
-                 accuracy_off=True, use_effective=False, comm_vec=None, align_communities_across_layers=True):
+                 accuracy_off=True, use_effective=False, comm_vec=None,
+                 align_communities_across_layers=True,min_com_size=5):
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
@@ -76,10 +78,10 @@ class ModularityBP():
 
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
-
+        self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
 
-    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False,realign=True):
+    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
         """
 
         :param beta:
@@ -87,9 +89,14 @@ class ModularityBP():
         :param niter:
         :param resgamma:
         :param omega:
+        :param realign
         :param reset:
         :return:
         """
+        if beta==0:
+            warnings.warn("beta cannot be zero.  Using 10-16")
+            beta=np.power(10.0,-16)
+
         assert(q>0),"q must be > 0"
         q_orig=q #before collapsing
         self.retrieval_modularities.loc[self.nruns, 'q'] = q_orig
@@ -118,9 +125,7 @@ class ModularityBP():
             if self._bpmod.getOmega() != omega:
                 self._bpmod.setOmega(omega)
                 
-        # in case c++ class calculated b*
-        if beta==0:
-            beta = self._bpmod.getBeta();
+
 
         if self._align_communities_across_layers:
             iters_per_run=niter #somewhat arbitrary divisor
@@ -207,14 +212,15 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
         retmod=self._get_retrieval_modularity(self.nruns)
         #logging.debug('calculating bethe_free energy')
-        bethe_energy=self._bpmod.compute_bethe_free_energy()
+        bethe_energy=self._get_bethe_free_energy()
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
         self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
         self.retrieval_modularities.loc[self.nruns,'avg_entropy']=_get_avg_entropy(cmargs)
-        _,cnts=np.unique(cpartition,return_counts=True)
-        self.retrieval_modularities.loc[self.nruns,'num_coms']=np.sum(cnts>5)
+        _,com_cnts=np.unique(self.partitions[self.nruns],return_counts=True)
 
-        self.retrieval_modularities.loc[self.nruns,'qstar']=self._get_true_number_of_communities(self.nruns)
+        # self.retrieval_modularities.loc[self.nruns,'num_coms']=self._get_true_number_of_communities(self.nruns)
+        self.retrieval_modularities.loc[self.nruns, 'num_coms']=np.sum(com_cnts>=self.min_community_size)
+       # self.retrieval_modularities.loc[self.nruns,'qstar']=self._get_true_number_of_communities(self.nruns)
         self.retrieval_modularities.loc[self.nruns,'bstar']=self.get_bstar(q,omega)
         if self.graph.comm_vec is not None:
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
@@ -240,6 +246,12 @@ class ModularityBP():
     #         elist_weights=sorted(zip(self.graph.),key=lambda (x):x[0],x[1])
     #     edgelist.sort()
     #     return edgelist
+
+
+    def _get_bethe_free_energy(self):
+        if self._bpmod is None:
+            raise AssertionError( "cannot calculate the bethe free energy without running first.  Please call run_mobp.")
+        return self._bpmod.compute_bethe_free_energy()
 
     def _get_cpp_intra_weights(self):
         if self.graph.unweighted:
@@ -416,7 +428,7 @@ class ModularityBP():
 
 
 
-    def _get_true_number_of_communities(self,ind,min_com_size=0):
+    def _get_true_number_of_communities(self,ind):
         """
 
         :param ind:
@@ -429,10 +441,10 @@ class ModularityBP():
 
         #create set of sets and take len.  Frozenset is immutable
         #
-        if min_com_size==0:
+        if self.min_community_size==0:
             return len(set([frozenset(s) for s in groupmap.values()]))
         else:
-            return len(set([ frozenset(s) for s in groupmap.values() if len(s) >= min_com_size ]))
+            return len(set([ frozenset(s) for s in groupmap.values() if len(s) >= self.min_community_size ]))
 
     def _is_trivial(self,ind,thresh=np.power(10.0,-3)):
         """
@@ -612,8 +624,15 @@ class ModularityBP():
     def _get_previous_layer_inds_dict(self,layer):
         """
         returns 2 dictionaries, mapping the indices of the nodes in the previous layer to that \
-        in the current layer.
-        :return:
+        in the current layer. This is used to define the adjacent layer of nodes.
+
+        creates interlayer_edge_dict={ node1 : [nodes with interlayer connections], node2 : []}
+
+        :return: cur2prev_inds = dict mapping from current layer id to previous layer ids based on interalyer edges \
+        prev2cur = dict mapping from previous layer to current layer.  Both these are based on the interlayer \
+        edges and neither are strictly one-to-one
+
+
         """
         if layer==0: #nothing in the previous layer
             return {},{}

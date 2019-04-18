@@ -380,7 +380,49 @@ def test_cpp_permutation():
     mlbp.plot_communities(0, ax=a)
     plt.show()
 
+
+def test_bethe_free_energy_calc():
+    n = 1000
+    q = 2
+    nlayers = 20
+    eta = 0.01
+    c = 10
+    ep = .1
+    ntrials = 1
+    omega = 1.0
+    gamma = 1.0
+    nblocks = q
+    pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
+    pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
+    prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
+    output = pd.DataFrame(columns=['beta', 'resgamma', 'omega', 'niters',
+                                   'AMI', 'AMI_layer_avg', 'retrieval_modularity', 'bethe_free_energy',
+                                   'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial'])
+
+    qmax = 4
+    ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
+    mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
+                                   comm_vec=ml_sbm.get_all_layers_block())
+
+    mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
+                              align_communities_across_layers=True)
+    bstar = mlbp.get_bstar(qmax, omega)
+    print('running')
+    mlbp.run_modbp(beta=bstar, niter=4, q=qmax, resgamma=gamma, omega=omega,reset=False)
+
+    for i in range(20):
+        print(i)
+        cind=output.shape[0]
+        # output.loc[cind,:] = mlbp.retrieval_modularities.loc[mlbp.nruns,:]
+        output.loc[cind,'bethe_free_energy']=mlbp._get_bethe_free_energy()
+        output.loc[cind,'niters']=i
+        mlbp.run_modbp(beta=bstar, niter=10, q=qmax, resgamma=gamma, omega=omega, reset=False)
+
+    plt.close()
+    plt.scatter(output.loc[:,'niters'],output.loc[:,'bethe_free_energy'])
+    plt.show()
+
 def main():
-    test_cpp_permutation()
+    test_bethe_free_energy_calc()
 if __name__=='__main__':
     main()

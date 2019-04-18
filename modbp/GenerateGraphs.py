@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sbn
 
 
-class RandomGraph():
+class RandomGraph(object):
     def __init__(self):
         pass
 
@@ -156,7 +156,7 @@ class RandomSBMGraph(RandomGraph):
         """
         return skm.accuracy_score(labels, self.block)
 
-class MultilayerGraph():
+class MultilayerGraph(object):
     """
 
     """
@@ -470,7 +470,7 @@ class MultilayerGraph():
         ax.set_xticklabels(layers)
         return ax
 
-class MultilayerSBM():
+class MultilayerSBM(MultilayerGraph):
 
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None,use_gcc=False):
 
@@ -505,6 +505,8 @@ class MultilayerSBM():
         self.layer_vec=self.get_node_layer_vec()
         # self.intra_layer_adj=self._get_intralayer_adj()
         # self.inter_layer_adj=self._get_interlayer_adj()
+        super(MultilayerSBM,self).__init__(intralayer_edges=self.intraedges, interlayer_edges=self.interedges,
+                       layer_vec=self.layer_vec,comm_vec=self.get_all_layers_block())
 
     def get_next_sbm(self,sbm):
         """
@@ -622,3 +624,80 @@ class MultilayerSBM():
         return np.array(merged_blocks)
 
 
+def generate_planted_partitions_sbm(n,epsilon,c,ncoms):
+    """
+
+    :param n: The number of nodes
+    :param c: total average degree for the network
+    :param ep: detectability parameter, :math:`\epsilon=p_{out}/p_{in}`, where \
+    p is the internal and external connection probabilities
+    :param ncoms: number of communities within the network
+    :return:
+    """
+
+    #based on planted partition model, we can calculated the values of
+    #pin and pout using the number of nodes, average degree, and the ratio
+    # of the internal and external edges
+
+    noq=n/float(ncoms)
+    pin=c/(((noq-1.0)+noq*(ncoms-1)*epsilon))
+    pout = epsilon * pin
+
+    remain=n%ncoms
+    if remain>0:
+        nodesperblock=[int(n/ncoms)]*ncoms
+        nodesperblock=[ x+1 if k<remain else x for k,x in enumerate(nodesperblock) ]
+    else:
+        nodesperblock=[n/ncoms]*ncoms
+
+    assert np.sum(nodesperblock)==n
+
+    # prob_mat=np.identity(ncoms) * pin+(np.ones((ncoms,ncoms))-np.identity(ncoms))*pout
+
+    prob_mat=np.identity(ncoms)*(pin-pout)+np.ones((ncoms,ncoms))*pout
+
+
+    sbm = MultilayerSBM(n, comm_prob_mat=prob_mat, layers=1, block_sizes0=nodesperblock,
+                                 transition_prob=0, use_gcc=True)
+
+    return sbm
+
+
+def generate_planted_partitions_dynamic_sbm(n, epsilon, c, ncoms,nlayers,eta):
+    """
+
+    :param n: The number of nodes
+    :param c: total average degree for the network
+    :param ep: detectability parameter, :math:`\epsilon=p_{out}/p_{in}`, where \
+    p is the internal and external connection probabilities
+    :param ncoms: number of communities within the network
+    :param nlayers: number of layers of the dynamic stochastic block model
+    :param eta: probability of each node switching community label in each layer
+    :return:
+    """
+
+    # based on planted partition model, we can calculated the values of
+    # pin and pout using the number of nodes, average degree, and the ratio
+    # of the internal and external edges
+
+    noq = n / float(ncoms)
+    pin = c / (((noq - 1.0) + noq * (ncoms - 1) * epsilon))
+    pout = epsilon * pin
+
+    remain = n % ncoms
+    if remain > 0:
+        nodesperblock = [int(n / ncoms)] * ncoms
+        nodesperblock = [x + 1 if k < remain else x for k, x in enumerate(nodesperblock)]
+    else:
+        nodesperblock = [n / ncoms] * ncoms
+
+    assert np.sum(nodesperblock) == n
+
+    # prob_mat=np.identity(ncoms) * pin+(np.ones((ncoms,ncoms))-np.identity(ncoms))*pout
+
+    prob_mat=np.identity(ncoms)*(pin-pout)+np.ones((ncoms,ncoms))*pout
+
+    dsbm = MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, block_sizes0=nodesperblock,
+                        transition_prob=eta, use_gcc=True)
+
+    return dsbm
