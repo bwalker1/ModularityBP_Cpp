@@ -8,6 +8,9 @@ import seaborn as sbn
 
 
 class RandomGraph(object):
+    """
+    Wrapper class for igraph with different accessor methods.
+    """
     def __init__(self):
         pass
 
@@ -27,6 +30,9 @@ class RandomGraph(object):
 
 
 class RandomERGraph(RandomGraph):
+    """
+    Wrapper class to create igraph ER graph
+    """
 
     def __init__(self,n,p):
         self.graph=ig.Graph.Erdos_Renyi(n=n,p=p,directed=False,loops=False)
@@ -50,14 +56,18 @@ class RandomERGraph(RandomGraph):
 
 
 class RandomSBMGraph(RandomGraph):
+    """
+    Wrapper class for a realization of non-degree corrected stochastic block model.
+    """
     def __init__(self,n,comm_prob_mat,block_sizes=None,graph=None,use_gcc=False):
         """
 
-        :param n:
-        :param comm_prob_mat:
-        :param block_sizes:
-        :param graph:
-        :param use_gcc:
+        :param n: number of communities
+        :param comm_prob_mat: Probabilities for node in community i to connect to node in community j
+        :param block_sizes: How many nodes are in each community.  len(block_sizes) = num communities and \
+        sum(block_sizes) = n
+        :param graph: can create object from already existing igraph object or create from scratch given parameters.
+        :param use_gcc:  if true, prune nodes node connected to largest component
         """
         if block_sizes is None:
             block_sizes = [int(n / (1.0 * comm_prob_mat.shape[0])) for _ in range(comm_prob_mat.shape[0] - 1)]
@@ -91,19 +101,24 @@ class RandomSBMGraph(RandomGraph):
 
     @property
     def block(self):
+        '''vector denoting the membership of each node'''
         return self.graph.vs['block']
 
     def get_AMI_with_blocks(self,labels):
         """
-        :param labels:
+        Compare partition (labels) of the nodes with the ground truth of the SBM
+
+        :param labels: a labeling of the nodes
         :type labels:
-        :return:
-        :rtype:
+        :return: AMI
+        :rtype: float
         """
         return skm.adjusted_mutual_info_score(labels_pred=labels,labels_true=self.block)
 
     def get_pin_pout_ratio(self):
         """
+
+        Calculate :math: `\epsilon = \frac{p_{in}}{p_{out}}` for the SBM.
 
         :return:
         """
@@ -123,7 +138,8 @@ class RandomSBMGraph(RandomGraph):
 
     def get_observed_group_sizes(self):
         """
-
+        Get the block sizes of the underlying graph.  Especially useful when we have taken the GCC \
+        so block sizes might have changed from specified parameters.
         :return:
         """
         coms,cnts=np.unique(self.graph.vs['block'],return_counts=True)
@@ -158,20 +174,26 @@ class RandomSBMGraph(RandomGraph):
 
 class MultilayerGraph(object):
     """
-
+    Wrapper class for storing a 'multilayer graph'  that can be used to call the modularity belief propagation\
+    A graph here is represented by a collection of igraphs (each one representing a "layer") as well as a set of \
+    edges between the layers.  In this formulation, each node can only be present in a single layer
     """
 
-    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,directed=False):
+    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,
+                 directed=False):
         """
 
-        :param intralayer_edges:
-        :param layer_vec:
-        :param interlayer_edges:
-        :param comm_vec:
-        :param directed:
+        :param intralayer_edges: list of intralayer edges between the nodes. If intralayer_edges.shape[1] > 2\
+         intralayer_edges[:,2] is assumed to represent the weights of the edges. Default weight is 1.
+        :param layer_vec: vector denoting layer membership for each edge.  Size of network is taken to be\
+        len(layer_vec)
+        :param interlayer_edges: list of edges across layers.  If interlayer_edges.shape[1] > 2\
+         interlayer_edges[:,2] is assumed to represent the weights of the edges. Default weight is 1.
+        :param comm_vec: Underlying known communitiies of the network.  Default is None
+        :param directed:  Are intralayer and interlayer edges directed.  #TODO: allow one or the other to be directed.
         """
 
-        self.n=len(layer_vec)
+        self.N=len(layer_vec)
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
         self.unweighted=True
@@ -203,7 +225,9 @@ class MultilayerGraph(object):
             self._prune_intra_edges_directed()  # make sure each edge is unique
 
         self.layer_vec=np.array(layer_vec)
+
         self.layers=self._create_layer_graphs()
+
         self.nlayers=len(self.layers)
         self.intradegrees=self.get_intralayer_degrees()
         self.interdegrees=self.get_interlayer_degrees()
@@ -262,7 +286,14 @@ class MultilayerGraph(object):
 
 
     def _create_graph_from_elist(self,n,elist,weights=None,simplify=True):
+        '''
 
+        :param n: number of nodes
+        :param elist: list of edges
+        :param weights: vector of weights of the edges.  Len(weights) must equal len(elist).
+        :param simplify:  remove multi-edges
+        :return:
+        '''
         cgraph=ig.Graph(n=n,edges=elist,directed=False)
         if weights is not None:
             cgraph.es['weight']=weights
@@ -284,14 +315,14 @@ class MultilayerGraph(object):
 
     def _label_layers(self,comvec=None):
         """
-        Here we set the true community assignmetn for each node in each layer using commvec
+        Here we set the true community assignment for each node in each layer using commvec
         :return: None
         """
         if comvec is None:
             assert self.comm_vec is not None, "Cannot set node communities if they are not provided"
             comvec=self.comm_vec
 
-        assert len(comvec)==self.n,"length of comvec: {:d} does not equal number of nodes: {:}".format(len(comvec),self.n)
+        assert len(comvec)==self.N,"length of comvec: {:d} does not equal number of nodes: {:}".format(len(comvec),self.N)
         coffset=0 #keep track of nodes already seen
         for layer in self.layers:
             layer.vs['block']=comvec[coffset:coffset+layer.vcount()]
@@ -318,11 +349,11 @@ class MultilayerGraph(object):
                 if 'weight' in self.layers[i].es.attributes():
                     total_degrees.extend(list(self.layers[i].strength(weights='weight')))
                 else:
-                    total_degrees.extend(list(self.layers[i].degrees()))
+                    total_degrees.extend(list(self.layers[i].degree()))
         return np.array(total_degrees)
 
     def get_interlayer_degrees(self):
-        degrees=np.zeros(self.n)
+        degrees=np.zeros(self.N)
         for i,e in enumerate(self.interlayer_edges):
             ei,ej=e[0],e[1]
             toadd=1 if self.interlayer_weights is None else self.interlayer_weights[i]
@@ -331,11 +362,24 @@ class MultilayerGraph(object):
         return degrees
 
     def get_AMI_with_communities(self,labels):
+        """
+        Calculate adjusted mutual information of labels with underlying community of network.
+        :param labels: commmunity to assess agreement with.  Len(labels) must \
+        equal self.N
+        :return:
+        """
         if self.comm_vec is None:
             raise ValueError("Must provide communities lables for Multilayer Graph")
         return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels)
 
     def get_AMI_layer_avg_with_communities(self,labels):
+        """
+        Calculate AMI of each layer with corresponding community in labels.  Return \
+        average AMI weighted by number of nodes in each layer.
+        :param labels: commmunity to assess agreement with.  Len(labels) must \
+        equal self.N
+        :return:
+        """
         if self.comm_vec is None:
             raise ValueError("Must provide communities lables for Multilayer Graph")
 
@@ -343,22 +387,23 @@ class MultilayerGraph(object):
         lay_vals=np.unique(self.layer_vec)
         for lay_val in lay_vals:
             cinds=np.where(self.layer_vec==lay_val)[0]
-            la_amis.append(len(cinds)/(1.0*self.n)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds]))
+            la_amis.append(len(cinds)/(1.0*self.N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds]))
 
         return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         
     def get_accuracy_with_communities(self,labels,permute=True):
-        """
+        """Calculate accuracy between supplied labels and the known communities of the networks.
 
-        :param labels:
-        :param permute:
+        :param labels:  commmunity to assess agreement with.  Len(labels) must \
+        equal self.N
+        :param permute:  Should maximum accurracy across label permuations be identified?
         :return:
         """
         if self.comm_vec is None:
             raise ValueError("Must provide communities lables for Multilayer Graph")
 
         #TODO
-        # #this needs to be re-written to be more efficient
+        # #this needs to be re-written to be more efficient.  Can use bipartite matching here.
 
         if permute:
             vals=np.unique(labels)
@@ -368,7 +413,7 @@ class MultilayerGraph(object):
                 cdict=dict(zip(vals,perm))
                 mappedlabels=list(map(lambda x : cdict[x],labels))
                 acc=skm.accuracy_score(y_pred=mappedlabels,y_true=self.comm_vec,normalize=False)
-                acc=(acc-self.n/ncoms)/(self.n-self.n/ncoms)
+                acc=(acc-self.N/ncoms)/(self.N-self.n/ncoms)
                 all_acc.append(acc)
             return np.max(all_acc) #return value with highest accuracy
         else:
@@ -396,9 +441,9 @@ class MultilayerGraph(object):
                     c_n=float(len(clabs)) #size of current layer
                     acc=(acc-c_n/ncoms)/(c_n-c_n/ncoms)
                     all_acc.append(acc)
-                la_amis.append( (len(cinds)/(1.0*self.n))*np.max(all_acc) )
+                la_amis.append( (len(cinds)/(1.0*self.N))*np.max(all_acc) )
             else:
-                la_amis.append( (len(cinds)/(1.0*self.n))*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
+                la_amis.append( (len(cinds)/(1.0*self.N))*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
         return np.sum(la_amis)
 
     def _to_sparse(self,edgelist):
@@ -409,19 +454,28 @@ class MultilayerGraph(object):
             data=np.array([1.0 for _ in range(edgelist.shape[0])])
         row_ind=edgelist[:,0]
         col_ind=edgelist[:,1]
-        N=self.n
+        N=self.N
         return scispa.csr_matrix((data,(row_ind,col_ind)),shape=(N,N),dtype=float)
 
     def to_scipy_csr(self):
+        """Create sparse matrix representations of the multilayer network.
+
+        :return: (A_sparse,C_sparse) = interlayer adjacency , interlayer adjacency
+        """
         A_sparse=self._to_sparse(self.intralayer_edges)
         C_sparse=self._to_sparse(self.interlayer_edges)
         return (A_sparse,C_sparse)
 
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):
         """
+        Plot communities as an nlayers by nodes/layer heatmap.  Note this only works
+        for the multiplex case where the number of nodes is fixed throughout each layer.
 
-        :param ind:
-        :param layers:
+        :param comvec: community label for each nodes.  If none, used stored ground truth for\
+        the network.
+        :param layers: Subset of the layers to plot.  If None, plots all layers.
+        :param ax: matplotlib.Axes to draw on
+        :param cmap: color map to label communities with. Defaults to cube_helix.
         :return:
         """
 
@@ -471,10 +525,12 @@ class MultilayerGraph(object):
         return ax
 
 class MultilayerSBM(MultilayerGraph):
-
+    """
+    Subclass of MultilayerGraph to create the dynamic stochastic block model from Ghasemian et al. 2016.
+    """
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None,use_gcc=False):
 
-        self.layer_sbms=[]
+        self.layer_sbms = []
         self.nlayers=layers
         self.transition_prob=transition_prob
         self.comm_prob_mat=comm_prob_mat
@@ -485,11 +541,12 @@ class MultilayerSBM(MultilayerGraph):
             block_sizes0 += [n - np.sum(block_sizes0)]  # make sure it sums to one
 
         assert not (use_gcc and layers > 1), "use_gcc only applies to single layer network"
+        #create first layer
         initalSBM = RandomSBMGraph(n=n, comm_prob_mat=comm_prob_mat, block_sizes=block_sizes0, use_gcc=use_gcc)
 
-        self.n = initalSBM.n  # number of total nodeslayers
-        self.nlayers = layers
-        self.N = self.n * self.nlayers
+        self.n = initalSBM.n  # number of nodes in each layer
+        self.nlayers = layers # number of layers
+        self.N = self.n * self.nlayers #Total number of nodes
 
         self._blocks=range(self.comm_prob_mat.shape[0]) #
         #initialize the first one
@@ -503,10 +560,14 @@ class MultilayerSBM(MultilayerGraph):
         self.interedges=self.get_interlayer_edgelist()
         self.intraedges=self.get_intralayer_edgelist()
         self.layer_vec=self.get_node_layer_vec()
-        # self.intra_layer_adj=self._get_intralayer_adj()
-        # self.inter_layer_adj=self._get_interlayer_adj()
+
+        #some redudancy between constructors here that could be cleaned up
         super(MultilayerSBM,self).__init__(intralayer_edges=self.intraedges, interlayer_edges=self.interedges,
                        layer_vec=self.layer_vec,comm_vec=self.get_all_layers_block())
+
+        #switch this to point to the layer_sbms igraphs
+        self.layers=[ lsbm.graph for i,lsbm in enumerate(self.layer_sbms)]
+        # self.layers=self.layer_sbms #we only need to store these once.
 
     def get_next_sbm(self,sbm):
         """
@@ -594,7 +655,8 @@ class MultilayerSBM(MultilayerGraph):
 
     def get_intralayer_edgelist(self):
         """
-        Single list of edges treating the network as a surpaadjacency format
+        Single list of edges treating the group of single layer SBM's  as a \
+        surpaadjacency format
 
         :return:
         """

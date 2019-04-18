@@ -100,7 +100,40 @@ def test_transform():
     print("running time {:.4f}".format(time()-t))
     
 def test_qstar():
-    pass
+    import numpy as np
+    import modbp
+    import matplotlib.pyplot as plt
+    import igraph as ig
+    import seaborn as sbn
+    #import network_tools as nt
+
+    n = 1000
+    q = 4
+    ep = .15
+    c = 6
+
+    sbm = modbp.GenerateGraphs.generate_planted_partitions_sbm(n=n, c=c, epsilon=ep, ncoms=q)
+    mbp_obj = modbp.ModularityBP(mlgraph=sbm, accuracy_off=True,
+                                 align_communities_across_layers=True)
+
+    omega = 0
+    gamma = 1
+    qmax = 6
+    qrange = range(2, qmax + 1)
+    betas_stars = [mbp_obj.get_bstar(omega=0, q=q) for q in qrange]
+    betas = np.linspace(0, mbp_obj.get_bstar(omega=0, q=qmax), 20)
+    betas = np.linspace(0, 6, 100)
+    for gamma in [.5, 1, 1.5]:
+        for j, beta in enumerate(betas):
+            if j % 10 == 0:
+                print(gamma, j, beta)
+            for i in range(20):
+                #     print(beta)
+                mbp_obj.run_modbp(q=qmax, beta=beta, niter=500, omega=omega, resgamma=gamma,
+                                  reset=True)
+
+    rm_df = mbp_obj.retrieval_modularities
+    return rm_df
 
 def test_modinterface_class():
     n = 1000
@@ -423,6 +456,6 @@ def test_bethe_free_energy_calc():
     plt.show()
 
 def main():
-    test_bethe_free_energy_calc()
+    test_qstar()
 if __name__=='__main__':
     main()

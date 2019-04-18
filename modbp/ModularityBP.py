@@ -400,7 +400,7 @@ class ModularityBP():
                     valsremap[val]=available.pop()
                 revmap[k]=valsremap[val]
 
-        if np.max(revmap.values())>=len(set(revmap.values())):
+        if np.max(list(revmap.values()))>=len(set(revmap.values())):
             raise AssertionError
 
         self.marginal_to_comm_number[ind] = revmap
