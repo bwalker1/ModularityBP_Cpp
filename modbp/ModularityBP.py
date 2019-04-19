@@ -89,7 +89,6 @@ class ModularityBP():
         :param niter:
         :param resgamma:
         :param omega:
-        :param realign
         :param reset:
         :return:
         """

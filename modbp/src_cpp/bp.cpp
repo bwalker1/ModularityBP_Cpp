@@ -88,8 +88,8 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
         }
         index_t i = p.first;
         index_t j = p.second;
-        edges[i].push_back(edge_data(j,true,1));
-        edges[j].push_back(edge_data(i,true,1));
+        edges[i].push_back(edge_data(j,true,w));
+        edges[j].push_back(edge_data(i,true,w));
         
         num_edges[layer_membership[i]] += 2;
         total_edges += 2;
