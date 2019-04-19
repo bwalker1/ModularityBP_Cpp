@@ -203,6 +203,7 @@ class MultilayerGraph(object):
         #create an vector length zero
         if interlayer_edges is None: #Assume that it is single layer
             self.interlayer_edges=np.zeros((0,2),dtype='int')
+            self.interlayer_weights=None
         else:
             self.interlayer_edges=interlayer_edges
             #are interlayer weights presen

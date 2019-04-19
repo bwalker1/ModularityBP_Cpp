@@ -829,11 +829,49 @@ double s(double beta, double omega, double q, double c)
 double sp(double beta, double omega, double q, double c)
 {
     double eb = exp(beta);
+    double e2b = exp(2*beta);
+
     double ewb = exp(omega*beta);
+    double e2wb = exp(2*omega*beta);
+
     
     double temp1 = eb - 1 + q;
     double temp2 = ewb- 1 + q;
-    return 2*c*eb*(eb-1)*q/(temp1*temp1*temp1) + 4*ewb * (ewb-1)*q*omega/(temp2*temp2*temp2);
+
+    double dxlamr= 2*q*(e2b-eb)/(temp1*temp1*temp1);
+    double dxlamt= 2*q*(e2wb-ewb)/(temp2*temp2*temp2);
+
+
+    return c*dxlamr+2*dxlamt;
+}
+
+double BP_Modularity::compute_excess_degree()
+{
+// compute the excess degree
+    double d2 = 0;
+    double d = 0;
+    for (int i=0;i<n;++i)
+    {
+        double nn = neighbor_count[i];
+
+
+        /*if (layer_membership[i] == 0)
+        {
+            nn -= 1;
+        }
+        if (layer_membership[i] == nt-1)
+        {
+            nn -= 1;
+        }*/
+
+        d2 += nn*nn;
+        d += nn;
+    }
+
+
+    double c = d2/d - 1;
+    return c;
+
 }
 
 double BP_Modularity::compute_bstar(double omega_in,int q_in)
@@ -842,28 +880,10 @@ double BP_Modularity::compute_bstar(double omega_in,int q_in)
     
     // compute c - decide on the right way
     // the simple average degree
-    double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
+    //double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
     
-    // compute the excess degree
-    double d2 = 0;
-    double d = 0;
-    for (int i=0;i<n;++i)
-    {
-        double nn = neighbor_count[i];
+    double c = compute_excess_degree();
 
-        if (layer_membership[i] == 0)
-        {
-            nn -= 1;
-        }
-        if (layer_membership[i] == nt-1)
-        {
-            nn -= 1;
-        }
-        
-        d2 += nn*nn;
-        d += nn;
-    }
-    c = d2/d - 1;
     
     // bisection/newton hybrid method
     double xl=0, xr=1;

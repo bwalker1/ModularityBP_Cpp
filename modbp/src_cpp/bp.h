@@ -60,6 +60,7 @@ public:
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
 
+    double compute_excess_degree();
     double compute_bstar(double omega_in,int q_in);
 
     void permute_beliefs(vector<vector<index_t> > permutation);

@@ -7267,6 +7267,28 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_BP_Modularity_compute_excess_degree(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  double result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_compute_excess_degree",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_compute_excess_degree" "', argument " "1"" of type '" "BP_Modularity *""'"); 
+  }
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
+  result = (double)(arg1)->compute_excess_degree();
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_BP_Modularity_compute_bstar(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   BP_Modularity *arg1 = (BP_Modularity *) 0 ;
@@ -19131,6 +19153,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BP_Modularity_set_compute_bfe", _wrap_BP_Modularity_set_compute_bfe, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_getVerbose", _wrap_BP_Modularity_getVerbose, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_setVerbose", _wrap_BP_Modularity_setVerbose, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_compute_excess_degree", _wrap_BP_Modularity_compute_excess_degree, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_compute_bstar", _wrap_BP_Modularity_compute_bstar, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_permute_beliefs", _wrap_BP_Modularity_permute_beliefs, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_merge_communities", _wrap_BP_Modularity_merge_communities, METH_VARARGS, NULL},

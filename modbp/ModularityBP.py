@@ -50,7 +50,7 @@ class ModularityBP():
 
         if not comm_vec is None:
             self.graph.comm_vec = comm_vec
-        self.n=self.graph.n
+        self.n=self.graph.N
         self.nlayers=self.graph.nlayers
         self.totaledgeweight=self.graph.totaledgeweight
         self.intralayer_edges=self.graph.intralayer_edges
