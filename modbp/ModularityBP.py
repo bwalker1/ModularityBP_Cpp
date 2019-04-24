@@ -127,7 +127,7 @@ class ModularityBP():
 
 
         if self._align_communities_across_layers:
-            iters_per_run=niter #somewhat arbitrary divisor
+            iters_per_run=niter/2 #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
         #logging.debug('time: {:.4f}'.format(time()-t))

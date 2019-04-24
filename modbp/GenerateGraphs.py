@@ -216,11 +216,11 @@ class MultilayerGraph(object):
 
         #are intralayer weights present
         if len(self.intralayer_edges)>0 and len(self.intralayer_edges[0]) > 2:  # weights are present
-            self.intralayer_weights = [e[2] for e in self.intralayer_edges]
+            self._intralayer_weights = [e[2] for e in self.intralayer_edges]
             self.intralayer_edges = [(e[0], e[1]) for e in self.intralayer_edges]
             self.unweighted=False
         else:
-            self.intralayer_weights = [1.0 for _ in range(len(self.intralayer_edges))]
+            self._intralayer_weights = [1.0 for _ in range(len(self.intralayer_edges))]
 
         if not self.is_directed:
             self._prune_intra_edges_directed()  # make sure each edge is unique
@@ -228,9 +228,8 @@ class MultilayerGraph(object):
         self.layer_vec=np.array(layer_vec)
 
         self.layers=self._create_layer_graphs()
-
         self.nlayers=len(self.layers)
-        self.intradegrees=self.get_intralayer_degrees()
+        self.intradegrees=self.get_intralayer_degrees() #by default these are weighted
         self.interdegrees=self.get_interlayer_degrees()
         self.intra_edge_counts=self.get_layer_edgecounts()
         if self.is_directed:
@@ -243,14 +242,26 @@ class MultilayerGraph(object):
             self._label_layers(self.comm_vec)
         self.interedgesbylayers=self._create_interlayeredges_by_layers()
 
+    @property
+    def intralayer_weights(self):
+        return self._intralayer_weights
+
+    @intralayer_weights.setter
+    def intralayer_weights(self, intra_weights):
+        """We have to recreate the layer graphs to be able to access degrees and\
+        strengths if these have changed"""
+        self._intralayer_weights = intra_weights
+        self.layers=self._create_layer_graphs()
+
+
     def _prune_intra_edges_directed(self,):
         eset={}
         edge_inds2rm=[]
         for i,e in enumerate(self.intralayer_edges): #note that we assume here BOTH ENTRIES will be the same if edges are duplicated
             if e[0]<e[1]:
-                eset[(e[0], e[1])] = self.intralayer_weights[i]
+                eset[(e[0], e[1])] = self._intralayer_weights[i]
             else:
-                eset[(e[1], e[0])] = self.intralayer_weights[i]
+                eset[(e[1], e[0])] = self._intralayer_weights[i]
         edges=[]
         weights=[]
         for k,val in eset.items():
@@ -261,6 +272,7 @@ class MultilayerGraph(object):
         edges,weights=zip(*edge_weights)
         self.intralayer_edges=edges
         self.intralayer_weights=weights
+
 
 
 
@@ -276,7 +288,7 @@ class MultilayerGraph(object):
             #subtract this off so that number of nodes created in igraph is correct
             for i,e in enumerate(self.intralayer_edges):
                 ei,ej=e[0],e[1]
-                weight = 1.0 if self.intralayer_weights is None else self.intralayer_weights[i]
+                weight = 1.0 if self._intralayer_weights is None else self._intralayer_weights[i]
                 if ei in node_inds or ej in node_inds:
                     if not (ei>=min_ind and ej>=min_ind):
                         raise AssertionError('edge indicies not in layer {:d},{:d}'.format(ei,ej))
@@ -341,13 +353,13 @@ class MultilayerGraph(object):
                 ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
         return np.array(ecounts)
 
-    def get_intralayer_degrees(self, i=None):
+    def get_intralayer_degrees(self, i=None,weighted=True):
         if i is not None:
             return np.array(self.layers[i].degree())
         else:
             total_degrees=[]
             for i in range(len(self.layers)):
-                if 'weight' in self.layers[i].es.attributes():
+                if weighted and 'weight' in self.layers[i].es.attributes():
                     total_degrees.extend(list(self.layers[i].strength(weights='weight')))
                 else:
                     total_degrees.extend(list(self.layers[i].degree()))

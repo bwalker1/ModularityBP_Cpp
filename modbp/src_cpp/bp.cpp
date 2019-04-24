@@ -51,7 +51,7 @@ public:
     edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n),node_strengths(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     if (intra_edgeweight.size() > 0)
     {
@@ -70,7 +70,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     uniform_int_distribution<index_t> destdist(0,n-1);
     neighbor_offset_map.resize(n);
     total_edges = 0;
-    
+    total_strength=0;
     // TODO: go through all input edges and put them into the data structure along with categorization of their edge type
     
     
@@ -91,7 +91,10 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
         edges[i].push_back(edge_data(j,true,w));
         edges[j].push_back(edge_data(i,true,w));
         
-        num_edges[layer_membership[i]] += 2;
+        num_edges[layer_membership[i]] += w;
+//        num_strength[layer_membership[i]] += w;
+
+        total_strength += w;
         total_edges += 2;
     }
     
@@ -123,31 +126,35 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     size_t neighbors_offset_count = 0;
     size_t beliefs_offset_count = 0;
     int neighbor_c = 0;
-    
+    double c_strength=0; // strength of current node
     beliefs_offsets[0] = 0;
     neighbors_offsets[0] = 0;
     max_degree = 0;
     for (index_t i=0;i<n;++i)
     {
+
         order[i] = i;
         
         beliefs_offset_count += q*edges[i].size();
         neighbors_offset_count += edges[i].size();
         neighbor_count[i] = (index_t) edges[i].size();
-        
+
         beliefs_offsets[i+1] = beliefs_offset_count;
         neighbors_offsets[i+1] = neighbors_offset_count;
         
         max_degree = max(max_degree,(index_t) edges[i].size());
-        
+
+        c_strength=0;
         for (index_t j=0;j<edges[i].size();++j)
         {
             //assert(neighbor_c < num_edges);
             edge_weights[neighbor_c] = edges[i][j].weight;
+            c_strength += edges[i][j].weight;
             neighbors_type[neighbor_c] = edges[i][j].type;
             neighbors[neighbor_c++] = edges[i][j].target;
             neighbor_offset_map[i][edges[i][j].target] = j;
         }
+        node_strengths[i]=c_strength;
     }
     scratch.resize(max_degree*q);
     neighbor_c = 0;
@@ -292,6 +299,8 @@ void BP_Modularity::step()
         
         index_t t = layer_membership[i];
         const index_t nn = neighbor_count[i];
+        double c_strength = node_strengths[i];
+
         if (nn==0) continue;
         
         // first, see how much change we had to incoming beliefs so we know if we need to update
@@ -317,7 +326,7 @@ void BP_Modularity::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            theta[t][s] += -beta*resgamma/(num_edges[t])* nn * (marginals[q*i + s] - marginals_old[q*i + s]);
+            theta[t][s] += -beta*resgamma/(2*num_edges[t])* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -362,7 +371,7 @@ void BP_Modularity::step()
                     scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
-                scratch[nn*s+idx] = exp(nn*theta[t][s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = exp(c_strength*theta[t][s] + scratch[nn*s+idx]);
             }
         }
         
@@ -729,7 +738,7 @@ void BP_Modularity::initializeTheta() {
         // fold in prefactor to theta
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] *= -(beta*resgamma/num_edges[t]);
+            theta[t][s] *= -(beta*resgamma/(2*num_edges[t]));
         }
     }
 }
@@ -852,8 +861,8 @@ double BP_Modularity::compute_excess_degree()
     double d = 0;
     for (int i=0;i<n;++i)
     {
-        double nn = neighbor_count[i];
-
+        //double nn = neighbor_count[i];
+        double ss = node_strengths[i];
 
         /*if (layer_membership[i] == 0)
         {
@@ -864,8 +873,8 @@ double BP_Modularity::compute_excess_degree()
             nn -= 1;
         }*/
 
-        d2 += nn*nn;
-        d += nn;
+        d2 += ss*ss;
+        d += ss;
     }
 
 

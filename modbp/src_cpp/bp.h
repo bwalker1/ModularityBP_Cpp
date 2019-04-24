@@ -79,6 +79,7 @@ private:
 
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
+    vector<double> node_strengths;
     vector<double> edge_weights;
 
     // private variables
@@ -117,8 +118,11 @@ private:
 
     // vector containing total number of edges in each layer
     vector<unsigned long> num_edges;
+//    vector<double>num_strength; //vector of total strength(weighted degree) each layer
     // sum of num_edges
+
     unsigned long total_edges;
+    double total_strength;
 
     double change;
     vector<double> changes;
