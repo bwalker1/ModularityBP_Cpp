@@ -194,6 +194,7 @@ class MultilayerGraph(object):
         """
 
         self.N=len(layer_vec)
+        self.layer_vec=np.array(layer_vec)
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
         self.unweighted=True
@@ -225,7 +226,6 @@ class MultilayerGraph(object):
         if not self.is_directed:
             self._prune_intra_edges_directed()  # make sure each edge is unique
 
-        self.layer_vec=np.array(layer_vec)
 
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)

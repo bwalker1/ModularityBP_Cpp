@@ -112,7 +112,7 @@ class ModularityBP():
                                         intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
-                                      resgamma=resgamma,omega=omega,transform=False,verbose=True)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:

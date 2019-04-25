@@ -60,8 +60,8 @@ public:
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
 
-    double compute_excess_degree();
-    double compute_bstar(double omega_in,int q_in);
+    double compute_excess_degree(bool use_strength = false);
+    double compute_bstar(double omega_in, int q_in);
 
     void permute_beliefs(vector<vector<index_t> > permutation);
     void merge_communities(vector<index_t> merges);
@@ -79,6 +79,8 @@ private:
 
     vector<unordered_map<index_t,index_t> > neighbor_offset_map;
     vector<index_t> neighbor_count;
+    vector<index_t> neighbor_count_interlayer;
+
     vector<double> node_strengths;
     vector<double> edge_weights;
 

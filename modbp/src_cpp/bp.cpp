@@ -51,7 +51,7 @@ public:
     edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n),node_strengths(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     if (intra_edgeweight.size() > 0)
     {
@@ -98,13 +98,16 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
         total_edges += 2;
     }
     
-    for (auto p : inter_edgelist)
+    for (auto p : inter_edgelist) //for now these are unweighted
     {
         index_t i = p.first;
         index_t j = p.second;
         edges[i].push_back(edge_data(j,false,1));
         edges[j].push_back(edge_data(i,false,1));
+        neighbor_count_interlayer[i]+=1;
+        neighbor_count_interlayer[j]+=1;
         total_edges += 2;
+
     }
     
     beliefs.resize(q*total_edges);
@@ -149,7 +152,9 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
         {
             //assert(neighbor_c < num_edges);
             edge_weights[neighbor_c] = edges[i][j].weight;
-            c_strength += edges[i][j].weight;
+            if (edges[i][j].type){ //only add in the intralyer strength
+                c_strength += edges[i][j].weight;
+                }
             neighbors_type[neighbor_c] = edges[i][j].type;
             neighbors[neighbor_c++] = edges[i][j].target;
             neighbor_offset_map[i][edges[i][j].target] = j;
@@ -854,107 +859,121 @@ double sp(double beta, double omega, double q, double c)
     return c*dxlamr+2*dxlamt;
 }
 
-double BP_Modularity::compute_excess_degree()
+double BP_Modularity::compute_excess_degree(bool use_strength ) //default is false
 {
-// compute the excess degree
+// compute the excess degree.  If use strength uses total strength for node
     double d2 = 0;
     double d = 0;
+    double ss=0;
     for (int i=0;i<n;++i)
     {
         //double nn = neighbor_count[i];
-        double ss = node_strengths[i];
-
-        /*if (layer_membership[i] == 0)
-        {
-            nn -= 1;
-        }
-        if (layer_membership[i] == nt-1)
-        {
-            nn -= 1;
-        }*/
-
+        if (use_strength){
+            ss = node_strengths[i];
+            }
+         else{
+            ss = neighbor_count[i];
+         }
         d2 += ss*ss;
         d += ss;
     }
-
-
     double c = d2/d - 1;
     return c;
 
 }
 
-double BP_Modularity::compute_bstar(double omega_in,int q_in)
-{
-    // currently this assumes multiplex graph
-    
-    // compute c - decide on the right way
-    // the simple average degree
-    //double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
-    
-    double c = compute_excess_degree();
+double BP_Modularity::compute_bstar(double omega_in, int q_in){
 
-    
-    // bisection/newton hybrid method
-    double xl=0, xr=1;
-    double xn;
-    
-    // find bounding interval
-    while (s(xr,omega_in,q_in,c) < 1)
+
+    double c = compute_excess_degree(false);
+    double average_weight=0;
+    double tot =0 ;
+    //calculate average weights including omega as weights for inter layer
+    for (index_t i=0;i<n;++i)
     {
-        xr *= 2;
+        average_weight+=node_strengths[i];
+        average_weight+=omega_in*neighbor_count_interlayer[i];
+        tot+=neighbor_count[i];
     }
-    
-    // start newton's from midpoint
-    xn = (xl+xr)/2;
-    double yn = s(xn,omega_in,q_in,c);
-    double ypn = sp(xn,omega_in,q_in,c);
-    
-    int maxiters = 100;
-    for (int iters=0;iters<maxiters;)
-    {
-        // try a newton step
-        
-        xn -= (yn - 1)/ypn;
-        yn = s(xn,omega_in,q_in,c);
-        ypn = sp(xn,omega_in,q_in,c);
-        
-        // check if this is in our bounding interval
-        if (xl < xn && xn < xr)
-        {
-            // narrow our interval using newton point
-            if (yn > 1)
-            {
-                xr = xn;
-            }
-            else
-            {
-                xl = xn;
-            }
-        }
-        else
-        {
-            // narrow our interval using bisection
-            double xc = (xl + xr)/2;
-            if (s(xc,omega_in,q_in,c)>1)
-            {
-                xr = xc;
-            }
-            else
-            {
-                xl = xc;
-            }
-            
-            // restart newton's at the new midpoint
-            xn = (xl + xr)/2;
-            yn = s(xn,omega_in,q_in,c);
-            ypn = sp(xn,omega_in,q_in,c);
-        }
-        
-        // check for convergence
-        if (xr - xl < 1e-6)
-        {
-            return (xl + xr)/2;
-        }
-    }
-    return (xl+xr)/2;
+    average_weight/=tot;
+    printf("q_in = %d , c = %.3f , avg_weight= %.3f , omega_in = %.3f ,tot=%.3f \n",q_in,c,average_weight,omega_in,tot);
+    double bstar =  (1.0/average_weight)*log(q_in /(sqrt(c)-1) +1) ;
+    return bstar;
+
 }
+
+//double BP_Modularity::compute_bstar(double omega_in,int q_in)
+//{
+//    // currently this assumes multiplex graph
+//
+//    // compute c - decide on the right way
+//    // the simple average degree
+//    //double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
+//
+//    double c = compute_excess_degree();
+//
+//
+//    // bisection/newton hybrid method
+//    double xl=0, xr=1;
+//    double xn;
+//
+//    // find bounding interval
+//    while (s(xr,omega_in,q_in,c) < 1)
+//    {
+//        xr *= 2;
+//    }
+//
+//    // start newton's from midpoint
+//    xn = (xl+xr)/2;
+//    double yn = s(xn,omega_in,q_in,c);
+//    double ypn = sp(xn,omega_in,q_in,c);
+//
+//    int maxiters = 100;
+//    for (int iters=0;iters<maxiters;)
+//    {
+//        // try a newton step
+//
+//        xn -= (yn - 1)/ypn;
+//        yn = s(xn,omega_in,q_in,c);
+//        ypn = sp(xn,omega_in,q_in,c);
+//
+//        // check if this is in our bounding interval
+//        if (xl < xn && xn < xr)
+//        {
+//            // narrow our interval using newton point
+//            if (yn > 1)
+//            {
+//                xr = xn;
+//            }
+//            else
+//            {
+//                xl = xn;
+//            }
+//        }
+//        else
+//        {
+//            // narrow our interval using bisection
+//            double xc = (xl + xr)/2;
+//            if (s(xc,omega_in,q_in,c)>1)
+//            {
+//                xr = xc;
+//            }
+//            else
+//            {
+//                xl = xc;
+//            }
+//
+//            // restart newton's at the new midpoint
+//            xn = (xl + xr)/2;
+//            yn = s(xn,omega_in,q_in,c);
+//            ypn = sp(xn,omega_in,q_in,c);
+//        }
+//
+//        // check for convergence
+//        if (xr - xl < 1e-6)
+//        {
+//            return (xl + xr)/2;
+//        }
+//    }
+//    return (xl+xr)/2;
+//}

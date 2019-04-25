@@ -82,6 +82,8 @@ def main():
     if os.path.exists(intra_edge_file):
         with gzip.open(intra_edge_file) as fh:
             intra_edges=pickle.load(fh)
+        inter_edges = adjacency_to_edges(C)
+
     else:
         A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
         intra_edges = adjacency_to_edges(A_knn)

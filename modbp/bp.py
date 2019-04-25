@@ -164,8 +164,8 @@ class BP_Modularity(_object):
     def setVerbose(self, arg2):
         return _bp.BP_Modularity_setVerbose(self, arg2)
 
-    def compute_excess_degree(self):
-        return _bp.BP_Modularity_compute_excess_degree(self)
+    def compute_excess_degree(self, use_strength=False):
+        return _bp.BP_Modularity_compute_excess_degree(self, use_strength)
 
     def compute_bstar(self, omega_in, q_in):
         return _bp.BP_Modularity_compute_bstar(self, omega_in, q_in)
