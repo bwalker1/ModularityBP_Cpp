@@ -188,18 +188,14 @@ long BP_Modularity::run(unsigned long maxIters)
         step();
         
         // monitor changes
-        
-        
         if (verbose)
             printf("Iteration %lu: change %f\n",iter+1,change);
         
         if (!changed)
         {
             converged = true;
-            
             if (verbose)
                 printf("Converged after %lu iterations.\n",iter+1);
-            
             return iter;
         }
     }
@@ -213,6 +209,8 @@ long BP_Modularity::run(unsigned long maxIters)
 void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
 {
     const index_t nn = neighbor_count[i];
+    double c_strength = node_strengths[i];
+
     index_t t = layer_membership[i];
     // iterate over all states
     double Z = 0;
@@ -225,7 +223,6 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             double add;
             if (type==true)
             {
-                // intralayer contribution
                 // intralayer contribution
                 if (weighted)
                 {
@@ -244,7 +241,7 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(nn*theta[t][s] + marginals[q*i+s]);
+        marginals[q*i+s] = exp(c_strength*theta[t][s] + marginals[q*i+s]);
         
         Z += marginals[q*i + s];
         
@@ -732,7 +729,9 @@ void BP_Modularity::initializeTheta() {
     for (index_t i=0;i<n;++i)
     {
         index_t t = layer_membership[i];
-        index_t nn = neighbor_count[i];
+        index_t nn = node_strengths[i];
+//        index_t nn = neighbor_count[i];
+
         for (index_t s = 0; s<q;++s)
         {
             theta[t][s] += nn * marginals[q*i + s];
@@ -812,22 +811,6 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
             }
         }
     }
-   //maybe i'm missing something here but vals is a vector of length q?
-   //wouldn't this just set all of the beliefs to be the same for each node?
-   //see above swap
-    // write out the beliefs
-//    for (index_t i = 0; i < nt; ++i)
-//    {
-//        index_t nn = neighbor_count[i];
-//        for (index_t idx2=0;idx2<nn;++idx2)
-//        {
-//            for (int s=0;s<q;++s)
-//            {
-//                beliefs[beliefs_offsets[i]+nn*s+idx2] = vals[s];
-//            }
-//        }
-//    }
-
 }
 
 double s(double beta, double omega, double q, double c)
