@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import seaborn as sbn
 
 
+"""Set of wrapper classes for easier access to graph information used by multimodbp"""
+
 class RandomGraph(object):
     """
     Wrapper class for igraph with different accessor methods.
@@ -36,23 +38,8 @@ class RandomERGraph(RandomGraph):
 
     def __init__(self,n,p):
         self.graph=ig.Graph.Erdos_Renyi(n=n,p=p,directed=False,loops=False)
+        super(RandomERGraph,self).__init__()
 
-# class RandomERGraph():
-#
-#     def __init__(self,n,p,node_inds=None):
-#         """We pick the number of edges as binomial"""
-#
-#         num_edges=np.random.binomial(n*(n-1),p)
-#         edgelist=set([])
-#         if node_inds is None:
-#             node_inds=np.arange(n)
-#         self.m=num_edges
-#         self.n=n
-#         self.edgelist=np.random.choice(node_inds ,replace=True,size=(2,num_edges))
-#             # edge= (i,j) if i<j else (j,i)
-#             # edgelist.add(edge)
-#
-#         self.edgelist.sort
 
 
 class RandomSBMGraph(RandomGraph):
@@ -88,7 +75,7 @@ class RandomSBMGraph(RandomGraph):
         self.comm_prob_mat=comm_prob_mat
 
 
-            #nodes are assigned on bases of block
+        #nodes are assigned on bases of block
         block=[]
         for i,blk in enumerate(self.block_sizes):
             block+=[i for _ in range(blk)]
@@ -109,7 +96,7 @@ class RandomSBMGraph(RandomGraph):
         Compare partition (labels) of the nodes with the ground truth of the SBM
 
         :param labels: a labeling of the nodes
-        :type labels:
+        :type labels: iterable
         :return: AMI
         :rtype: float
         """
@@ -146,6 +133,10 @@ class RandomSBMGraph(RandomGraph):
         return cnts
 
     def get_observed_cin_cout(self):
+        """
+
+        :return: degree for each of the blocks
+        """
         coms,cnts=np.unique(self.graph.vs['block'],return_counts=True)
 
         ncoms=len(coms)
@@ -154,6 +145,7 @@ class RandomSBMGraph(RandomGraph):
                      np.outer(cnts,cnts)-np.diag(cnts)) #N/(N_A*N_B)
         label2num=dict(zip(coms,range(ncoms)))
         observed_cnts=np.zeros((ncoms,ncoms))
+
         for ei, ej in self.get_edgelist():
             ind1=label2num[self.graph.vs['block'][ei]]
             ind2=label2num[self.graph.vs['block'][ej]]
@@ -165,8 +157,8 @@ class RandomSBMGraph(RandomGraph):
 
     def get_accuracy(self, labels):
         """
-        :param labels:
-        :type labels:
+        :param labels: labels to compare to known blocks
+        :type labels: list
         :return:
         :rtype:
         """
@@ -542,8 +534,19 @@ class MultilayerSBM(MultilayerGraph):
     Subclass of MultilayerGraph to create the dynamic stochastic block model from Ghasemian et al. 2016.
     """
     def __init__(self,n,comm_prob_mat,layers=2,transition_prob=.1,block_sizes0=None,use_gcc=False):
+        """
 
-        self.layer_sbms = []
+        :param n: number of nodes in each layer
+        :param comm_prob_mat: probability of block connections in SBM(this is fixed across all layers)
+        :param layers:  number of layers
+        :param transition_prob: probability of each node changing communities from one layer to next.  \
+        if transistion_prob=0 then community structure is constant across all layers.
+        :param block_sizes0: Initial size of the blocks.  Default is to use even block sizes starting out.\
+        block sizes at subsequent layers are determined by number of nodes that randomly transition between \
+        communities
+        :param use_gcc: use only giant connected component of starting SBM (default is False)
+        """
+        self.layer_sbms = []  #this is list of GenerateGraph.RandomSBMGraph objects.
         self.nlayers=layers
         self.transition_prob=transition_prob
         self.comm_prob_mat=comm_prob_mat
@@ -569,7 +572,7 @@ class MultilayerSBM(MultilayerGraph):
 
         for _ in range(layers-1):
             #create the next sbm from the previous one and add it to the list.
-            self.layer_sbms.append(self.get_next_sbm(self.layer_sbms[-1]))
+            self.layer_sbms.append(self._get_next_sbm(self.layer_sbms[-1]))
         self.interedges=self.get_interlayer_edgelist()
         self.intraedges=self.get_intralayer_edgelist()
         self.layer_vec=self.get_node_layer_vec()
@@ -582,11 +585,11 @@ class MultilayerSBM(MultilayerGraph):
         self.layers=[ lsbm.graph for i,lsbm in enumerate(self.layer_sbms)]
         # self.layers=self.layer_sbms #we only need to store these once.
 
-    def get_next_sbm(self,sbm):
+    def _get_next_sbm(self, sbm):
         """
         Generate new block values for each nodes. And then create a new SBM for the next layer
-        :param sbm:
-        :return:
+        :param sbm: current sbm
+        :return: GenerateGraph.RandomSBMGraph
         """
 
         num_transition=np.random.binomial(self.n,self.transition_prob)
@@ -619,6 +622,10 @@ class MultilayerSBM(MultilayerGraph):
         return nxtsbm
 
     def get_intralayer_adj(self):
+        """
+        Single adjacency matrix representing all layers.
+        :return: np.array of intralayer adjacency representation
+        """
         intra_adj=np.zeros((self.n*self.nlayers,self.n*self.nlayers))
         for i,layer in enumerate(self.layer_sbms):
             offset=self.n*i
@@ -627,6 +634,11 @@ class MultilayerSBM(MultilayerGraph):
         return intra_adj
 
     def get_interlayer_adj(self):
+        """
+        Singer interlayer adjencency matrix created by connecting each node to it's equivalent\
+        node in the next layer.  This is a temporal multiplex topology.
+        :return: np.array of interlayer adjacency representation
+        """
         #TODO this can be changed for different couplings. Right now I do only adjacent layers
         inter_adj=np.zeros((self.n*self.nlayers,self.n*self.nlayers))
         Iden_N=np.identity(self.n)
@@ -644,7 +656,7 @@ class MultilayerSBM(MultilayerGraph):
         Single list of edges giving the multilayer connections.  For this model \
         nodes are multiplex an connected to their neighboring slice identities.
 
-        :return:
+        :return: np.array
         """
 
         interedges=np.zeros((self.n*(self.nlayers-1),2),dtype='int')
@@ -660,7 +672,10 @@ class MultilayerSBM(MultilayerGraph):
         return interedges
 
     def get_node_layer_vec(self):
+        """
 
+        :return: np.array denoting which layer each node is in
+        """
         layers=[]
         for i,net in enumerate(self.layer_sbms):
             layers.extend([i for _ in range(net.n)])
@@ -669,9 +684,9 @@ class MultilayerSBM(MultilayerGraph):
     def get_intralayer_edgelist(self):
         """
         Single list of edges treating the group of single layer SBM's  as a \
-        surpaadjacency format
+        surpra-adjacency format
 
-        :return:
+        :return: np.array
         """
         nedges=np.sum([net.m for net in self.layer_sbms])
         intraedges=np.zeros((nedges,2),dtype='int')

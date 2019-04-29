@@ -373,6 +373,8 @@ void BP_Modularity::step()
                     scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
+//                printf("cscratch: %.3f , c_strength: %.3f, theta[t][s]: %.3f\n",scratch[nn*s+idx],c_strength,theta[t][s]);
+
                 scratch[nn*s+idx] = exp(c_strength*theta[t][s] + scratch[nn*s+idx]);
             }
         }
@@ -388,6 +390,7 @@ void BP_Modularity::step()
             }
             if (compute_bfe)
             {
+//                printf("in loop sum %.3f\n",sum);
                 bfe -= log(sum);
             }
             if (sum > 0)
@@ -419,6 +422,8 @@ void BP_Modularity::step()
             }
         }
     }
+    printf("single bfe %.3f\n",bfe);
+
     if (compute_bfe)
     {
         compute_marginals(true);
@@ -476,6 +481,8 @@ void BP_Modularity::step()
                 bfe -= log(sum)/2;
             }
         }
+        printf("pair bfe %.3f\n",bfe);
+
         //contribution of non-edges (i.e. from the null model)
         for (index_t t=0;t<nt;++t)
         {
@@ -485,10 +492,12 @@ void BP_Modularity::step()
                 double temp2 = theta[t][s];
                 temp += temp2*temp2;
             }
-            bfe += beta/(2*num_edges[t]) * temp;
+            bfe += beta/(4*num_edges[t]) * temp;
         }
         bfe /= (n);
     }
+    printf("theta bfe %.3f\n",bfe);
+
     
     if (!fast_convergence)
     {
@@ -729,13 +738,16 @@ void BP_Modularity::initializeTheta() {
     for (index_t i=0;i<n;++i)
     {
         index_t t = layer_membership[i];
-        index_t nn = node_strengths[i];
+        double nn = node_strengths[i];
 //        index_t nn = neighbor_count[i];
 
         for (index_t s = 0; s<q;++s)
         {
-            theta[t][s] += nn * marginals[q*i + s];
+                theta[t][s] += nn * marginals[q*i + s];
+                printf("theta[t][s] : %.3f, nn:%.3f \n",theta[t][s],nn);
+
         }
+
     }
     for (index_t t = 0; t < nt; ++t)
     {
@@ -743,6 +755,7 @@ void BP_Modularity::initializeTheta() {
         for (index_t s = 0; s<q;++s)
         {
             theta[t][s] *= -(beta*resgamma/(2*num_edges[t]));
+            printf("num_edges[t]: %.3f ,theta[t][s] : %.3f\n",num_edges[t],theta[t][s]);
         }
     }
 }
@@ -879,7 +892,7 @@ double BP_Modularity::compute_bstar(double omega_in, int q_in){
         tot+=neighbor_count[i];
     }
     average_weight/=tot;
-    printf("q_in = %d , c = %.3f , avg_weight= %.3f , omega_in = %.3f ,tot=%.3f \n",q_in,c,average_weight,omega_in,tot);
+//    printf("q_in = %d , c = %.3f , avg_weight= %.3f , omega_in = %.3f ,tot=%.3f \n",q_in,c,average_weight,omega_in,tot);
     double bstar =  (1.0/average_weight)*log(q_in /(sqrt(c)-1) +1) ;
     return bstar;
 

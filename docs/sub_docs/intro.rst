@@ -1,4 +1,4 @@
-.. CHAMP documentation master file, created by
+.. Multilayer Modularity BP documentation master file, created by
    sphinx-quickstart on Tue Jul 11 15:50:43 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -6,6 +6,9 @@
 Background
 ************
 
+We present *multimodbp*, a belief propagation implementation of multilayer modularity for communtiy detection\
+Our tool is a C++ based implentation of the belief propagation algorithm (also called the sum-product or \
+message passing algorithm) wrapped in Python for convenient access and execution.
 
 =================================
 Introduction: Belief Propagation

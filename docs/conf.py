@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# modBP documentation build configuration file, created by
+# CHAMP documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul 11 15:50:43 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -20,6 +20,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../modbp'))
+sys.path.insert(0, os.path.abspath('./sub_docs'))
 
 
 
@@ -54,26 +55,39 @@ if on_rtd:
     # the below only works for Python3.3+
     # from unittest.mock import MagicMock
     # use this for Python<3.3
-    from mock import Mock as MagicMock
+#    from mock import Mock as MagicMock
+
+#    class Mock(MagicMock):
+#        @classmethod
+#        def __getattr__(cls, name):
+#            return Mock()
+    from unittest.mock import MagicMock
 
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
-            return Mock()
-
+            return MagicMock()
     # include the names of your minimal required packages here
-    MOCK_MODULES = ['numpy', 'numpy.random', 'igraph', 'matplotlib.pyplot',
-                    'sklearn.metrics','pandas',
-                    'sklearn']
+    MOCK_MODULES = ['numpy', 'numpy.random', 'igraph', 'louvain', 'matplotlib', 'matplotlib.pyplot',
+                    'matplotlib.cm', 'matplotlib.lines', 'matplotlib.patheffects',
+                    'matplotlib.colors','seaborn','pandas',
+                    'matplotlib.patches',
+                    'matplotlib.path',
+                    'sklearn.metrics',
+                    'sklearn', 'h5py',
+                    'scipy','scipy.sparse','ipython','Cython']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 else:
     html_theme = 'sphinx_rtd_theme'
 
+    sys.path.insert(0,'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages' )
 #Have to specify all modules
 #These are for local mocks.
-autodoc_mock_imports=['numpy', 'numpy.random', 'igraph', 'matplotlib.pyplot',
-                    'sklearn.metrics','pandas',
-                    'sklearn']
+autodoc_mock_imports=['numpy','igraph','louvain', 'matplotlib','h5py','Cython',
+                      'matplotlib.cm','matplotlib.colors','matplotlib.patches','seaborn','pandas',
+                      'matplotlib.path','matplotlib.lines','matplotlib.pyplot','matplotlib.patheffects',
+                      'sklearn.metrics','numpy.random','sklearn','ipython',
+                      'scipy','scipy.sparse','scipy.optimize','scipy.stats']
 
 #
 # import mock
@@ -99,9 +113,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'modBP'
-copyright = u'2018, William Weir and Benjamin Walker'
-author = u'William Weir and Benjamin Walker'
+project = u'MultiModbp'
+copyright = u'2019, William Weir'
+author = u'William Weir'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -185,7 +199,7 @@ todo_include_todos = True
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = u'modBP v1'
+# html_title = u'CHAMP v1'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -206,7 +220,7 @@ todo_include_todos = True
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 
-# html_static_path = ['docs/_static']
+# html_static_path = ['docs/sub_docs']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -286,7 +300,7 @@ todo_include_todos = True
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'modBPdoc'
+htmlhelp_basename = 'MultiModBPdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -312,7 +326,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'modBP.tex', u'modBP Documentation',
+    (master_doc, 'MultiModBP.tex', u'MultiModBP Documentation',
      u'William Weir', 'manual'),
 ]
 
@@ -338,7 +352,7 @@ latex_documents = [
 #
 # latex_appendices = []
 
-# It false, will not define \strong, \code, 	itleref, \crossref ... but only
+# It false, will not define \strong, \code,     itleref, \crossref ... but only
 # \sphinxstrong, ..., \sphinxtitleref, ... To help avoid clash with user added
 # packages.
 #
@@ -354,7 +368,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'modBP', u'modBP Documentation',
+    (master_doc, 'mulitmodbp', u'MultiModBP Documentation',
      [author], 1)
 ]
 
@@ -369,8 +383,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'modBP', u'modBP Documentation',
-     author, 'modBP', 'One line description of project.',
+    (master_doc, 'MultiModBP', u'MultiModBP Documentation',
+     author, 'MultiModBP', 'A multilayer modularity belief propagation tool for community detection in networks.',
      'Miscellaneous'),
 ]
 

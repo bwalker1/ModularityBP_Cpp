@@ -119,7 +119,7 @@ private:
     bool compute_bfe;
 
     // vector containing total number of edges in each layer
-    vector<unsigned long> num_edges;
+    vector<double> num_edges;
 //    vector<double>num_strength; //vector of total strength(weighted degree) each layer
     // sum of num_edges
 

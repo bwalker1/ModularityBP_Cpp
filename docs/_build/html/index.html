@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Multilevel Modularity Belief Propagation &mdash; modBP 1 documentation</title>
+  <title>Multilayer Modularity Belief Propagation (multimodbp) &mdash; MultiModbp 1 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="modBP 1 documentation" href="#"/>
-        <link rel="next" title="Background" href="_static/intro.html"/> 
+    <link rel="top" title="MultiModbp 1 documentation" href="#"/>
+        <link rel="next" title="Background" href="sub_docs/intro.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -55,7 +55,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> modBP
+            <a href="#" class="icon icon-home"> MultiModbp
           
 
           
@@ -90,9 +90,10 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Multilevel Modularity Belief Propagation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="_static/intro.html">Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="_static/generategraph.html">Random Graph Generation Class</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multilayer Modularity Belief Propagation (multimodbp)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/intro.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/generategraph.html">Multilayer Graph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/references.html">References</a></li>
 </ul>
 
             
@@ -107,7 +108,7 @@
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">modBP</a>
+          <a href="#">MultiModbp</a>
         
       </nav>
 
@@ -137,7 +138,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Multilevel Modularity Belief Propagation</li>
+      <li>Multilayer Modularity Belief Propagation (multimodbp)</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -156,42 +157,49 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="multilevel-modularity-belief-propagation">
-<h1>Multilevel Modularity Belief Propagation<a class="headerlink" href="#multilevel-modularity-belief-propagation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="multilayer-modularity-belief-propagation-multimodbp">
+<h1>Multilayer Modularity Belief Propagation (multimodbp)<a class="headerlink" href="#multilayer-modularity-belief-propagation-multimodbp" title="Permalink to this headline">¶</a></h1>
+<p>A belief propagation solution to multilay modularity community detection.</p>
+<div class="figure align-center" style="width: 95%">
+<img alt="_images/modbp_illustration.png" src="_images/modbp_illustration.png" />
+</div>
+<p>We have implemented a belief propagation solution for multilayer modularity in both C++ and Python.  Our implementation allows for both weighted and unweighted single layer networksas well as a variety of multilayer topologies.  The C++ backend provides significant performance increaseand allows for running the algorithm at larger scale networks.  Our method extends the approach of Pan Zhang and Christopher Moore <a class="reference internal" href="#zhang-2014gea" id="id1">[2]</a> and provides a convenient interface with the standard networks analysis library, igraph.</p>
 <div class="section" id="contents">
 <h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Multilevel Modularity Belief Propagation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="_static/intro.html">Background</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="_static/intro.html#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_static/intro.html#modularity">Modularity</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_static/intro.html#multilayer-modularity">Multilayer Modularity</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multilayer Modularity Belief Propagation (multimodbp)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/intro.html">Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/intro.html#introduction-belief-propagation">Introduction: Belief Propagation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/intro.html#modularity">Modularity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/intro.html#multilayer-modularity">Multilayer Modularity</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="_static/generategraph.html">Random Graph Generation Class</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="_static/generategraph.html#graph-classes">Graph Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/generategraph.html">Multilayer Graph Class</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/generategraph.html#multilayer-graph">Multilayer Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/generategraph.html#random-graph-classes">Random Graph Classes</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/references.html">References</a></li>
 </ul>
 </div>
 </div>
 <div class="section" id="download-and-installation">
 <h2>Download and Installation:<a class="headerlink" href="#download-and-installation" title="Permalink to this headline">¶</a></h2>
-<p>The modbp module is hosted on <a class="reference external" href="https://pypi.python.org/pypi/modbp">PyPi</a>.  The easiest way to install is via the pip command:</p>
+<p>The <em>multimodbp</em> module is hosted on <a class="reference external" href="https://pypi.python.org/pypi/modbp">PyPi</a>.  The easiest way to install is via the pip command:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">modbp</span>
 </pre></div>
 </div>
 <p>For installation from source, the latest version of champ can be downloaded from GitHub:</p>
 <blockquote>
-<div><a class="reference external" href="https://github.com/bwalker1/ModularityBP_Cpp">https://github.com/bwalker1/ModularityBP_Cpp</a></div></blockquote>
+<div><a class="reference external" href="https://github.com/bwalker1/ModularityBP_Cpp">Multimodbp Github</a></div></blockquote>
 <p>For basic installation:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>python setup.py install
 </pre></div>
 </div>
 <div class="section" id="dependencies">
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
-<p>Most of the dependencies for modbp are fairly standard tools for data analysis in Python.   They include :</p>
+<p>Most of the dependencies for CHAMP are fairly standard tools for data analysis in Python:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://www.scipy.org/scipylib/download.html">NumPy</a> : Python numerical analysis library.</li>
 <li><a class="reference external" href="http://scikit-learn.org/stable/install.html">sklearn</a> :Machine learning tools for python.</li>
@@ -203,9 +211,20 @@
 </div>
 <div class="section" id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h2>
-<p>Please cite:</p>
-<p id="bibtex-bibliography-index-0"></p>
-<p><a class="reference external" href="_static/champ.bib">bibtex</a></p>
+<p id="bibtex-bibliography-index-0"><table class="docutils citation" frame="void" id="mucha-2010vk" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>Peter&nbsp;J Mucha, Thomas Richardson, Kevin Macon, Mason&nbsp;A Porter, and Jukka-Pekka Onnela. Community structure in time-dependent, multiscale, and multiplex networks. <em>Science</em>, 328(5980):876–878, May 2010.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="zhang-2014gea" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[2]</a></td><td>Pan Zhang and Cristopher Moore. Scalable detection of statistically significant communities and hierarchies, using message passing for modularity. <em>Proceedings of the National Academy of Sciences</em>, 111(51):18144–18149, 2014.</td></tr>
+</tbody>
+</table>
+</p>
+<p>For more details and results see our <a class="reference external" href="http://">manuscript</a></p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
@@ -226,7 +245,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="_static/intro.html" class="btn btn-neutral float-right" title="Background" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="sub_docs/intro.html" class="btn btn-neutral float-right" title="Background" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -236,7 +255,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, William Weir and Benjamin Walker.
+        &copy; Copyright 2019, William Weir.
 
     </p>
   </div>
