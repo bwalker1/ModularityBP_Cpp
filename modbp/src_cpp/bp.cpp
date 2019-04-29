@@ -422,7 +422,6 @@ void BP_Modularity::step()
             }
         }
     }
-    printf("single bfe %.3f\n",bfe);
 
     if (compute_bfe)
     {
@@ -481,7 +480,6 @@ void BP_Modularity::step()
                 bfe -= log(sum)/2;
             }
         }
-        printf("pair bfe %.3f\n",bfe);
 
         //contribution of non-edges (i.e. from the null model)
         for (index_t t=0;t<nt;++t)
@@ -496,7 +494,6 @@ void BP_Modularity::step()
         }
         bfe /= (n);
     }
-    printf("theta bfe %.3f\n",bfe);
 
     
     if (!fast_convergence)
@@ -691,10 +688,7 @@ void BP_Modularity::initializeBeliefs() {
     }
     */
     //compute_marginals();
-    for (index_t i=0;i<n;++i)
-    {
-        //printf("%f\n",marginals[i]);
-    }
+
     
     for (index_t i=0;i<beliefs.size();++i)
     {
@@ -744,8 +738,6 @@ void BP_Modularity::initializeTheta() {
         for (index_t s = 0; s<q;++s)
         {
                 theta[t][s] += nn * marginals[q*i + s];
-                printf("theta[t][s] : %.3f, nn:%.3f \n",theta[t][s],nn);
-
         }
 
     }
@@ -755,7 +747,6 @@ void BP_Modularity::initializeTheta() {
         for (index_t s = 0; s<q;++s)
         {
             theta[t][s] *= -(beta*resgamma/(2*num_edges[t]));
-            printf("num_edges[t]: %.3f ,theta[t][s] : %.3f\n",num_edges[t],theta[t][s]);
         }
     }
 }
