@@ -101,7 +101,7 @@ def main():
                                    intralayer_edges=intra_edges,
                                    layer_vec=layer_vec,directed=False)
 
-    q_max_val = 20
+    q_max_val = 15
     #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
     #omega_vals = [0.0, 1, 2, 4, 8]
 
@@ -110,7 +110,7 @@ def main():
 
 
 
-    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val,3)))
+    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val)))
     for beta in bstars:
         modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
                             omega=omega,resgamma=gamma,reset=False)
