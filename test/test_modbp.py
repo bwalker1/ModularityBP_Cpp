@@ -455,7 +455,39 @@ def test_bethe_free_energy_calc():
     plt.scatter(output.loc[:,'niters'],output.loc[:,'bethe_free_energy'])
     plt.show()
 
+
+def test_spinglass():
+    n = 200
+    c = 5
+    p = (n * c / 2.0) / (n * (n - 1.0) / 2.0)
+    qmax = 2
+    omega = 0
+    gamma = 1
+    er_graph = modbp.RandomERGraph(n=200, p=p)
+    betas = np.linspace(50, 65, 10)
+    mler_graph = modbp.MultilayerGraph(intralayer_edges=er_graph.get_edgelist(),
+                                       layer_vec=[0] * er_graph.n)
+    mbp_obj = modbp.ModularityBP(mlgraph=mler_graph, accuracy_off=True,
+                                 align_communities_across_layers=True)
+
+    for gamma in [1]:
+        for j, beta in enumerate(betas):
+            for i in range(1):
+                mbp_obj.run_modbp(q=qmax, beta=beta, niter=400, omega=omega, resgamma=gamma,
+                                  reset=True)
+
+    rm_df = mbp_obj.retrieval_modularities
+    niters = rm_df.astype(float).groupby(['beta'])['niters'].mean()
+
+    plt.close()
+    f, a = plt.subplots(1, 1, figsize=(5, 5))
+    a = plt.subplot(1, 1, 1)
+    a.plot(niters.index, niters.values)
+    plt.show()
+
 def main():
-    test_qstar()
+    test_spinglass()
+
+
 if __name__=='__main__':
     main()
