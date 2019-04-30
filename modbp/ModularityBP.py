@@ -973,7 +973,6 @@ def calc_modularity(graph,partition,resgamma,omega):
         Chat = np.sum(np.apply_along_axis(func1d=part_equal, arr=inter_edges, axis=1))
     else:
         Chat = 0
-
     if not graph.is_directed:
         Chat = Chat * 2.0
 

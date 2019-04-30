@@ -80,7 +80,7 @@ def main():
     k = 10
     intra_edge_file=os.path.join("senate_knn_{:d}_intra_edgelist.pickle".format(k))
     if os.path.exists(intra_edge_file):
-        with gzip.open(intra_edge_file) as fh:
+        with gzip.open(intra_edge_file,'rb') as fh:
             intra_edges=pickle.load(fh)
         inter_edges = adjacency_to_edges(C)
 
@@ -89,6 +89,11 @@ def main():
         intra_edges = adjacency_to_edges(A_knn)
         #intra_edges = adjacency_to_edges(A)
         inter_edges = adjacency_to_edges(C)
+        with gzip.open(intra_edge_file,'wb') as fh:
+            pickle.dump(intra_edges,fh)
+
+
+
 
 
     # A_gtools=nt.create_gt_graph_from_adj(A_knn)
@@ -108,27 +113,37 @@ def main():
     modbp_obj = modbp.ModularityBP(mlgraph=mgraph,use_effective=True,align_communities_across_layers=True,
                                    accuracy_off=True,comm_vec=parties)
 
-
-
-    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val)))
-    for beta in bstars:
-        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
-                            omega=omega,resgamma=gamma,reset=False)
-
-
-    #create directories to save stuff. 
-    partition_out=os.path.join(senate_out_dir,"zippe_partitions_knn10")
-    rm_df_out=os.path.join(senate_out_dir,"senate_ret_mod_dfs_knn10")
+    partition_out = os.path.join(senate_out_dir, "zippe_partitions_knn10")
+    rm_df_out = os.path.join(senate_out_dir, "senate_ret_mod_dfs_knn10")
     if not os.path.exists(partition_out):
         os.makedirs(partition_out)
     if not os.path.exists(rm_df_out):
         os.makedirs(rm_df_out)
-        
-    with gzip.open(os.path.join(partition_out,"senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma,omega)),'wb') as fh:
-        pickle.dump(modbp_obj.partitions,fh)
 
-    modrm=modbp_obj.retrieval_modularities
-    modrm.to_csv(os.path.join(rm_df_out,"senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma,omega)))
+    partitions_out = os.path.join(partition_out, "senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma, omega))
+    dataframe_outfile = os.path.join(rm_df_out, "senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma, omega))
+
+    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val)))
+    for i,beta in enumerate(bstars):
+        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
+                            omega=omega,resgamma=gamma,reset=False)
+        if i==0:
+            with open(dataframe_outfile, 'w') as fh:
+                modbp_obj.retrieval_modularities.to_csv(fh, header=True)
+            with gzip.open(partitions_out,'w') as fh:
+                pickle.dump(modbp_obj.partitions,fh)
+        else:
+            with open(dataframe_outfile, 'a') as fh:
+                modbp_obj.retrieval_modularities.iloc[[-1], :].to_csv(fh, header=False)
+            #some redudancy here
+            with gzip.open(partitions_out, 'w') as fh:
+                pickle.dump(modbp_obj.partitions, fh)
+
+
+
+
+
+
 
     return 0
 

@@ -336,7 +336,7 @@ class MultilayerGraph(object):
 
 
     def get_layer_edgecounts(self):
-        """m for undirected networks"""
+        """m for each layer"""
         ecounts=[]
         for i in range(self.nlayers):
             if self.is_directed:
@@ -544,7 +544,7 @@ class MultilayerSBM(MultilayerGraph):
         :param block_sizes0: Initial size of the blocks.  Default is to use even block sizes starting out.\
         block sizes at subsequent layers are determined by number of nodes that randomly transition between \
         communities
-        :param use_gcc: use only giant connected component of starting SBM (default is False)
+        :param use_gcc: use only giant connected component of starting SBM (option for single layer only)
         """
         self.layer_sbms = []  #this is list of GenerateGraph.RandomSBMGraph objects.
         self.nlayers=layers
@@ -788,6 +788,6 @@ def generate_planted_partitions_dynamic_sbm(n, epsilon, c, ncoms,nlayers,eta):
     prob_mat=np.identity(ncoms)*(pin-pout)+np.ones((ncoms,ncoms))*pout
 
     dsbm = MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, block_sizes0=nodesperblock,
-                        transition_prob=eta, use_gcc=True)
+                        transition_prob=eta, use_gcc=False)
 
     return dsbm
