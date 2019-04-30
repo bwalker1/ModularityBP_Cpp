@@ -241,34 +241,56 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        marginals[q*i+s] = exp(c_strength*theta[t][s] + marginals[q*i+s]);
+        double temp_inside = c_strength*theta[t][s] + marginals[q*i+s];
+        marginals[q*i+s] = exp(temp_inside);
         
         Z += marginals[q*i + s];
         
         assert(Z > 0);
         assert(!::isnan(Z));
-        
-        if (!(Z > 0 && !::isnan(Z)))
-        {
-            //printf("Z is not correct\n");
-        }
     }
     if (do_bfe_contribution)
     {
         bfe += log(Z);
     }
     // normalize
-    for (index_t s = 0; s < q; ++s)
+    if (!isinf(Z))
     {
-        if (Z > 0)
+        for (index_t s = 0; s < q; ++s)
         {
-            marginals[q*i + s] /= Z;
+            double temp = marginals[q*i + s];
+            if (Z > 0)
+            {
+                marginals[q*i + s] /= Z;
+            }
+            else
+            {
+                marginals[q*i + s] = 1.0/q;
+            }
         }
-        else
+    }
+    else
+    {
+        // count how many large marginals there are
+        int inf_count = 0;
+        for (index_t s = 0; s < q; ++s)
         {
-            marginals[q*i + s] = 1.0/q;
+            if (isinf(marginals[q*i + s]))
+            {
+                ++inf_count;
+            }
         }
-        assert(! ::isnan(marginals[q*i + s]));
+        for (index_t s = 0; s < q; ++s)
+        {
+            if (isinf(marginals[q*i + s]))
+            {
+                marginals[q*i+s] = 1.0/(inf_count);
+            }
+            else
+            {
+                marginals[q*i+s] = 0;
+            }
+        }
     }
 }
 
@@ -374,8 +396,8 @@ void BP_Modularity::step()
                 }
                 // evaluate the rest of the update equation
 //                printf("cscratch: %.3f , c_strength: %.3f, theta[t][s]: %.3f\n",scratch[nn*s+idx],c_strength,theta[t][s]);
-
-                scratch[nn*s+idx] = exp(c_strength*theta[t][s] + scratch[nn*s+idx]);
+                double temp = exp(c_strength*theta[t][s] + scratch[nn*s+idx]);
+                scratch[nn*s+idx] = temp;
             }
         }
         
@@ -718,6 +740,7 @@ void BP_Modularity::initializeTheta() {
         {
             theta[t][s] = beta*resgamma/(q);
             //theta[t][s] = 0;
+
         }
     }
     
@@ -727,6 +750,7 @@ void BP_Modularity::initializeTheta() {
         for (index_t s=0;s<q;++s)
         {
             theta[t][s]=0;
+            
         }
     }
     for (index_t i=0;i<n;++i)
@@ -738,6 +762,7 @@ void BP_Modularity::initializeTheta() {
         for (index_t s = 0; s<q;++s)
         {
                 theta[t][s] += nn * marginals[q*i + s];
+
         }
 
     }
