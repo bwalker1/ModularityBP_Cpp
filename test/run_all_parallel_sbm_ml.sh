@@ -1,4 +1,4 @@
-for gamma in 3
+for gamma in .5 1.0 1.5 3
 do
     for omega in 0 1 2
     do

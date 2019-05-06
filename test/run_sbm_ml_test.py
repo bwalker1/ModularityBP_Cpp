@@ -70,29 +70,38 @@ def main():
             # mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a[1])
             # plt.show()
 
-        # these are the non-trivial ones
-        minidx = mlbp_rm[mlbp_rm['converged'] == True][
-            'retrieval_modularity']  # & ~mlbp_rm['is_trivial'] ]['retrieval_modularity']
-        cind = output.shape[0]
-
-        if minidx.shape[0] == 0:
-            output.loc[cind, ['ep', 'eta', 'resgamma', 'omega','converged']] = [ep, eta, gamma, omega,False]
-            output.loc[cind, ['niters']] = 1000
-            continue
-        minidx = minidx.idxmax()
-
-        output.loc[cind, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-                          'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']] = \
-            mlbp_rm.loc[
-                minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-                         'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
-        output.loc[cind, ['ep', 'eta']] = [ep, eta]
         if trial==0:
             with open(outfile,'w') as fh:
-                output.to_csv(fh,header=True)
+                mlbp_rm.to_csv(fh,header=True)
         else:
             with open(outfile,'a') as fh: #writeout as we go
-                output.iloc[[-1], :].to_csv(fh, header=False)
+                mlbp_rm.to_csv(fh, header=False)
+
+
+
+        # these are the non-trivial ones
+        # minidx = mlbp_rm[mlbp_rm['converged'] == True][
+        #     'retrieval_modularity']  # & ~mlbp_rm['is_trivial'] ]['retrieval_modularity']
+        # cind = output.shape[0]
+
+        # if minidx.shape[0] == 0:
+        #     output.loc[cind, ['ep', 'eta', 'resgamma', 'omega','converged']] = [ep, eta, gamma, omega,False]
+        #     output.loc[cind, ['niters']] = 1000
+        #     continue
+        # minidx = minidx.idxmax()
+
+        # output.loc[cind, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
+        #                   'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']] = \
+        #     mlbp_rm.loc[
+        #         minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
+        #                  'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
+        # output.loc[cind, ['ep', 'eta']] = [ep, eta]
+        # if trial==0:
+        #     with open(outfile,'w') as fh:
+        #         output.to_csv(fh,header=True)
+        # else:
+        #     with open(outfile,'a') as fh: #writeout as we go
+        #         output.iloc[[-1], :].to_csv(fh, header=False)
 
 
     return 0

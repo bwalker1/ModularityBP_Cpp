@@ -335,19 +335,24 @@ class MultilayerGraph(object):
 
 
 
-    def get_layer_edgecounts(self):
+    def get_layer_edgecounts(self,weight=None):
         """m for each layer"""
         ecounts=[]
         for i in range(self.nlayers):
-            if self.is_directed:
-                ecounts.append(np.sum(self.get_intralayer_degrees(i)))
-            else:
-                ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
+            if weight is None:
+                if self.is_directed:
+                    ecounts.append(np.sum(self.get_intralayer_degrees(i)))
+                else:
+                    ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
         return np.array(ecounts)
 
-    def get_intralayer_degrees(self, i=None,weighted=True):
+    def get_intralayer_degrees(self, i=None, weighted=True):
         if i is not None:
-            return np.array(self.layers[i].degree())
+            if weighted and 'weight' in self.layers[i].es.attributes():
+                return np.array(self.layers[i].strength(weights='weight'))
+            else:
+                return np.array(self.layers[i].degree())
+
         else:
             total_degrees=[]
             for i in range(len(self.layers)):
@@ -467,8 +472,18 @@ class MultilayerGraph(object):
 
         :return: (A_sparse,C_sparse) = interlayer adjacency , interlayer adjacency
         """
-        A_sparse=self._to_sparse(self.intralayer_edges)
+        if self.unweighted is True:
+            A_sparse=self._to_sparse(self.intralayer_edges)
+        else:
+            #zip edge weights into representation
+            temp=zip(*self.intralayer_edges)
+            temp=zip(temp[0],temp[1],self.intralayer_weights)
+            A_sparse=self._to_sparse(temp)
+
         C_sparse=self._to_sparse(self.interlayer_edges)
+        if not self.is_directed:
+            A_sparse+=A_sparse.T
+            C_sparse+=C_sparse.T
         return (A_sparse,C_sparse)
 
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):

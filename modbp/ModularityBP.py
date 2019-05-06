@@ -145,8 +145,8 @@ class ModularityBP():
         #Calculate effective group size and get partitions
         #logging.debug('Combining marginals')
         self._get_community_distances(self.nruns) #sets values in method
-        cpartition=self._get_partition(self.nruns,self.use_effective)
-        self.partitions[self.nruns]=cpartition
+        cpartition = self._get_partition(self.nruns, self.use_effective)
+        self.partitions[self.nruns] = cpartition
 
         if self.use_effective:
             q_new = self._merge_communities_bp(self.nruns)
@@ -319,7 +319,7 @@ class ModularityBP():
                                         intra_edgelist=self._intraedgelistpv,
                                       intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
-                                      _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter
+                                      _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter here
                                        omega=omega,transform=False)
 
         return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
@@ -332,6 +332,7 @@ class ModularityBP():
         """
         if nrun is None:
             nrun=self.nruns #get last one
+
         resgamma,omega=self.retrieval_modularities.loc[nrun,['resgamma','omega']]
         cpartition = self.partitions[nrun] #must have already been run
         return calc_modularity(self.graph,partition=cpartition,resgamma=resgamma,omega=omega)
@@ -925,8 +926,11 @@ def _get_avg_entropy(marginal):
 
 def calc_modularity(graph,partition,resgamma,omega):
     """
-
-    :param nrun:
+    Calculate the modularity of graph for given partition, resolution, and omega
+    :param graph: GenerateGraph.MultilayerGraph object
+    :param partition:
+    :param resgamma:
+    :param omega:
     :return:
     """
 
@@ -989,10 +993,11 @@ def calc_modularity(graph,partition,resgamma,omega):
         com_inddict[k] = np.array(val)
 
     Phat = 0
-    degrees = graph.get_intralayer_degrees()  # get all degrees
+
+    degrees = graph.get_intralayer_degrees()  # get degrees/strengths
     for i in range(graph.nlayers):
+        layersum=0
         c_layer_inds = np.where(graph.layer_vec == i)[0]
-        # TODO for weighted network this should be the edge strengths
         for com in allcoms:
             cind = com_inddict[com]
             # get only the inds in this layer
@@ -1002,7 +1007,10 @@ def calc_modularity(graph,partition,resgamma,omega):
                 continue  # contribution is 0
             else:
                 cPmat = np.outer(cdeg, cdeg.T)
-                Phat += (np.sum(cPmat) / (2.0 * graph.intra_edge_counts[i]))
+                layersum += (np.sum(cPmat))
+        layersum /= (2.0 * graph.intra_edge_counts[i])
+        Phat += layersum
 
+    # print("A:{:.2f},P:{:.2f},C:{:.2f}".format(Ahat,Phat,Chat))
     mu= 2.0*graph.totaledgeweight if not graph.is_directed else graph.totaledgeweight
     return (1.0 / mu) * (Ahat - resgamma * Phat + omega * Chat)
