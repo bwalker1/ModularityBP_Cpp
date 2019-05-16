@@ -143,7 +143,7 @@ class RandomSBMGraph(RandomGraph):
 
         totalcnts=np.divide(np.ones((ncoms, ncoms)) * sum(cnts),
                      np.outer(cnts,cnts)-np.diag(cnts)) #N/(N_A*N_B)
-        label2num=dict(zip(coms,range(ncoms)))
+        label2num=dict(list(zip(coms,range(ncoms))))
         observed_cnts=np.zeros((ncoms,ncoms))
 
         for ei, ej in self.get_edgelist():
@@ -246,10 +246,10 @@ class MultilayerGraph(object):
         self.layers=self._create_layer_graphs()
 
 
-    def _prune_intra_edges_directed(self,):
+    def _prune_intra_edges_directed(self):
         eset={}
         edge_inds2rm=[]
-        for i,e in enumerate(self.intralayer_edges): #note that we assume here BOTH ENTRIES will be the same if edges are duplicated
+        for i,e in enumerate(self.intralayer_edges): #note that we assume here BOTH WEIGHTs will be the same if edges are duplicated
             if e[0]<e[1]:
                 eset[(e[0], e[1])] = self._intralayer_weights[i]
             else:
@@ -261,7 +261,7 @@ class MultilayerGraph(object):
             weights.append(val)
 
         edge_weights=sorted(list(zip(edges,weights)),key=lambda x:x[0])
-        edges,weights=zip(*edge_weights)
+        edges,weights=list(zip(*edge_weights))
         self.intralayer_edges=edges
         self.intralayer_weights=weights
 
@@ -335,24 +335,19 @@ class MultilayerGraph(object):
 
 
 
-    def get_layer_edgecounts(self,weight=None):
+    def get_layer_edgecounts(self):
         """m for each layer"""
         ecounts=[]
         for i in range(self.nlayers):
-            if weight is None:
-                if self.is_directed:
-                    ecounts.append(np.sum(self.get_intralayer_degrees(i)))
-                else:
-                    ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
+            if self.is_directed:
+                ecounts.append(np.sum(self.get_intralayer_degrees(i)))
+            else:
+                ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
         return np.array(ecounts)
 
-    def get_intralayer_degrees(self, i=None, weighted=True):
+    def get_intralayer_degrees(self, i=None,weighted=True):
         if i is not None:
-            if weighted and 'weight' in self.layers[i].es.attributes():
-                return np.array(self.layers[i].strength(weights='weight'))
-            else:
-                return np.array(self.layers[i].degree())
-
+            return np.array(self.layers[i].degree())
         else:
             total_degrees=[]
             for i in range(len(self.layers)):
@@ -472,18 +467,8 @@ class MultilayerGraph(object):
 
         :return: (A_sparse,C_sparse) = interlayer adjacency , interlayer adjacency
         """
-        if self.unweighted is True:
-            A_sparse=self._to_sparse(self.intralayer_edges)
-        else:
-            #zip edge weights into representation
-            temp=zip(*self.intralayer_edges)
-            temp=zip(temp[0],temp[1],self.intralayer_weights)
-            A_sparse=self._to_sparse(temp)
-
+        A_sparse=self._to_sparse(self.intralayer_edges)
         C_sparse=self._to_sparse(self.interlayer_edges)
-        if not self.is_directed:
-            A_sparse+=A_sparse.T
-            C_sparse+=C_sparse.T
         return (A_sparse,C_sparse)
 
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):
