@@ -17,7 +17,6 @@
 #include <unordered_set>
 #include <algorithm>
 using namespace std;
-using std::isinf;
 
 
 double truncate(const double in, const int q)
@@ -255,7 +254,7 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         bfe += log(Z);
     }
     // normalize
-    if (!isinf(Z))
+    if (!std::isinf(Z))
     {
         for (index_t s = 0; s < q; ++s)
         {
@@ -276,14 +275,14 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         int inf_count = 0;
         for (index_t s = 0; s < q; ++s)
         {
-            if (isinf(marginals[q*i + s]))
+            if (std::isinf(marginals[q*i + s]))
             {
                 ++inf_count;
             }
         }
         for (index_t s = 0; s < q; ++s)
         {
-            if (isinf(marginals[q*i + s]))
+            if (std::isinf(marginals[q*i + s]))
             {
                 marginals[q*i+s] = 1.0/(inf_count);
             }
