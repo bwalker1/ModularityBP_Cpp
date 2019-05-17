@@ -46,7 +46,7 @@ def adjacency_to_edges(A,directed=False):
     nnzvals = np.array(A[nnz_inds])
     if len(nnzvals.shape) > 1:
         nnzvals = nnzvals[0]  # handle scipy sparse types
-    return zip(nnz_inds[0], nnz_inds[1], nnzvals)
+    return list(zip(nnz_inds[0], nnz_inds[1], nnzvals))
 
 def main():
     gamma=float(sys.argv[1])

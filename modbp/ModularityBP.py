@@ -262,7 +262,7 @@ class ModularityBP():
     def _get_edgelistpv(self,inter=False):
         ''' Return PairVector swig wrapper version of edgelist'''
         if inter:
-            try: #fonud that type numpy.int
+            try: #found that type numpy.int doesn't work
                 _edgelistpv = PairVector(self.interlayer_edges) #cpp wrapper for list
             except NotImplementedError:
                 self.interlayer_edges=[ (int(e[0]),int(e[1])) for e in self.interlayer_edges]
@@ -993,17 +993,16 @@ def calc_modularity(graph,partition,resgamma,omega):
         com_inddict[k] = np.array(val)
 
     Phat = 0
-
-    degrees = graph.get_intralayer_degrees()  # get degrees/strengths
+    degrees = graph.get_intralayer_degrees()  # get all layers degrees/strengths
     for i in range(graph.nlayers):
         layersum=0
         c_layer_inds = np.where(graph.layer_vec == i)[0]
         for com in allcoms:
             cind = com_inddict[com]
             # get only the inds in this layer
-            cind = cind[np.isin(cind, c_layer_inds)]
-            cdeg = degrees[cind]  #
-            if cind.shape[0] == 1:
+            cind_com = cind[np.where(np.isin(cind, c_layer_inds))[0]]
+            cdeg = degrees[cind_com]  #
+            if cind_com.shape[0] == 1:
                 continue  # contribution is 0
             else:
                 cPmat = np.outer(cdeg, cdeg.T)

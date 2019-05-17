@@ -216,8 +216,8 @@ class MultilayerGraph(object):
             self._intralayer_weights = [1.0 for _ in range(len(self.intralayer_edges))]
 
         if not self.is_directed:
-            self._prune_intra_edges_directed()  # make sure each edge is unique
-
+            self._prune_intra_edges_for_undirected()  # make sure each edge is unique
+            self._prune_inter_edges_for_undirected()
 
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)
@@ -246,9 +246,8 @@ class MultilayerGraph(object):
         self.layers=self._create_layer_graphs()
 
 
-    def _prune_intra_edges_directed(self):
+    def _prune_intra_edges_for_undirected(self):
         eset={}
-        edge_inds2rm=[]
         for i,e in enumerate(self.intralayer_edges): #note that we assume here BOTH WEIGHTs will be the same if edges are duplicated
             if e[0]<e[1]:
                 eset[(e[0], e[1])] = self._intralayer_weights[i]
@@ -264,6 +263,18 @@ class MultilayerGraph(object):
         edges,weights=list(zip(*edge_weights))
         self.intralayer_edges=edges
         self.intralayer_weights=weights
+
+    def _prune_inter_edges_for_undirected(self):
+        #interlayer edges aren't weighted.  We just remove duplicated edges
+        eset=set([])
+        for i, e in enumerate(self.interlayer_edges):
+            if e[0] < e[1]:
+                eset.add((e[0], e[1]))
+            else:
+                eset.add((e[1], e[0]))
+        eset=sorted(list(eset), key= lambda x:x[0])
+        self.interlayer_edges=eset
+
 
 
 
@@ -343,11 +354,15 @@ class MultilayerGraph(object):
                 ecounts.append(np.sum(self.get_intralayer_degrees(i)))
             else:
                 ecounts.append(np.sum(self.get_intralayer_degrees(i))/2.0)
+
         return np.array(ecounts)
 
     def get_intralayer_degrees(self, i=None,weighted=True):
         if i is not None:
-            return np.array(self.layers[i].degree())
+            if weighted and 'weight' in self.layers[i].es.attributes():
+                return np.array(self.layers[i].strength(weights='weight'))
+            else:
+                return np.array(self.layers[i].degree())
         else:
             total_degrees=[]
             for i in range(len(self.layers)):
@@ -451,15 +466,22 @@ class MultilayerGraph(object):
                 la_amis.append( (len(cinds)/(1.0*self.N))*skm.accuracy_score(y_true=ctrue,y_pred=clabs))
         return np.sum(la_amis)
 
-    def _to_sparse(self,edgelist):
-        edgelist=np.array(edgelist)
-        if edgelist.shape[1]>2 : #assume data is 3rd
-            data=edgelist[:,2]
+    def _to_sparse(self,intra=True):
+        if intra:
+            edgelist=np.array(self.intralayer_edges)
+            data=self.intralayer_weights
         else:
-            data=np.array([1.0 for _ in range(edgelist.shape[0])])
+            edgelist=np.array(self.interlayer_edges)
+            data=self.interlayer_weights
+
+        # if edgelist.shape[1]>2 : #assume data is 3rd
+        #     data=edgelist[:,2]
+        # else:
+        #     data=np.array([1.0 for _ in range(edgelist.shape[0])])
         row_ind=edgelist[:,0]
         col_ind=edgelist[:,1]
         N=self.N
+
         return scispa.csr_matrix((data,(row_ind,col_ind)),shape=(N,N),dtype=float)
 
     def to_scipy_csr(self):
@@ -467,9 +489,11 @@ class MultilayerGraph(object):
 
         :return: (A_sparse,C_sparse) = interlayer adjacency , interlayer adjacency
         """
-        A_sparse=self._to_sparse(self.intralayer_edges)
-        C_sparse=self._to_sparse(self.interlayer_edges)
+
+        A_sparse=self._to_sparse()
+        C_sparse=self._to_sparse(intra=False)
         return (A_sparse,C_sparse)
+
 
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):
         """
