@@ -12,8 +12,9 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
-#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+# clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir = "/home/wweir/Modularity_BP_proj/ModularityBP_Cpp" #lccc
+# clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
@@ -45,7 +46,7 @@ def main():
                            "sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_omega{:.2f}_gamma{:.2f}.csv".format(n, q, nlayers,
                                                                                                          eta, ep, omega,
                                                                                                          gamma))
-
+    print(outfile)
     qmax = 2 * q
     #qmax = q
     for trial in range(ntrials):
@@ -55,53 +56,25 @@ def main():
 
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
-        # mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega)
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(2, qmax+1)]
-        # betas = np.linspace(bstars[0], bstars[-1], 3*(qmax-2))
-        #betas=[mlbp.get_bstar(q,omega)]
+
         betas=bstars
-        for beta in betas:
+        for j,beta in enumerate(betas):
             mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
-            # print(mlbp_rm.loc[mlbp_rm.shape[0]-1,'AMI'])
-            # plt.close()
-            # f,a=plt.subplots(1,2)
-            # mlbp.plot_communities(ax=a[0])
-            # mlbp.plot_communities(ind=mlbp_rm.shape[0]-1,ax=a[1])
-            # plt.show()
 
-        if trial==0:
-            with open(outfile,'w') as fh:
-                mlbp_rm.to_csv(fh,header=True)
-        else:
-            with open(outfile,'a') as fh: #writeout as we go
-                mlbp_rm.to_csv(fh, header=False)
-
-
-
-        # these are the non-trivial ones
-        # minidx = mlbp_rm[mlbp_rm['converged'] == True][
-        #     'retrieval_modularity']  # & ~mlbp_rm['is_trivial'] ]['retrieval_modularity']
-        # cind = output.shape[0]
-
-        # if minidx.shape[0] == 0:
-        #     output.loc[cind, ['ep', 'eta', 'resgamma', 'omega','converged']] = [ep, eta, gamma, omega,False]
-        #     output.loc[cind, ['niters']] = 1000
-        #     continue
-        # minidx = minidx.idxmax()
-
-        # output.loc[cind, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-        #                   'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']] = \
-        #     mlbp_rm.loc[
-        #         minidx, ['beta', 'resgamma', 'omega', 'niters', 'AMI', 'AMI_layer_avg', 'retrieval_modularity',
-        #                  'bethe_free_energy', 'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged']]
-        # output.loc[cind, ['ep', 'eta']] = [ep, eta]
-        # if trial==0:
-        #     with open(outfile,'w') as fh:
-        #         output.to_csv(fh,header=True)
-        # else:
-        #     with open(outfile,'a') as fh: #writeout as we go
-        #         output.iloc[[-1], :].to_csv(fh, header=False)
+            mlbp_rm['trial']=trial
+            mlbp_rm['ep'] = ep
+            mlbp_rm['eta'] = eta
+            mlbp_rm['n'] = n
+            mlbp_rm['q_true'] = q
+            #append as we complete beta of each trial
+            if trial == 0 and j==0:
+                with open(outfile, 'w') as fh:
+                    mlbp_rm.to_csv(fh, header=True)
+            else:
+                with open(outfile, 'a') as fh:  # writeout as we go
+                    mlbp_rm.iloc[[-1], :].to_csv(fh, header=False)
 
 
     return 0

@@ -433,7 +433,7 @@ class MultilayerGraph(object):
                 cdict=dict(zip(vals,perm))
                 mappedlabels=list(map(lambda x : cdict[x],labels))
                 acc=skm.accuracy_score(y_pred=mappedlabels,y_true=self.comm_vec,normalize=False)
-                acc=(acc-self.N/ncoms)/(self.N-self.n/ncoms)
+                acc=(acc-self.N/ncoms)/(self.N-self.N/ncoms)
                 all_acc.append(acc)
             return np.max(all_acc) #return value with highest accuracy
         else:
