@@ -12,8 +12,8 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-# clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
-clusterdir = "/home/wweir/Modularity_BP_proj/ModularityBP_Cpp" #lccc
+clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+# clusterdir = "/home/wweir/Modularity_BP_proj/ModularityBP_Cpp" #lccc
 # clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
