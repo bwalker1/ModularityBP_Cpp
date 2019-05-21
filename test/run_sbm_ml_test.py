@@ -31,12 +31,7 @@ def main():
     omega = float(sys.argv[8])
     gamma = float(sys.argv[9])
     nblocks = q
-    pin = c / (1.0 + ep * (q - 1.0)) / (n * 1.0 / q)
-    pout = c / (1 + (q - 1.0) / ep) / (n * 1.0 / q)
-    prob_mat = np.identity(nblocks) * pin + (np.ones((nblocks, nblocks)) - np.identity(nblocks)) * pout
-    output = pd.DataFrame(columns=['ep', 'eta', 'beta', 'resgamma', 'omega', 'niters',
-                                   'AMI', 'AMI_layer_avg', 'retrieval_modularity', 'bethe_free_energy',
-                                   'Accuracy', 'Accuracy_layer_avg', 'qstar', 'num_coms', 'is_trivial','converged'])
+
 
 
     finoutdir = os.path.join(clusterdir, 'test/modbpdata/SBM_test_data_n{:}_q{:d}_nt{:}'.format(n, q, ntrials))
@@ -48,12 +43,9 @@ def main():
                                                                                                          gamma))
     print(outfile)
     qmax = 2 * q
-    #qmax = q
     for trial in range(ntrials):
-        ml_sbm = modbp.MultilayerSBM(n, comm_prob_mat=prob_mat, layers=nlayers, transition_prob=eta)
-        mgraph = modbp.MultilayerGraph(ml_sbm.intraedges, ml_sbm.layer_vec, ml_sbm.interedges,
-                                       comm_vec=ml_sbm.get_all_layers_block())
-
+        mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,
+                                                             eta=eta,nlayers=nlayers)
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(2, qmax+1)]
