@@ -299,7 +299,7 @@ class ModularityBP():
         if use_effective: #map the marginals to very close ones.
             groupmap=self.marginal_index_to_close_marginals[ind]
             # We use the effective communities to map
-            parts=np.array( map(lambda x: self.marginal_to_comm_number[ind][x], parts))
+            parts=np.array( [ self.marginal_to_comm_number[ind][x] for x in parts])
             return parts
 
         else:
@@ -476,11 +476,9 @@ class ModularityBP():
             for e in interedges:
                 ei=e[0]
                 ej=e[1]
-                try:
-                    if partition[ei] != partition[ej]:
-                        num_switched += 1
-                except:
-                    print(ei,ej,partition)
+                if partition[ei] != partition[ej]:
+                    num_switched += 1
+
             if percent:
                 num_switched /= float(len(interedges))
             return num_switched
@@ -729,8 +727,8 @@ class ModularityBP():
 
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
-        colcoms=map(lambda x : curcoms[x],col_ind)
-        rwcoms=map(lambda x : prevcoms[x],row_ind)
+        colcoms= list(map(lambda x : curcoms[x],col_ind))
+        rwcoms= list(map(lambda x : prevcoms[x],row_ind))
         com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
 
         #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
@@ -803,7 +801,7 @@ class ModularityBP():
 
 
         self.partitions[ind][lay_inds]=\
-            map(lambda x : curpermutation[x], self.partitions[ind][lay_inds])
+            list(map(lambda x : curpermutation[x], self.partitions[ind][lay_inds]))
 
         #also apply map to the final permutation dictionary
         #No Communities should be merged or destroyed in this mapping
@@ -838,7 +836,7 @@ class ModularityBP():
 
             currow = range(numcoms)
             #use the final mapping dictionary to map each of the communities in this layer
-            currow = map ( lambda  x : self._permutation_vectors[ind][layer][x],currow)
+            currow = list(map ( lambda  x : self._permutation_vectors[ind][layer][x],currow))
             outarray[i,:]=currow
 
         return outarray
