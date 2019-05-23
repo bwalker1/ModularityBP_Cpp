@@ -476,8 +476,11 @@ class ModularityBP():
             for e in interedges:
                 ei=e[0]
                 ej=e[1]
-                if partition[ei] != partition[ej]:
-                    num_switched += 1
+                try:
+                    if partition[ei] != partition[ej]:
+                        num_switched += 1
+                except:
+                    print(ei,ej,partition)
             if percent:
                 num_switched /= float(len(interedges))
             return num_switched
