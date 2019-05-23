@@ -844,7 +844,9 @@ class ModularityBP():
         :param ind:
         :return:
         """
-        merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
+        #type cast to int
+        merge_vec=IntArray([int(x) for x in self._groupmap_to_permutation_vector(ind).astype(int)])
+        # merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
         self._bpmod.merge_communities(merge_vec)
         return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
