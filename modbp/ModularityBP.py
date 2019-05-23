@@ -264,13 +264,13 @@ class ModularityBP():
         if inter:
             try: #found that type numpy.int doesn't work
                 _edgelistpv = PairVector(self.interlayer_edges) #cpp wrapper for list
-            except NotImplementedError:
+            except:
                 self.interlayer_edges=[ (int(e[0]),int(e[1])) for e in self.interlayer_edges]
                 _edgelistpv = PairVector(self.interlayer_edges)
         else:
             try:
                 _edgelistpv = PairVector(self.intralayer_edges)
-            except NotImplementedError:
+            except:
                 self.intralayer_edges = [(int(e[0]), int(e[1])) for e in self.intralayer_edges]
                 _edgelistpv = PairVector(self.intralayer_edges)
 
