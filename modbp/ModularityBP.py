@@ -418,7 +418,7 @@ class ModularityBP():
         """
         revgroupmap=self.marginal_to_comm_number[ind]
 
-        outarray=np.arange(np.max(revgroupmap.keys())+1)
+        outarray=np.arange(np.max(list(revgroupmap.keys()))+1)
 
         for k,val in revgroupmap.items():
             outarray[k]=val
@@ -677,7 +677,7 @@ class ModularityBP():
         prev_layer = layers[np.where(layers == layer)[0][0] - 1]
         prevind = np.where(self.layer_vec == prev_layer)[0]
         cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
-        prev_inds=prev2cur_inds.keys()
+        prev_inds=list(prev2cur_inds.keys())
 
         curpart = self.partitions[ind][cind]
         prevpart = self.partitions[ind][prevind]
@@ -784,7 +784,7 @@ class ModularityBP():
         curpermutation={k:v for k,v in permutation.items()}
 
         #ensure that things don't get map to that aren't mapped so some other community
-        comsremain=set(list(curcoms)+permutation.keys()).difference(permutation.values())
+        comsremain=set(list(curcoms)+list(permutation.keys())).difference(permutation.values())
         coms2match=set(curcoms).difference(curpermutation.keys()) #communities that need to be matched
 
         for com in comsremain.intersection(coms2match) : # these map to themselve
