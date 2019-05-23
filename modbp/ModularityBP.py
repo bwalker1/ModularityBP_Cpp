@@ -471,9 +471,11 @@ class ModularityBP():
             # these are the identity connection across layers
             # we check for which identities switch
             prev_layer=layers[np.where(layers == layer)[0][0] - 1]
-            interedges = self.interedgesbylayers[(layer, prev_layer)] #use previous layer
+            interedges = self.graph.interedgesbylayers[(layer, prev_layer)] #use previous layer
             num_switched = 0
-            for ei, ej in interedges:
+            for e in interedges:
+                ei=e[0]
+                ej=e[1]
                 if partition[ei] != partition[ej]:
                     num_switched += 1
             if percent:
