@@ -496,7 +496,7 @@ class ModularityBP():
         for i,layer in enumerate(layers):
             lay_inds=np.where(self.layer_vec==layer)[0]
             #all the possible community labels
-            partvals=np.unique(self.marginal_to_comm_number[ind].values())
+            partvals=np.unique(list(self.marginal_to_comm_number[ind].values()))
             #map to itself
             final_permutation_dict.append(dict(zip(partvals,partvals)))
         return final_permutation_dict
@@ -732,8 +732,8 @@ class ModularityBP():
         com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
 
         #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
-        coms_remaining=set(curcoms).difference(com_map_dict.values())
-        comsnotmapped=set(curcoms).difference(com_map_dict.keys())
+        coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
+        comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
         #things that are in both get mapped to themselves first
         for com in coms_remaining.intersection(comsnotmapped):
             com_map_dict[com]=com
@@ -827,7 +827,7 @@ class ModularityBP():
         """
         layers=self.layers_unique
         N=len(self.layers_unique)
-        M=len(np.unique(self.marginal_to_comm_number[ind].values()))
+        M=len(np.unique(list(self.marginal_to_comm_number[ind].values())))
         outarray=np.zeros((N,M)) #layers by #communites (after combining)
 
         numcoms=len(set(self.marginal_to_comm_number[ind].values()))
@@ -861,7 +861,9 @@ class ModularityBP():
         :returns: permutes the beliefs or marginals
         """
         perm_vec_c=self._create_all_layers_permuation_vector(ind).astype(int)
-        perm_vec_c=IntMatrix(perm_vec_c)
+        # type cast each to int
+        perm_vec_c=IntMatrix([[int(x) for x in y] for y in perm_vec_c])
+
         self._bpmod.permute_beliefs(perm_vec_c)
 
 
