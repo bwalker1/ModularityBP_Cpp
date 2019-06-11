@@ -21,7 +21,7 @@ options=dict( name='modbp',
                  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
                  "Topic :: Scientific/Engineering :: Information Analysis",
                  ],
-    install_requires=[]
+    install_requires=['igraph','numpy','matplotlib','scipy','scikit-learn','seaborn','pandas']
 )
 #    install_requires=['pyhull','igraph','louvain','matplotlib','numpy',]
 

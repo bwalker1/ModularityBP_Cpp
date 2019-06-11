@@ -127,7 +127,7 @@ class ModularityBP():
 
 
         if self._align_communities_across_layers:
-            iters_per_run=niter/2 #somewhat arbitrary divisor
+            iters_per_run=niter//2 #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
         #logging.debug('time: {:.4f}'.format(time()-t))
@@ -264,13 +264,13 @@ class ModularityBP():
         if inter:
             try: #found that type numpy.int doesn't work
                 _edgelistpv = PairVector(self.interlayer_edges) #cpp wrapper for list
-            except NotImplementedError:
+            except:
                 self.interlayer_edges=[ (int(e[0]),int(e[1])) for e in self.interlayer_edges]
                 _edgelistpv = PairVector(self.interlayer_edges)
         else:
             try:
                 _edgelistpv = PairVector(self.intralayer_edges)
-            except NotImplementedError:
+            except:
                 self.intralayer_edges = [(int(e[0]), int(e[1])) for e in self.intralayer_edges]
                 _edgelistpv = PairVector(self.intralayer_edges)
 
@@ -299,7 +299,7 @@ class ModularityBP():
         if use_effective: #map the marginals to very close ones.
             groupmap=self.marginal_index_to_close_marginals[ind]
             # We use the effective communities to map
-            parts=np.array( map(lambda x: self.marginal_to_comm_number[ind][x], parts))
+            parts=np.array( [ self.marginal_to_comm_number[ind][x] for x in parts])
             return parts
 
         else:
@@ -418,7 +418,7 @@ class ModularityBP():
         """
         revgroupmap=self.marginal_to_comm_number[ind]
 
-        outarray=np.arange(np.max(revgroupmap.keys())+1)
+        outarray=np.arange(np.max(list(revgroupmap.keys()))+1)
 
         for k,val in revgroupmap.items():
             outarray[k]=val
@@ -473,9 +473,12 @@ class ModularityBP():
             prev_layer=layers[np.where(layers == layer)[0][0] - 1]
             interedges = self.graph.interedgesbylayers[(layer, prev_layer)] #use previous layer
             num_switched = 0
-            for ei, ej in interedges:
+            for e in interedges:
+                ei=e[0]
+                ej=e[1]
                 if partition[ei] != partition[ej]:
                     num_switched += 1
+
             if percent:
                 num_switched /= float(len(interedges))
             return num_switched
@@ -493,7 +496,7 @@ class ModularityBP():
         for i,layer in enumerate(layers):
             lay_inds=np.where(self.layer_vec==layer)[0]
             #all the possible community labels
-            partvals=np.unique(self.marginal_to_comm_number[ind].values())
+            partvals=np.unique(list(self.marginal_to_comm_number[ind].values()))
             #map to itself
             final_permutation_dict.append(dict(zip(partvals,partvals)))
         return final_permutation_dict
@@ -677,7 +680,7 @@ class ModularityBP():
         prev_layer = layers[np.where(layers == layer)[0][0] - 1]
         prevind = np.where(self.layer_vec == prev_layer)[0]
         cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
-        prev_inds=prev2cur_inds.keys()
+        prev_inds=list(prev2cur_inds.keys())
 
         curpart = self.partitions[ind][cind]
         prevpart = self.partitions[ind][prevind]
@@ -724,13 +727,13 @@ class ModularityBP():
 
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
-        colcoms=map(lambda x : curcoms[x],col_ind)
-        rwcoms=map(lambda x : prevcoms[x],row_ind)
+        colcoms= list(map(lambda x : curcoms[x],col_ind))
+        rwcoms= list(map(lambda x : prevcoms[x],row_ind))
         com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
 
         #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
-        coms_remaining=set(curcoms).difference(com_map_dict.values())
-        comsnotmapped=set(curcoms).difference(com_map_dict.keys())
+        coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
+        comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
         #things that are in both get mapped to themselves first
         for com in coms_remaining.intersection(comsnotmapped):
             com_map_dict[com]=com
@@ -784,7 +787,7 @@ class ModularityBP():
         curpermutation={k:v for k,v in permutation.items()}
 
         #ensure that things don't get map to that aren't mapped so some other community
-        comsremain=set(list(curcoms)+permutation.keys()).difference(permutation.values())
+        comsremain=set(list(curcoms)+list(permutation.keys())).difference(permutation.values())
         coms2match=set(curcoms).difference(curpermutation.keys()) #communities that need to be matched
 
         for com in comsremain.intersection(coms2match) : # these map to themselve
@@ -798,7 +801,7 @@ class ModularityBP():
 
 
         self.partitions[ind][lay_inds]=\
-            map(lambda x : curpermutation[x], self.partitions[ind][lay_inds])
+            list(map(lambda x : curpermutation[x], self.partitions[ind][lay_inds]))
 
         #also apply map to the final permutation dictionary
         #No Communities should be merged or destroyed in this mapping
@@ -824,7 +827,7 @@ class ModularityBP():
         """
         layers=self.layers_unique
         N=len(self.layers_unique)
-        M=len(np.unique(self.marginal_to_comm_number[ind].values()))
+        M=len(np.unique(list(self.marginal_to_comm_number[ind].values())))
         outarray=np.zeros((N,M)) #layers by #communites (after combining)
 
         numcoms=len(set(self.marginal_to_comm_number[ind].values()))
@@ -833,7 +836,7 @@ class ModularityBP():
 
             currow = range(numcoms)
             #use the final mapping dictionary to map each of the communities in this layer
-            currow = map ( lambda  x : self._permutation_vectors[ind][layer][x],currow)
+            currow = list(map ( lambda  x : self._permutation_vectors[ind][layer][x],currow))
             outarray[i,:]=currow
 
         return outarray
@@ -844,7 +847,9 @@ class ModularityBP():
         :param ind:
         :return:
         """
-        merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
+        #type cast to int
+        merge_vec=IntArray([int(x) for x in self._groupmap_to_permutation_vector(ind).astype(int)])
+        # merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
         self._bpmod.merge_communities(merge_vec)
         return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
@@ -856,7 +861,9 @@ class ModularityBP():
         :returns: permutes the beliefs or marginals
         """
         perm_vec_c=self._create_all_layers_permuation_vector(ind).astype(int)
-        perm_vec_c=IntMatrix(perm_vec_c)
+        # type cast each to int
+        perm_vec_c=IntMatrix([[int(x) for x in y] for y in perm_vec_c])
+
         self._bpmod.permute_beliefs(perm_vec_c)
 
 
