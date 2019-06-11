@@ -44,7 +44,7 @@ def main():
     print(outfile)
     qmax = 2 * q
     for trial in range(ntrials):
-        mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,
+        mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,c=c,ncoms=q,epsilon=ep,
                                                              eta=eta,nlayers=nlayers)
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
@@ -52,7 +52,7 @@ def main():
 
         betas=bstars
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=4000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
             mlbp_rm['trial']=trial
@@ -61,7 +61,7 @@ def main():
             mlbp_rm['n'] = n
             mlbp_rm['q_true'] = q
             #append as we complete beta of each trial
-            if trial == 0 and j==0:
+            if False and ( trial == 0 and j==0):
                 with open(outfile, 'w') as fh:
                     mlbp_rm.to_csv(fh, header=True)
             else:
