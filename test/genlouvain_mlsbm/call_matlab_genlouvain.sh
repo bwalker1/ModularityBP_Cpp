@@ -9,6 +9,7 @@
 matlab_exec=/Applications/MATLAB_R2016b.app/bin/matlab
 homedir='/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp'
 
+
 matlab_func_file="${homeddir}/test/genlouvain_mlsbm/run_gen_louvain.m"
 export MATLABPATH="${homedir}/test/genlouvain_mlsbm/"
 export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-master"

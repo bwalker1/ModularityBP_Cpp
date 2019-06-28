@@ -312,6 +312,8 @@ void BP_Modularity::step()
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
         index_t i;
+        //We update nodes in a random order every other step.
+
         if (iter%2 == 0)
         {
             i = order[node_idx];
