@@ -186,7 +186,7 @@ class MultilayerGraph(object):
         """
 
         self.N=len(layer_vec)
-        self.layer_vec=np.array(layer_vec)
+        self.layer_vec=np.array([int(x) for x in layer_vec]) #NEEDS to be integer valued.
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
         self.unweighted=True
@@ -514,7 +514,7 @@ class MultilayerGraph(object):
         def get_partition_matrix(partition, layer_vec):
             # assumes partiton in same ordering for each layer
             vals = np.unique(layer_vec)
-            nodeperlayer = len(layer_vec) / len(vals)
+            nodeperlayer = len(layer_vec) // len(vals)
             com_matrix = np.zeros((nodeperlayer, len(vals)))
             for i, val in enumerate(vals):
                 cind = np.where(layer_vec == val)[0]

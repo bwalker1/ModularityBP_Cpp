@@ -44,7 +44,7 @@ def main():
     print(outfile)
     qmax = 2 * q
     for trial in range(ntrials):
-        mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,c=c,ncoms=q,epsilon=ep,
+        mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,c=c,
                                                              eta=eta,nlayers=nlayers)
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
@@ -52,6 +52,7 @@ def main():
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
+
         for j,beta in enumerate(betas):
             mlbp.run_modbp(beta=beta, niter=8000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities

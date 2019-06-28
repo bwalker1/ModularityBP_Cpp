@@ -8,7 +8,13 @@ function call_gen_louvain(input_file,output_file,gamma,coupling)
     twom=sum(k);
     P=k*k'/twom;
     B=A-gamma*P+coupling*C;
-    tic,[S,Q]=genlouvain(B,10000,0);toc;
+    rng('shuffle');
+    if exist('S0','var')
+          tic,[S,Q]=genlouvain(B,20000,0,1,'moverandw',S0);toc;
+    else
+          tic,[S,Q]=genlouvain(B,20000,0,1,'moverandw');toc;
+    end
+
     save(output_file,'S');
-    0
+   
     

@@ -312,6 +312,8 @@ void BP_Modularity::step()
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
         index_t i;
+        //We update nodes in a random order every other step.
+
         if (iter%2 == 0)
         {
             i = order[node_idx];
@@ -493,7 +495,7 @@ void BP_Modularity::step()
                         // belief from target to source
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
                         // ternary operator for delta_st (Kronecker delta function)
-                  
+
                         sum += (s==t?(scaleHere+1):1)*psi1*psi2;
 
                     }
@@ -514,7 +516,7 @@ void BP_Modularity::step()
             }
             bfe += beta/(4*num_edges[t]) * temp;
         }
-        bfe /= (n);
+        bfe /= (-1*beta*n);
     }
 
     
