@@ -217,7 +217,7 @@ def main():
             # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'niters'])
 
 
-            print(beta)
+            #print(beta)
 
             # for debugging
             # plt.close()
