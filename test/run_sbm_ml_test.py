@@ -48,14 +48,13 @@ def main():
                                                              eta=eta,nlayers=nlayers)
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
 
-        bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(2, qmax+1)]
+        bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(1, qmax+1)]
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
-        # betas=np.linspace(.01,bstars[-1],len(bstars)*4)
 
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=4000, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=8000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
             mlbp_rm['trial']=trial
