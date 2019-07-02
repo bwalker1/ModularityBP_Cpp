@@ -1,12 +1,15 @@
 function call_gen_louvain(input_file,output_file,gamma,coupling)
     load(input_file);
     A=sparse(A);
-    A=A+A';
-    C=C+C';
-    sum(sum(A))
-    k=sum(A)';
-    twom=sum(k);
-    P=k*k'/twom;
+    A=max(A,A');
+    C=max(C,C');
+    %P should be in the file already
+    P=P;
+
+    %sum(sum(A))
+    %k=sum(A)';
+    %twom=sum(k);
+    %P=k*k'/twom;
     B=A-gamma*P+coupling*C;
     rng('shuffle');
     if exist('S0','var')

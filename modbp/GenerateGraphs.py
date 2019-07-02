@@ -494,6 +494,25 @@ class MultilayerGraph(object):
         C_sparse=self._to_sparse(intra=False)
         return (A_sparse,C_sparse)
 
+    def create_null_adj(self):
+        P=np.zeros((self.N,self.N))
+        P = np.zeros((self.N, self.N))
+        cind = 0
+        for layer in self.layers:
+            if 'weight' in layer.es.attributes():
+                strength = np.array(layer.strength(weights='weight'))
+                pcur = np.outer(strength, strength)
+                pcur /= (2.0 * np.sum(layer.es['weight']))
+            else:
+                strength = np.array(layer.strength())
+                pcur = np.outer(strength, strength)
+                pcur /= (2.0 * np.sum(layer.degree()))
+
+            cinds = range(cind, cind + layer.vcount())
+            P[np.ix_(cinds, cinds)] = pcur
+            cind += layer.vcount()
+
+        return P
 
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):
         """
