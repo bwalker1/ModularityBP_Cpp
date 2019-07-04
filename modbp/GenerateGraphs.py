@@ -186,7 +186,11 @@ class MultilayerGraph(object):
         """
 
         self.N=len(layer_vec)
-        self.layer_vec=np.array([int(x) for x in layer_vec]) #NEEDS to be integer valued.
+        layers=np.unique(layer_vec)
+        #assure that it is sorted by appearance with elements from 0 to len(nlayers)
+        layer_dict=dict(zip(layers,range(len(layers))))
+        self.layer_vec=np.array([layer_dict[x] for x in layer_vec])
+
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
         self.unweighted=True
@@ -483,6 +487,52 @@ class MultilayerGraph(object):
         N=self.N
 
         return scispa.csr_matrix((data,(row_ind,col_ind)),shape=(N,N),dtype=float)
+
+    def reorder_nodes(self):
+        """
+        Resort all objects in the MultilayerGraph object by their community label
+        :return:
+        """
+        new_com_vec=np.array([])
+        A_old,C_old=self.to_scipy_csr()
+
+        offset=0
+        total_perm_vec=[]
+
+        for i,layer in enumerate(self.layers):
+            cinds=np.where(self.layer_vec==i)[0]
+            ccom_vec=self.comm_vec[cinds]
+            #zip sort, unzip
+            if i==0:
+                c_new_comvec,cperm_vec=list(zip(*sorted(zip(ccom_vec,range(offset,len(ccom_vec)+offset)),key=lambda x:x[0])))
+                rev_perm_vec = [-1 for _ in range(len(cperm_vec))]
+                for j, val in enumerate(cperm_vec):
+                    rev_perm_vec[val - offset] = j + offset  # offset for nodes in previous layers
+                assert -1 not in rev_perm_vec
+            else:
+               c_new_comvec = [0 for _ in range(len(ccom_vec))]
+               #use the old rev_perm_vec for permuting this layer (just offset new values)
+               for j,val in enumerate(rev_perm_vec):
+                   rev_perm_vec[j]=val+len(cinds)
+               for j,val in enumerate(ccom_vec):
+                   c_new_comvec[rev_perm_vec[j]-offset]=val
+
+            new_com_vec=np.append(new_com_vec,c_new_comvec)
+            total_perm_vec+=rev_perm_vec
+            offset+=len(cinds)
+
+
+        new_intra_elist=[(total_perm_vec[e[0]],total_perm_vec[e[1]],self.intralayer_weights[i])\
+                         for i,e in enumerate(self.intralayer_edges)]
+        new_inter_elist = [(total_perm_vec[e[0]], total_perm_vec[e[1]], self.interlayer_weights[i]) \
+                           for i,e in enumerate(self.interlayer_edges)]
+
+        #reset with new permuted edges
+        self.__init__(intralayer_edges=new_intra_elist,layer_vec=self.layer_vec,interlayer_edges=new_inter_elist,
+                      comm_vec=new_com_vec)
+
+
+
 
     def to_scipy_csr(self):
         """Create sparse matrix representations of the multilayer network.
@@ -834,3 +884,17 @@ def generate_planted_partitions_dynamic_sbm(n, epsilon, c, ncoms,nlayers,eta):
                         transition_prob=eta, use_gcc=False)
 
     return dsbm
+
+def adjacency_to_edges(A,directed=False):
+    """Extract list of non zero values from adjacency, handling directedness."""
+    if not directed:
+        try:
+            nnz_inds=np.nonzero(np.triu(A))
+        except:
+            nnz_inds=np.nonzero(scispa.triu(A))
+    else:
+        nnz_inds = np.nonzero(A)
+    nnzvals = np.array(A[nnz_inds])
+    if len(nnzvals.shape) > 1:
+        nnzvals = nnzvals[0]  # handle scipy sparse types
+    return list(zip(nnz_inds[0], nnz_inds[1], nnzvals))
