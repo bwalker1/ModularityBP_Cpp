@@ -10,7 +10,6 @@ homedir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp'
 #homedir='/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp'
 
 
-matlab_func_file="${homeddir}/test/genlouvain_mlsbm/run_gen_louvain.m"
 export MATLABPATH="${homedir}/test/genlouvain_mlsbm/"
 export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-master"
 
