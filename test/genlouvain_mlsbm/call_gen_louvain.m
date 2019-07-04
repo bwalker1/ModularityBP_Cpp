@@ -5,7 +5,6 @@ function call_gen_louvain(input_file,output_file,gamma,coupling)
     C=max(C,C');
     %P should be in the file already
     P=P;
-
     %sum(sum(A))
     %k=sum(A)';
     %twom=sum(k);
