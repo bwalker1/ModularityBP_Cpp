@@ -545,7 +545,6 @@ class MultilayerGraph(object):
         return (A_sparse,C_sparse)
 
     def create_null_adj(self):
-        P=np.zeros((self.N,self.N))
         P = np.zeros((self.N, self.N))
         cind = 0
         for layer in self.layers:
@@ -562,6 +561,7 @@ class MultilayerGraph(object):
             P[np.ix_(cinds, cinds)] = pcur
             cind += layer.vcount()
 
+        P=scispa.csr_matrix(P)
         return P
 
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):

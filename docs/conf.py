@@ -62,11 +62,11 @@ if on_rtd:
 #        def __getattr__(cls, name):
 #            return Mock()
     from unittest.mock import MagicMock
-
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
             return MagicMock()
+        
     # include the names of your minimal required packages here
     MOCK_MODULES = ['numpy', 'numpy.random', 'igraph', 'louvain', 'matplotlib', 'matplotlib.pyplot',
                     'matplotlib.cm', 'matplotlib.lines', 'matplotlib.patheffects',
