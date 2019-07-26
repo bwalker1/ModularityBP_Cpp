@@ -53,7 +53,7 @@ def main(pargs=None):
         else:
             with open(outfile,'a') as fh:
                 c_df.to_csv(fh,header=False)
-    # print ('writing file to {:}'.format(outfile))
+    print ('writing file to {:}'.format(outfile))
     # outdf.to_csv(outfile)
     return 0
 
