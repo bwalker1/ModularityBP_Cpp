@@ -1,9 +1,9 @@
-.. CHAMP documentation master file, created by
+.. modbp documentation master file, created by
    sphinx-quickstart on Tue Jul 11 15:50:43 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Multilayer Modularity Belief Propagation (multimodbp)
+Multilayer Modularity Belief Propagation (modbp)
 =================================================================
 A belief propagation solution to multilay modularity community detection.
 
@@ -34,12 +34,12 @@ __________
 Download and Installation:
 ____________________________
 
-The *multimodbp* module is hosted on `PyPi <https://pypi.python.org/pypi/modbp>`_.  The easiest way to install is \
+The *modbp* module is hosted on `PyPi <https://pypi.python.org/pypi/modbp>`_.  The easiest way to install is \
 via the pip command::
 
    pip install modbp
 
-For installation from source, the latest version of champ can be downloaded from GitHub\:
+For installation from source, the latest version of modbp can be downloaded from GitHub\:
 
    `Multimodbp Github <https://github.com/bwalker1/ModularityBP_Cpp>`_
 
@@ -52,14 +52,21 @@ For basic installation:
 Dependencies
 ***************
 
-Most of the dependencies for CHAMP are fairly standard tools for data analysis in Python:
+To make our code run as quickly as possible, the underlying belief propagation algorithm has been written in C++.  Wrapping and interfacing this code with the Python tools requires `swig <http://www.swig.org/index.php>`_, a tool for creating Python classes from C++ objects.
+
+
+The python dependencies for *modbp* are fairly standard tools for data analysis in Python:
 
 + `NumPy <https://www.scipy.org/scipylib/download.html>`_ \: Python numerical analysis library.
 + `sklearn <http://scikit-learn.org/stable/install.html>`_ \:Machine learning tools for python.
 + `python-igraph <http://igraph.org/python/#downloads>`_ \:igraph python version for manipulation of networks.
 + `matplotlib <https://matplotlib.org/users/installing.html>`_ \:Python data visualization library.
++ `pandas  <https://pandas.pydata.org/pandas-docs/stable/install.html>`_ \:data structures and data analysis tools for python.
 
 These should all be handled automatically if using pip to install.
+
+We are also working on creating a conda recipe for easy installation through conda forge.
+
 
 Citation
 ___________

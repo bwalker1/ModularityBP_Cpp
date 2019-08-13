@@ -93,6 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../index.html">Multilayer Modularity Belief Propagation (multimodbp)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sub_docs/intro.html">Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sub_docs/generategraph.html">Multilayer Graph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sub_docs/modularitybp.html">ModularityBP Object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sub_docs/references.html">References</a></li>
 </ul>
 
@@ -295,19 +296,17 @@
     <span class="k">def</span> <span class="nf">get_observed_cin_cout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="sd">        :return:</span>
+<span class="sd">        :return: degree for each of the blocks</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">coms</span><span class="p">,</span><span class="n">cnts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;block&#39;</span><span class="p">],</span><span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">ncoms</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">coms</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">ncoms</span><span class="p">,</span> <span class="n">ncoms</span><span class="p">))</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cnts</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">cnts</span><span class="p">,</span><span class="n">cnts</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">cnts</span><span class="p">))</span>
         <span class="n">totalcnts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">ncoms</span><span class="p">,</span> <span class="n">ncoms</span><span class="p">))</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cnts</span><span class="p">),</span>
                      <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">cnts</span><span class="p">,</span><span class="n">cnts</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">cnts</span><span class="p">))</span> <span class="c1">#N/(N_A*N_B)</span>
-        
         <span class="n">label2num</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">coms</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">ncoms</span><span class="p">)))</span>
         <span class="n">observed_cnts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ncoms</span><span class="p">,</span><span class="n">ncoms</span><span class="p">))</span>
+
         <span class="k">for</span> <span class="n">ei</span><span class="p">,</span> <span class="n">ej</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_edgelist</span><span class="p">():</span>
             <span class="n">ind1</span><span class="o">=</span><span class="n">label2num</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;block&#39;</span><span class="p">][</span><span class="n">ei</span><span class="p">]]</span>
             <span class="n">ind2</span><span class="o">=</span><span class="n">label2num</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="s1">&#39;block&#39;</span><span class="p">][</span><span class="n">ej</span><span class="p">]]</span>
@@ -319,8 +318,8 @@
 
     <span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param labels:</span>
-<span class="sd">        :type labels:</span>
+<span class="sd">        :param labels: labels to compare to known blocks</span>
+<span class="sd">        :type labels: list</span>
 <span class="sd">        :return:</span>
 <span class="sd">        :rtype:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -497,19 +496,24 @@
 
 
 
-<div class="viewcode-block" id="MultilayerGraph.get_layer_edgecounts"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerGraph.get_layer_edgecounts">[docs]</a>    <span class="k">def</span> <span class="nf">get_layer_edgecounts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;m for undirected networks&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MultilayerGraph.get_layer_edgecounts"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerGraph.get_layer_edgecounts">[docs]</a>    <span class="k">def</span> <span class="nf">get_layer_edgecounts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;m for each layer&quot;&quot;&quot;</span>
         <span class="n">ecounts</span><span class="o">=</span><span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">:</span>
-                <span class="n">ecounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_intralayer_degrees</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ecounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_intralayer_degrees</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">:</span>
+                    <span class="n">ecounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_intralayer_degrees</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ecounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_intralayer_degrees</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ecounts</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">get_intralayer_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_intralayer_degrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weighted</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">weighted</span> <span class="ow">and</span> <span class="s1">&#39;weight&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">es</span><span class="o">.</span><span class="n">attributes</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strength</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">total_degrees</span><span class="o">=</span><span class="p">[]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)):</span>
@@ -629,8 +633,18 @@
 
 <span class="sd">        :return: (A_sparse,C_sparse) = interlayer adjacency , interlayer adjacency</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">A_sparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intralayer_edges</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unweighted</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">A_sparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intralayer_edges</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#zip edge weights into representation</span>
+            <span class="n">temp</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">intralayer_edges</span><span class="p">)</span>
+            <span class="n">temp</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">intralayer_weights</span><span class="p">)</span>
+            <span class="n">A_sparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_sparse</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+
         <span class="n">C_sparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_sparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interlayer_edges</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">:</span>
+            <span class="n">A_sparse</span><span class="o">+=</span><span class="n">A_sparse</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">C_sparse</span><span class="o">+=</span><span class="n">C_sparse</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">A_sparse</span><span class="p">,</span><span class="n">C_sparse</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MultilayerGraph.plot_communities"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerGraph.plot_communities">[docs]</a>    <span class="k">def</span> <span class="nf">plot_communities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comvec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -695,9 +709,20 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Subclass of MultilayerGraph to create the dynamic stochastic block model from Ghasemian et al. 2016.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">comm_prob_mat</span><span class="p">,</span><span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">transition_prob</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span><span class="n">block_sizes0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">use_gcc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="MultilayerSBM.__init__"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">comm_prob_mat</span><span class="p">,</span><span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">transition_prob</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span><span class="n">block_sizes0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">use_gcc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">        :param n: number of nodes in each layer</span>
+<span class="sd">        :param comm_prob_mat: probability of block connections in SBM(this is fixed across all layers)</span>
+<span class="sd">        :param layers:  number of layers</span>
+<span class="sd">        :param transition_prob: probability of each node changing communities from one layer to next.  \</span>
+<span class="sd">        if transistion_prob=0 then community structure is constant across all layers.</span>
+<span class="sd">        :param block_sizes0: Initial size of the blocks.  Default is to use even block sizes starting out.\</span>
+<span class="sd">        block sizes at subsequent layers are determined by number of nodes that randomly transition between \</span>
+<span class="sd">        communities</span>
+<span class="sd">        :param use_gcc: use only giant connected component of starting SBM (option for single layer only)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1">#this is list of GenerateGraph.RandomSBMGraph objects.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="o">=</span><span class="n">layers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transition_prob</span><span class="o">=</span><span class="n">transition_prob</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comm_prob_mat</span><span class="o">=</span><span class="n">comm_prob_mat</span>
@@ -723,7 +748,7 @@
 
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">layers</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
             <span class="c1">#create the next sbm from the previous one and add it to the list.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_next_sbm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_next_sbm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interedges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_interlayer_edgelist</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intraedges</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_intralayer_edgelist</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer_vec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_node_layer_vec</span><span class="p">()</span>
@@ -733,14 +758,14 @@
                        <span class="n">layer_vec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_vec</span><span class="p">,</span><span class="n">comm_vec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_all_layers_block</span><span class="p">())</span>
 
         <span class="c1">#switch this to point to the layer_sbms igraphs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">=</span><span class="p">[</span> <span class="n">lsbm</span><span class="o">.</span><span class="n">graph</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">lsbm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">=</span><span class="p">[</span> <span class="n">lsbm</span><span class="o">.</span><span class="n">graph</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">lsbm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">)]</span></div>
         <span class="c1"># self.layers=self.layer_sbms #we only need to store these once.</span>
 
-<div class="viewcode-block" id="MultilayerSBM.get_next_sbm"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.get_next_sbm">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_sbm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sbm</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_next_sbm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sbm</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate new block values for each nodes. And then create a new SBM for the next layer</span>
-<span class="sd">        :param sbm:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :param sbm: current sbm</span>
+<span class="sd">        :return: GenerateGraph.RandomSBMGraph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">num_transition</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">transition_prob</span><span class="p">)</span>
@@ -770,17 +795,26 @@
 
         <span class="c1">#permute the nodes to line up with ids</span>
         <span class="n">nxtsbm</span><span class="o">.</span><span class="n">graph</span><span class="o">=</span><span class="n">nxtsbm</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">permute_vertices</span><span class="p">(</span><span class="n">perm_ids</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">nxtsbm</span></div>
+        <span class="k">return</span> <span class="n">nxtsbm</span>
 
-    <span class="k">def</span> <span class="nf">get_intralayer_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MultilayerSBM.get_intralayer_adj"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.get_intralayer_adj">[docs]</a>    <span class="k">def</span> <span class="nf">get_intralayer_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Single adjacency matrix representing all layers.</span>
+<span class="sd">        :return: np.array of intralayer adjacency representation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">intra_adj</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">):</span>
             <span class="n">offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="n">i</span>
             <span class="n">inds</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span><span class="n">offset</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span><span class="nb">range</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span><span class="n">offset</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span> <span class="c1">#index diagonal block</span>
             <span class="n">intra_adj</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">get_adjacency</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">intra_adj</span>
+        <span class="k">return</span> <span class="n">intra_adj</span></div>
 
-    <span class="k">def</span> <span class="nf">get_interlayer_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MultilayerSBM.get_interlayer_adj"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.get_interlayer_adj">[docs]</a>    <span class="k">def</span> <span class="nf">get_interlayer_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Singer interlayer adjencency matrix created by connecting each node to it&#39;s equivalent\</span>
+<span class="sd">        node in the next layer.  This is a temporal multiplex topology.</span>
+<span class="sd">        :return: np.array of interlayer adjacency representation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">#TODO this can be changed for different couplings. Right now I do only adjacent layers</span>
         <span class="n">inter_adj</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="p">))</span>
         <span class="n">Iden_N</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
@@ -791,14 +825,14 @@
                 <span class="n">inter_adj</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Iden_N</span><span class="p">)</span>
                 <span class="n">inter_adj</span><span class="p">[</span><span class="n">inds_t</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Iden_N</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">inter_adj</span>
+        <span class="k">return</span> <span class="n">inter_adj</span></div>
 
 <div class="viewcode-block" id="MultilayerSBM.get_interlayer_edgelist"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.get_interlayer_edgelist">[docs]</a>    <span class="k">def</span> <span class="nf">get_interlayer_edgelist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Single list of edges giving the multilayer connections.  For this model \</span>
 <span class="sd">        nodes are multiplex an connected to their neighboring slice identities.</span>
 
-<span class="sd">        :return:</span>
+<span class="sd">        :return: np.array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">interedges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nlayers</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="mi">2</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
@@ -813,19 +847,22 @@
             <span class="n">offset</span><span class="o">+=</span><span class="n">cnet</span><span class="o">.</span><span class="n">n</span>
         <span class="k">return</span> <span class="n">interedges</span></div>
 
-    <span class="k">def</span> <span class="nf">get_node_layer_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MultilayerSBM.get_node_layer_vec"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.get_node_layer_vec">[docs]</a>    <span class="k">def</span> <span class="nf">get_node_layer_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="sd">        :return: np.array denoting which layer each node is in</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">layers</span><span class="o">=</span><span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">net</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">):</span>
             <span class="n">layers</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">net</span><span class="o">.</span><span class="n">n</span><span class="p">)])</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MultilayerSBM.get_intralayer_edgelist"><a class="viewcode-back" href="../../sub_docs/generategraph.html#modbp.MultilayerSBM.get_intralayer_edgelist">[docs]</a>    <span class="k">def</span> <span class="nf">get_intralayer_edgelist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Single list of edges treating the group of single layer SBM&#39;s  as a \</span>
-<span class="sd">        surpaadjacency format</span>
+<span class="sd">        surpra-adjacency format</span>
 
-<span class="sd">        :return:</span>
+<span class="sd">        :return: np.array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">nedges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">net</span><span class="o">.</span><span class="n">m</span> <span class="k">for</span> <span class="n">net</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_sbms</span><span class="p">])</span>
         <span class="n">intraedges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nedges</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
@@ -927,7 +964,7 @@
     <span class="n">prob_mat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">ncoms</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">pin</span><span class="o">-</span><span class="n">pout</span><span class="p">)</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">ncoms</span><span class="p">,</span><span class="n">ncoms</span><span class="p">))</span><span class="o">*</span><span class="n">pout</span>
 
     <span class="n">dsbm</span> <span class="o">=</span> <span class="n">MultilayerSBM</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">comm_prob_mat</span><span class="o">=</span><span class="n">prob_mat</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="n">nlayers</span><span class="p">,</span> <span class="n">block_sizes0</span><span class="o">=</span><span class="n">nodesperblock</span><span class="p">,</span>
-                        <span class="n">transition_prob</span><span class="o">=</span><span class="n">eta</span><span class="p">,</span> <span class="n">use_gcc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">transition_prob</span><span class="o">=</span><span class="n">eta</span><span class="p">,</span> <span class="n">use_gcc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">dsbm</span>
 </pre></div>

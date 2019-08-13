@@ -1,13 +1,33 @@
 from distutils.core import setup, Extension
-
+import os,re
 ext_module=Extension(name="_bp",
                     sources=["modbp/src_cpp/bp.cpp","modbp/src_cpp/bp_infer.cpp","modbp/bp.i"],
                     include_dirs=["modbp/src_cpp"],swig_opts=["-c++"],extra_compile_args=['-std=c++11'],
                     )
 
-options=dict( name='modbp',
-    version='0.0',
-    packages=['modbp'],
+#setup version information
+#read inversion info from single file
+PKG = "modbp"
+VERSIONFILE = os.path.join(PKG, "_version.py")
+verstr = "unknown"
+try:
+    verstrline = open(VERSIONFILE, "rt").read()
+    print(verstrline)
+except EnvironmentError:
+    pass # Okay, there is no version file.
+else:
+    VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+    mo = re.search(VSRE, verstrline, re.M)
+    if mo:
+        verstr = mo.group(1)
+    else:
+        print ("unable to find version in %s" % (VERSIONFILE,))
+        raise RuntimeError("if %s.py exists, it is required to be well-formed" % (VERSIONFILE,))
+
+
+options=dict( name=PKG,
+    version=verstr,
+    packages=[PKG],
     url='',
     license='GPLv3+',
     author='William Weir',
@@ -17,7 +37,7 @@ options=dict( name='modbp',
     ext_modules=[ext_module],
     zip_safe=False,
     classifiers=["Programming Language :: Python :: 2.7",
-                 "Programming Language :: Python :: 3.3",
+                 "Programming Language :: Python :: 3.6",
                  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
                  "Topic :: Scientific/Engineering :: Information Analysis",
                  ],

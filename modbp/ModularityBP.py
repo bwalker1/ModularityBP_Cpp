@@ -21,7 +21,7 @@ import os,pickle,gzip
 
 class ModularityBP():
     """
-    This is python interface class for the mulitlayer modularity BP
+    This is python interface class for the mulitlayer modularity BP.
     """
 
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
@@ -84,13 +84,13 @@ class ModularityBP():
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
         """
 
-        :param beta:
-        :param q:
-        :param niter:
-        :param resgamma:
-        :param omega:
-        :param reset:
-        :return:
+        :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
+        :param q:  The number of mariginals used for the run of modbp.  Note that if self.use_effective is true,  The final number of reported communities could be lower.
+        :param niter:  Maximum number of iterations allowed.  If self._align_communities_across_layers is true, the actual number of runs could be higher than this upper bound though at most 2*niter
+        :param resgamma:  The resolution parameter at which to run modbp.  Default is resgamma=1.0
+        :param omega:  The coupling strength used in running multimodbp.  This represent how strongly the algorithm tries to assign nodes connected by an interlayer connection to the same community.
+        :param reset:  If true, the marginals will be rerandomized when this method is called.  Otherwise the state will be maintained from previous runs if existing (assuming q hasn't changed).
+        :return: None
         """
         if beta==0:
             warnings.warn("beta cannot be zero.  Using 10-16")

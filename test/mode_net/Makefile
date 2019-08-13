@@ -6,7 +6,7 @@ ifeq ($(UNAME), Linux)
 	CFLAGS=-O3
 endif
 ifeq ($(UNAME), Darwin)
-	CFLAGS=-fast
+	CFLAGS=-Ofast
 endif
 OFILE := bm.o
 OUTPUT := sbm

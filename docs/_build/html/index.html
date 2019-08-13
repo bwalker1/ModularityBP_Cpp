@@ -93,6 +93,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Multilayer Modularity Belief Propagation (multimodbp)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sub_docs/intro.html">Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sub_docs/generategraph.html">Multilayer Graph Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/modularitybp.html">ModularityBP Object</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sub_docs/references.html">References</a></li>
 </ul>
 
@@ -180,17 +181,24 @@
 <li class="toctree-l2"><a class="reference internal" href="sub_docs/generategraph.html#random-graph-classes">Random Graph Classes</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="sub_docs/modularitybp.html">ModularityBP Object</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/modularitybp.html#storing-graphs-on-modularitybp-object">Storing Graphs on ModularityBP Object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/modularitybp.html#running-multilayer-modularity-belief-propagation">Running Multilayer Modularity Belief Propagation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/modularitybp.html#accessing-partitions-and-marginals">Accessing partitions and marginals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sub_docs/modularitybp.html#assessing-results-across-many-different-runs">Assessing Results Across Many Different Runs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="sub_docs/references.html">References</a></li>
 </ul>
 </div>
 </div>
 <div class="section" id="download-and-installation">
 <h2>Download and Installation:<a class="headerlink" href="#download-and-installation" title="Permalink to this headline">¶</a></h2>
-<p>The <em>multimodbp</em> module is hosted on <a class="reference external" href="https://pypi.python.org/pypi/modbp">PyPi</a>.  The easiest way to install is via the pip command:</p>
+<p>The <em>modbp</em> module is hosted on <a class="reference external" href="https://pypi.python.org/pypi/modbp">PyPi</a>.  The easiest way to install is via the pip command:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">modbp</span>
 </pre></div>
 </div>
-<p>For installation from source, the latest version of champ can be downloaded from GitHub:</p>
+<p>For installation from source, the latest version of modbp can be downloaded from GitHub:</p>
 <blockquote>
 <div><a class="reference external" href="https://github.com/bwalker1/ModularityBP_Cpp">Multimodbp Github</a></div></blockquote>
 <p>For basic installation:</p>
@@ -199,14 +207,17 @@
 </div>
 <div class="section" id="dependencies">
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
-<p>Most of the dependencies for CHAMP are fairly standard tools for data analysis in Python:</p>
+<p>To make our code run as quickly as possible, the underlying belief propagation algorithm has been written in C++.  Wrapping and interfacing this code with the Python tools requires <a class="reference external" href="http://www.swig.org/index.php">swig</a>, a tool for creating Python classes from C++ objects.</p>
+<p>The python dependencies for <em>modbp</em> are fairly standard tools for data analysis in Python:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://www.scipy.org/scipylib/download.html">NumPy</a> : Python numerical analysis library.</li>
 <li><a class="reference external" href="http://scikit-learn.org/stable/install.html">sklearn</a> :Machine learning tools for python.</li>
 <li><a class="reference external" href="http://igraph.org/python/#downloads">python-igraph</a> :igraph python version for manipulation of networks.</li>
 <li><a class="reference external" href="https://matplotlib.org/users/installing.html">matplotlib</a> :Python data visualization library.</li>
+<li><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/install.html">pandas</a> :data structures and data analysis tools for python.</li>
 </ul>
 <p>These should all be handled automatically if using pip to install.</p>
+<p>We are also working on creating a conda recipe for easy installation through conda forge.</p>
 </div>
 </div>
 <div class="section" id="citation">
@@ -224,6 +235,7 @@
 </tbody>
 </table>
 </p>
+<p><a class="reference external" href="sub_docs/biblio.bib">bibtex</a></p>
 <p>For more details and results see our <a class="reference external" href="http://">manuscript</a></p>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
