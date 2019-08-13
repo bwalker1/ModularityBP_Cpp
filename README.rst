@@ -5,7 +5,7 @@ A belief propagation solution to multilay modularity community detection.
 
 .. figure::  docs/sub_docs/images/modbp_illustration.png
    :align:   center
-   :figwidth: 95%
+   :figwidth: 75%
 
 We have implemented a belief propagation solution for multilayer modularity in both \
 C++ and Python.  Our implementation allows for both weighted and unweighted single layer networks\
