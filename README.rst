@@ -57,11 +57,8 @@ Citation
 ___________
 
 
-.. bibliography:: sub_docs/biblio.bib
-   :style: plain
-   :list: none
 
-`bibtex <sub_docs/biblio.bib>`_
+`bibtex <docs/sub_docs/biblio.bib>`_
 
 For more details and results see our `manuscript <http://>`_
 

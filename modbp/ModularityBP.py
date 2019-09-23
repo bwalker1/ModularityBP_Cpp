@@ -20,8 +20,13 @@ import os,pickle,gzip
 ##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.INFO)
 
 class ModularityBP():
+
     """
     This is python interface class for the mulitlayer modularity BP.
+
+    :cvar graph:
+    :type graph:
+
     """
 
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
@@ -305,24 +310,44 @@ class ModularityBP():
         else:
             return parts
 
+    def _get_excess_degree(self):
+        degrees = self.graph.intradegrees + self.graph.interdegrees
+        d_avg = np.mean(degrees)
+        d2=np.mean(np.power(degrees,2.0))
+        return d2/d_avg - 1
+
     def get_bstar(self,q,omega=0):
-        #c is supposed to be the average excess degree
-        # degrees=self.graph.intradegrees + self.graph.interdegrees
-        # d_avg=np.mean(degrees)
-        # d2=np.mean(np.power(degrees,2.0))
-        # c= d2/d_avg - 1
-        #c=(2.0*self.totaledgeweight/(self.n))
-        # return np.log(q/(np.sqrt(c)-1)+1)
+        "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
+         detection and data clustering using message passing)"
 
-        if self._bpmod is None:
-            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
-                                        intra_edgelist=self._intraedgelistpv,
-                                      intra_edgeweight=self._cpp_intra_weights,
-                                      inter_edgelist=self._interedgelistpv,
-                                      _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter here
-                                       omega=omega,transform=False)
+        weights=np.append(self.graph.intralayer_weights,omega*self.graph.interlayer_weights)
 
-        return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
+        def avg_weights(bstar, weights, q, c):
+            # bstar should be scalar
+            exp_b_w = np.exp(bstar * weights)
+            return np.mean(np.power((exp_b_w - 1) / (exp_b_w + q - 1), 2.0)) * c - 1
+
+        deg_excess=self._get_excess_degree()
+        bstar = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))[0]
+        return bstar
+
+    # def get_bstar(self,q,omega=0):
+    #     #c is supposed to be the average excess degree
+    #     # degrees=self.graph.intradegrees + self.graph.interdegrees
+    #     # d_avg=np.mean(degrees)
+    #     # d2=np.mean(np.power(degrees,2.0))
+    #     # c= d2/d_avg - 1
+    #     #c=(2.0*self.totaledgeweight/(self.n))
+    #     # return np.log(q/(np.sqrt(c)-1)+1)
+    #     if self._bpmod is None:
+    #         self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
+    #                                     intra_edgelist=self._intraedgelistpv,
+    #                                   intra_edgeweight=self._cpp_intra_weights,
+    #                                   inter_edgelist=self._interedgelistpv,
+    #                                   _n=self.n, _nt= self.nlayers , q=q, beta=1.0, #beta doesn't matter here
+    #                                    omega=omega,transform=False)
+    #
+    #     return self._bpmod.compute_bstar(omega,int(q)) #q must be an int
 
     def _get_retrieval_modularity(self,nrun=None):
         """
