@@ -320,7 +320,8 @@ class ModularityBP():
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
 
-        weights=np.append(self.graph.intralayer_weights,omega*self.graph.interlayer_weights)
+        weights=np.append(self.graph.intralayer_weights,
+                          omega*np.array(self.graph.interlayer_weights))
 
         def avg_weights(bstar, weights, q, c):
             # bstar should be scalar
