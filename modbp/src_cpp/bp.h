@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false);
+	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes, const double beta, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false , const vector<index_t> &bipartite_class = {} );
 
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -72,6 +72,8 @@ private:
 //    void shuffleBeliefs(vector<vector<double>> in_beliefs);
     void initializeBeliefs();
     void initializeTheta();
+    void initializeTheta_bipartite();
+
     void normalize(vector<double> & beliefs, index_t i);
     void reinit(bool init_beliefs=true, bool init_theta=true);
 
@@ -102,10 +104,13 @@ private:
 	vector<double> marginals_old;
 
     vector< vector<double> > theta;
+    vector< vector<double> > theta_bipartite;
 
     vector<index_t> layer_membership;
+    vector<index_t> bipartite_class;
 
-    index_t n, nt;
+    index_t n, nt ,num_biparte_classes;
+
     int q;
     double beta;
     double resgamma;
@@ -138,7 +143,7 @@ private:
     
     bool changed;
     bool computed_marginals;
-    
+    bool is_bipartite;
     inline index_t n_neighbors(index_t i) { return (index_t) neighbors_offsets[i+1]-neighbors_offsets[i]; }
     
     default_random_engine rng;
@@ -148,6 +153,7 @@ private:
     bool verbose;
     
     unsigned long iter;
+
 };
 
 #endif /* bp_hpp */

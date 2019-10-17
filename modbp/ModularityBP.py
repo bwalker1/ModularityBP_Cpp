@@ -32,7 +32,23 @@ class ModularityBP():
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
                  intralayer_edgelist=None, layer_vec=None,
                  accuracy_off=True, use_effective=False, comm_vec=None,
-                 align_communities_across_layers=True,min_com_size=5):
+                 align_communities_across_layers=True,min_com_size=5,is_bipartite=False):
+
+        """
+
+        :param mlgraph:
+        :param interlayer_edgelist:
+        :param intralayer_edgelist:
+        :param layer_vec:
+        :param accuracy_off:
+        :param use_effective:
+        :param comm_vec:
+        :param align_communities_across_layers:
+        :param min_com_size:
+        :param is_bipartite: if graph is bipartite, change underlying null model for intralayer \
+        to use k_i d_j / m . note edges are still passed in as edge list and bipartiteness is not \
+        checked for.
+        """
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
@@ -42,7 +58,8 @@ class ModularityBP():
             if hasattr(mlgraph, 'get_edgelist'):
                 self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
                                               interlayer_edges=np.zeros((0,2),dtype='int'),
-                                              layer_vec=[0 for _ in range(mlgraph.vcount())])
+                                              layer_vec=[0 for _ in range(mlgraph.vcount())],
+                                              is_bipartite=is_bipartite)
 
             else:
                 self.graph=mlgraph
@@ -51,7 +68,9 @@ class ModularityBP():
             if interlayer_edgelist is None:
                 interlayer_edgelist=np.zeros((0,2),dtype='int')
             self.graph = MultilayerGraph(intralayer_edges=intralayer_edgelist,
-                                         interlayer_edges=interlayer_edgelist,layer_vec=layer_vec)
+                                         interlayer_edges=interlayer_edgelist,
+                                         layer_vec=layer_vec,
+                                         is_bipartite=is_bipartite)
 
         if not comm_vec is None:
             self.graph.comm_vec = comm_vec
@@ -80,11 +99,14 @@ class ModularityBP():
         self.retrieval_modularities=pd.DataFrame(columns=['q','beta','resgamma','omega',
                                                          'retrieval_modularity','niters'],dtype=float)
 
-
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
+        self._bipart_class_ia =  self._get_bipartpv()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
+
+        if self.nlayers>1 and self.graph.is_bipartite:
+            raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
         """
@@ -107,6 +129,10 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
         self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
         self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
+        if self.graph.is_bipartite:
+            num_bipart = len (np.unique(self.graph.bipartite_classes))
+        else:
+            num_bipart = 1
 
         t=time()
         #logging.debug("Creating c++ modbp object")
@@ -117,6 +143,7 @@ class ModularityBP():
                                         intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
+                                      num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite
                                       resgamma=resgamma,omega=omega,transform=False,verbose=False)
 
         else:
@@ -281,6 +308,13 @@ class ModularityBP():
 
         return _edgelistpv
 
+    def _get_bipart_vec(self):
+        if self.graph.bipartite_classes is not None:
+            bipart_classpv = IntArray (self.graph.bipartite_classes)
+        else:
+            bipart_classpv = IntArray ([])
+        return bipart_classpv
+
     def _get_partition(self,ind,use_effective=True):
         """ We want to have argmax with randomly broken ties.
 
@@ -319,7 +353,6 @@ class ModularityBP():
     def get_bstar(self,q,omega=0):
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
-
         weights=np.append(self.graph.intralayer_weights,
                           omega*np.array(self.graph.interlayer_weights))
 
@@ -1044,5 +1077,9 @@ def calc_modularity(graph,partition,resgamma,omega):
         Phat += layersum
 
     # print("A:{:.2f},P:{:.2f},C:{:.2f}".format(Ahat,Phat,Chat))
-    mu= 2.0*graph.totaledgeweight if not graph.is_directed else graph.totaledgeweight
+    if graph.is_directed:
+        mu = graph.totaledgeweight
+    else:
+        mu= 2.0*graph.totaledgeweight
+
     return (1.0 / mu) * (Ahat - resgamma * Phat + omega * Chat)

@@ -171,7 +171,7 @@ class MultilayerGraph(object):
     edges between the layers.  In this formulation, each node can only be present in a single layer
     """
 
-    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,
+    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,bipartite_classes=None,
                  directed=False):
         """
 
@@ -182,6 +182,7 @@ class MultilayerGraph(object):
         :param interlayer_edges: list of edges across layers.  If interlayer_edges.shape[1] > 2\
          interlayer_edges[:,2] is assumed to represent the weights of the edges. Default weight is 1.
         :param comm_vec: Underlying known communitiies of the network.  Default is None
+        :param bipartite_classes : list detail which class each of the nodes is in
         :param directed:  Are intralayer and interlayer edges directed.  #TODO: allow one or the other to be directed.
         """
 
@@ -194,7 +195,6 @@ class MultilayerGraph(object):
         self.intralayer_edges=intralayer_edges
         self.is_directed=directed
         self.unweighted=True
-
 
 
         #create an vector length zero
@@ -225,9 +225,13 @@ class MultilayerGraph(object):
 
         self.layers=self._create_layer_graphs()
         self.nlayers=len(self.layers)
-        self.intradegrees=self.get_intralayer_degrees() #by default these are weighted
+
+        # by default these are weighted and OUT degrees
+        self.intradegrees=self.get_intralayer_degrees()
         self.interdegrees=self.get_interlayer_degrees()
+
         self.intra_edge_counts=self.get_layer_edgecounts()
+        #get total edge weight
         if self.is_directed:
             self.totaledgeweight=np.sum(self.interdegrees)+np.sum(self.intradegrees)
         else:
@@ -237,6 +241,16 @@ class MultilayerGraph(object):
         if self.comm_vec is not None:
             self._label_layers(self.comm_vec)
         self.interedgesbylayers=self._create_interlayeredges_by_layers()
+
+        if bipartite_classes is None:
+            self.is_bipartite = False
+            self.bipartite_classes = None
+        else:
+            self.is_bipartite = True
+            self.bipartite_classes=bipartite_classes
+
+        if self.is_bipartite:
+            assert self._check_bipartite(), "Edges between members of same node classes detected"
 
     @property
     def intralayer_weights(self):
@@ -361,19 +375,27 @@ class MultilayerGraph(object):
 
         return np.array(ecounts)
 
-    def get_intralayer_degrees(self, i=None,weighted=True):
+    def get_intralayer_degrees(self,i=None,weighted=True,mode='OUT'):
+        """
+
+        :param i: if i is given, the layer to get degree vector for.  else single \
+        vector across all nodes in all layers is given
+        :param weighted: return strengths vs degrees
+        :param mode: IN degrees or OUT degrees. default is OUT
+        :return:
+        """
         if i is not None:
             if weighted and 'weight' in self.layers[i].es.attributes():
-                return np.array(self.layers[i].strength(weights='weight'))
+                return np.array(self.layers[i].strength(weights='weight',mode=mode))
             else:
-                return np.array(self.layers[i].degree())
+                return np.array(self.layers[i].degree(mode=mode))
         else:
             total_degrees=[]
             for i in range(len(self.layers)):
                 if weighted and 'weight' in self.layers[i].es.attributes():
-                    total_degrees.extend(list(self.layers[i].strength(weights='weight')))
+                    total_degrees.extend(list(self.layers[i].strength(weights='weight',mode=mode)))
                 else:
-                    total_degrees.extend(list(self.layers[i].degree()))
+                    total_degrees.extend(list(self.layers[i].degree(mode=mode)))
         return np.array(total_degrees)
 
     def get_interlayer_degrees(self):
@@ -621,6 +643,18 @@ class MultilayerGraph(object):
         ax.set_xticks(range(0, len(layers)))
         ax.set_xticklabels(layers)
         return ax
+
+    def _check_bipartite(self):
+        """Go through each edge and make sure it is between different classes"""
+
+        if self.bipartite_classes is None:
+            return False
+
+        for e in self.intralayer_edges:
+            # are in the same class
+            if self.bipartite_classes[int(e[0])] == self.bipartite_classes[int(e[1])]:
+                return False
+        return True
 
 class MultilayerSBM(MultilayerGraph):
     """

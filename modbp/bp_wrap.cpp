@@ -5608,10 +5608,306 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   index_t arg5 ;
   index_t arg6 ;
   int arg7 ;
-  double arg8 ;
+  index_t arg8 ;
   double arg9 ;
   double arg10 ;
-  bool arg11 ;
+  double arg11 ;
+  bool arg12 ;
+  bool arg13 ;
+  vector< index_t > *arg14 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  unsigned long val5 ;
+  int ecode5 = 0 ;
+  unsigned long val6 ;
+  int ecode6 = 0 ;
+  int val7 ;
+  int ecode7 = 0 ;
+  unsigned long val8 ;
+  int ecode8 = 0 ;
+  double val9 ;
+  int ecode9 = 0 ;
+  double val10 ;
+  int ecode10 = 0 ;
+  double val11 ;
+  int ecode11 = 0 ;
+  bool val12 ;
+  int ecode12 = 0 ;
+  bool val13 ;
+  int ecode13 = 0 ;
+  void *argp14 = 0 ;
+  int res14 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject * obj13 = 0 ;
+  BP_Modularity *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12,&obj13)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "vector< double > const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "vector< double > const &""'"); 
+  }
+  arg3 = reinterpret_cast< vector< double > * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  arg4 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp4);
+  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Modularity" "', argument " "5"" of type '" "index_t""'");
+  } 
+  arg5 = static_cast< index_t >(val5);
+  ecode6 = SWIG_AsVal_unsigned_SS_long(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Modularity" "', argument " "6"" of type '" "index_t""'");
+  } 
+  arg6 = static_cast< index_t >(val6);
+  ecode7 = SWIG_AsVal_int(obj6, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
+  } 
+  arg7 = static_cast< int >(val7);
+  ecode8 = SWIG_AsVal_unsigned_SS_long(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "index_t""'");
+  } 
+  arg8 = static_cast< index_t >(val8);
+  ecode9 = SWIG_AsVal_double(obj8, &val9);
+  if (!SWIG_IsOK(ecode9)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
+  } 
+  arg9 = static_cast< double >(val9);
+  ecode10 = SWIG_AsVal_double(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
+  } 
+  arg10 = static_cast< double >(val10);
+  ecode11 = SWIG_AsVal_double(obj10, &val11);
+  if (!SWIG_IsOK(ecode11)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
+  } 
+  arg11 = static_cast< double >(val11);
+  ecode12 = SWIG_AsVal_bool(obj11, &val12);
+  if (!SWIG_IsOK(ecode12)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "bool""'");
+  } 
+  arg12 = static_cast< bool >(val12);
+  ecode13 = SWIG_AsVal_bool(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "new_BP_Modularity" "', argument " "13"" of type '" "bool""'");
+  } 
+  arg13 = static_cast< bool >(val13);
+  res14 = SWIG_ConvertPtr(obj13, &argp14, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res14)) {
+    SWIG_exception_fail(SWIG_ArgError(res14), "in method '" "new_BP_Modularity" "', argument " "14"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp14) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "14"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg14 = reinterpret_cast< vector< index_t > * >(argp14);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,(vector< index_t > const &)*arg14);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  vector< index_t > *arg1 = 0 ;
+  vector< pair< index_t,index_t > > *arg2 = 0 ;
+  vector< double > *arg3 = 0 ;
+  vector< pair< index_t,index_t > > *arg4 = 0 ;
+  index_t arg5 ;
+  index_t arg6 ;
+  int arg7 ;
+  index_t arg8 ;
+  double arg9 ;
+  double arg10 ;
+  double arg11 ;
+  bool arg12 ;
+  bool arg13 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  unsigned long val5 ;
+  int ecode5 = 0 ;
+  unsigned long val6 ;
+  int ecode6 = 0 ;
+  int val7 ;
+  int ecode7 = 0 ;
+  unsigned long val8 ;
+  int ecode8 = 0 ;
+  double val9 ;
+  int ecode9 = 0 ;
+  double val10 ;
+  int ecode10 = 0 ;
+  double val11 ;
+  int ecode11 = 0 ;
+  bool val12 ;
+  int ecode12 = 0 ;
+  bool val13 ;
+  int ecode13 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  BP_Modularity *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "vector< double > const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "vector< double > const &""'"); 
+  }
+  arg3 = reinterpret_cast< vector< double > * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
+  }
+  arg4 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp4);
+  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Modularity" "', argument " "5"" of type '" "index_t""'");
+  } 
+  arg5 = static_cast< index_t >(val5);
+  ecode6 = SWIG_AsVal_unsigned_SS_long(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Modularity" "', argument " "6"" of type '" "index_t""'");
+  } 
+  arg6 = static_cast< index_t >(val6);
+  ecode7 = SWIG_AsVal_int(obj6, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
+  } 
+  arg7 = static_cast< int >(val7);
+  ecode8 = SWIG_AsVal_unsigned_SS_long(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "index_t""'");
+  } 
+  arg8 = static_cast< index_t >(val8);
+  ecode9 = SWIG_AsVal_double(obj8, &val9);
+  if (!SWIG_IsOK(ecode9)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
+  } 
+  arg9 = static_cast< double >(val9);
+  ecode10 = SWIG_AsVal_double(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
+  } 
+  arg10 = static_cast< double >(val10);
+  ecode11 = SWIG_AsVal_double(obj10, &val11);
+  if (!SWIG_IsOK(ecode11)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
+  } 
+  arg11 = static_cast< double >(val11);
+  ecode12 = SWIG_AsVal_bool(obj11, &val12);
+  if (!SWIG_IsOK(ecode12)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "bool""'");
+  } 
+  arg12 = static_cast< bool >(val12);
+  ecode13 = SWIG_AsVal_bool(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "new_BP_Modularity" "', argument " "13"" of type '" "bool""'");
+  } 
+  arg13 = static_cast< bool >(val13);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  vector< index_t > *arg1 = 0 ;
+  vector< pair< index_t,index_t > > *arg2 = 0 ;
+  vector< double > *arg3 = 0 ;
+  vector< pair< index_t,index_t > > *arg4 = 0 ;
+  index_t arg5 ;
+  index_t arg6 ;
+  int arg7 ;
+  index_t arg8 ;
+  double arg9 ;
+  double arg10 ;
+  double arg11 ;
   bool arg12 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -5627,13 +5923,13 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   int ecode6 = 0 ;
   int val7 ;
   int ecode7 = 0 ;
-  double val8 ;
+  unsigned long val8 ;
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
   double val10 ;
   int ecode10 = 0 ;
-  bool val11 ;
+  double val11 ;
   int ecode11 = 0 ;
   bool val12 ;
   int ecode12 = 0 ;
@@ -5699,11 +5995,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
+  ecode8 = SWIG_AsVal_unsigned_SS_long(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "index_t""'");
   } 
-  arg8 = static_cast< double >(val8);
+  arg8 = static_cast< index_t >(val8);
   ecode9 = SWIG_AsVal_double(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
@@ -5714,11 +6010,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
   } 
   arg10 = static_cast< double >(val10);
-  ecode11 = SWIG_AsVal_bool(obj10, &val11);
+  ecode11 = SWIG_AsVal_double(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
   } 
-  arg11 = static_cast< bool >(val11);
+  arg11 = static_cast< double >(val11);
   ecode12 = SWIG_AsVal_bool(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
     SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "bool""'");
@@ -5732,7 +6028,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   vector< index_t > *arg1 = 0 ;
   vector< pair< index_t,index_t > > *arg2 = 0 ;
@@ -5741,10 +6037,10 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   index_t arg5 ;
   index_t arg6 ;
   int arg7 ;
-  double arg8 ;
+  index_t arg8 ;
   double arg9 ;
   double arg10 ;
-  bool arg11 ;
+  double arg11 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -5759,13 +6055,13 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   int ecode6 = 0 ;
   int val7 ;
   int ecode7 = 0 ;
-  double val8 ;
+  unsigned long val8 ;
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
   double val10 ;
   int ecode10 = 0 ;
-  bool val11 ;
+  double val11 ;
   int ecode11 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
@@ -5828,11 +6124,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
+  ecode8 = SWIG_AsVal_unsigned_SS_long(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "index_t""'");
   } 
-  arg8 = static_cast< double >(val8);
+  arg8 = static_cast< index_t >(val8);
   ecode9 = SWIG_AsVal_double(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
@@ -5843,11 +6139,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
   } 
   arg10 = static_cast< double >(val10);
-  ecode11 = SWIG_AsVal_bool(obj10, &val11);
+  ecode11 = SWIG_AsVal_double(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
   } 
-  arg11 = static_cast< bool >(val11);
+  arg11 = static_cast< double >(val11);
   result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
@@ -5856,7 +6152,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   vector< index_t > *arg1 = 0 ;
   vector< pair< index_t,index_t > > *arg2 = 0 ;
@@ -5865,7 +6161,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   index_t arg5 ;
   index_t arg6 ;
   int arg7 ;
-  double arg8 ;
+  index_t arg8 ;
   double arg9 ;
   double arg10 ;
   void *argp1 = 0 ;
@@ -5882,7 +6178,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   int ecode6 = 0 ;
   int val7 ;
   int ecode7 = 0 ;
-  double val8 ;
+  unsigned long val8 ;
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
@@ -5948,11 +6244,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
+  ecode8 = SWIG_AsVal_unsigned_SS_long(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "index_t""'");
   } 
-  arg8 = static_cast< double >(val8);
+  arg8 = static_cast< index_t >(val8);
   ecode9 = SWIG_AsVal_double(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
@@ -5971,7 +6267,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_5(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   vector< index_t > *arg1 = 0 ;
   vector< pair< index_t,index_t > > *arg2 = 0 ;
@@ -5980,7 +6276,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(se
   index_t arg5 ;
   index_t arg6 ;
   int arg7 ;
-  double arg8 ;
+  index_t arg8 ;
   double arg9 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -5996,7 +6292,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(se
   int ecode6 = 0 ;
   int val7 ;
   int ecode7 = 0 ;
-  double val8 ;
+  unsigned long val8 ;
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
@@ -6059,11 +6355,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
+  ecode8 = SWIG_AsVal_unsigned_SS_long(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "index_t""'");
   } 
-  arg8 = static_cast< double >(val8);
+  arg8 = static_cast< index_t >(val8);
   ecode9 = SWIG_AsVal_double(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
@@ -6077,158 +6373,17 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  vector< index_t > *arg1 = 0 ;
-  vector< pair< index_t,index_t > > *arg2 = 0 ;
-  vector< double > *arg3 = 0 ;
-  vector< pair< index_t,index_t > > *arg4 = 0 ;
-  index_t arg5 ;
-  index_t arg6 ;
-  int arg7 ;
-  double arg8 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  void *argp4 = 0 ;
-  int res4 = 0 ;
-  unsigned long val5 ;
-  int ecode5 = 0 ;
-  unsigned long val6 ;
-  int ecode6 = 0 ;
-  int val7 ;
-  int ecode7 = 0 ;
-  double val8 ;
-  int ecode8 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  BP_Modularity *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:new_BP_Modularity",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t,  0  | 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "vector< double > const &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "3"" of type '" "vector< double > const &""'"); 
-  }
-  arg3 = reinterpret_cast< vector< double > * >(argp3);
-  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res4)) {
-    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp4) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "4"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg4 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp4);
-  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Modularity" "', argument " "5"" of type '" "index_t""'");
-  } 
-  arg5 = static_cast< index_t >(val5);
-  ecode6 = SWIG_AsVal_unsigned_SS_long(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Modularity" "', argument " "6"" of type '" "index_t""'");
-  } 
-  arg6 = static_cast< index_t >(val6);
-  ecode7 = SWIG_AsVal_int(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Modularity" "', argument " "7"" of type '" "int""'");
-  } 
-  arg7 = static_cast< int >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Modularity" "', argument " "8"" of type '" "double""'");
-  } 
-  arg8 = static_cast< double >(val8);
-  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
-  PyObject *argv[13] = {
+  PyObject *argv[15] = {
     0
   };
   Py_ssize_t ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 12) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 14) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 8) {
-    int _v;
-    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-          _v = SWIG_CheckState(res);
-          if (_v) {
-            {
-              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_unsigned_SS_long(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                {
-                  int res = SWIG_AsVal_int(argv[6], NULL);
-                  _v = SWIG_CheckState(res);
-                }
-                if (_v) {
-                  {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
-                    _v = SWIG_CheckState(res);
-                  }
-                  if (_v) {
-                    return _wrap_new_BP_Modularity__SWIG_4(self, args);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
   }
   if (argc == 9) {
     int _v;
@@ -6260,7 +6415,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                 }
                 if (_v) {
                   {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
+                    int res = SWIG_AsVal_unsigned_SS_long(argv[7], NULL);
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
@@ -6269,7 +6424,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      return _wrap_new_BP_Modularity__SWIG_3(self, args);
+                      return _wrap_new_BP_Modularity__SWIG_5(self, args);
                     }
                   }
                 }
@@ -6310,7 +6465,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                 }
                 if (_v) {
                   {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
+                    int res = SWIG_AsVal_unsigned_SS_long(argv[7], NULL);
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
@@ -6324,7 +6479,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_new_BP_Modularity__SWIG_2(self, args);
+                        return _wrap_new_BP_Modularity__SWIG_4(self, args);
                       }
                     }
                   }
@@ -6366,7 +6521,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                 }
                 if (_v) {
                   {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
+                    int res = SWIG_AsVal_unsigned_SS_long(argv[7], NULL);
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
@@ -6381,11 +6536,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       }
                       if (_v) {
                         {
-                          int res = SWIG_AsVal_bool(argv[10], NULL);
+                          int res = SWIG_AsVal_double(argv[10], NULL);
                           _v = SWIG_CheckState(res);
                         }
                         if (_v) {
-                          return _wrap_new_BP_Modularity__SWIG_1(self, args);
+                          return _wrap_new_BP_Modularity__SWIG_3(self, args);
                         }
                       }
                     }
@@ -6428,7 +6583,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                 }
                 if (_v) {
                   {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
+                    int res = SWIG_AsVal_unsigned_SS_long(argv[7], NULL);
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
@@ -6443,7 +6598,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       }
                       if (_v) {
                         {
-                          int res = SWIG_AsVal_bool(argv[10], NULL);
+                          int res = SWIG_AsVal_double(argv[10], NULL);
                           _v = SWIG_CheckState(res);
                         }
                         if (_v) {
@@ -6452,7 +6607,159 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
-                            return _wrap_new_BP_Modularity__SWIG_0(self, args);
+                            return _wrap_new_BP_Modularity__SWIG_2(self, args);
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 13) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            {
+              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              {
+                int res = SWIG_AsVal_unsigned_SS_long(argv[5], NULL);
+                _v = SWIG_CheckState(res);
+              }
+              if (_v) {
+                {
+                  int res = SWIG_AsVal_int(argv[6], NULL);
+                  _v = SWIG_CheckState(res);
+                }
+                if (_v) {
+                  {
+                    int res = SWIG_AsVal_unsigned_SS_long(argv[7], NULL);
+                    _v = SWIG_CheckState(res);
+                  }
+                  if (_v) {
+                    {
+                      int res = SWIG_AsVal_double(argv[8], NULL);
+                      _v = SWIG_CheckState(res);
+                    }
+                    if (_v) {
+                      {
+                        int res = SWIG_AsVal_double(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        {
+                          int res = SWIG_AsVal_double(argv[10], NULL);
+                          _v = SWIG_CheckState(res);
+                        }
+                        if (_v) {
+                          {
+                            int res = SWIG_AsVal_bool(argv[11], NULL);
+                            _v = SWIG_CheckState(res);
+                          }
+                          if (_v) {
+                            {
+                              int res = SWIG_AsVal_bool(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              return _wrap_new_BP_Modularity__SWIG_1(self, args);
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 14) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            {
+              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              {
+                int res = SWIG_AsVal_unsigned_SS_long(argv[5], NULL);
+                _v = SWIG_CheckState(res);
+              }
+              if (_v) {
+                {
+                  int res = SWIG_AsVal_int(argv[6], NULL);
+                  _v = SWIG_CheckState(res);
+                }
+                if (_v) {
+                  {
+                    int res = SWIG_AsVal_unsigned_SS_long(argv[7], NULL);
+                    _v = SWIG_CheckState(res);
+                  }
+                  if (_v) {
+                    {
+                      int res = SWIG_AsVal_double(argv[8], NULL);
+                      _v = SWIG_CheckState(res);
+                    }
+                    if (_v) {
+                      {
+                        int res = SWIG_AsVal_double(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        {
+                          int res = SWIG_AsVal_double(argv[10], NULL);
+                          _v = SWIG_CheckState(res);
+                        }
+                        if (_v) {
+                          {
+                            int res = SWIG_AsVal_bool(argv[11], NULL);
+                            _v = SWIG_CheckState(res);
+                          }
+                          if (_v) {
+                            {
+                              int res = SWIG_AsVal_bool(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              int res = SWIG_ConvertPtr(argv[13], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+                              _v = SWIG_CheckState(res);
+                              if (_v) {
+                                return _wrap_new_BP_Modularity__SWIG_0(self, args);
+                              }
+                            }
                           }
                         }
                       }
@@ -6470,11 +6777,12 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_BP_Modularity'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const,double const,bool,bool)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const,double const,bool)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const,double const)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const)\n");
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const,bool,bool,vector< index_t > const &)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const,bool,bool)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const,bool)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const)\n");
   return 0;
 }
 
