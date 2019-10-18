@@ -171,18 +171,19 @@ class MultilayerGraph(object):
     edges between the layers.  In this formulation, each node can only be present in a single layer
     """
 
-    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,comm_vec=None,bipartite_classes=None,
+    def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,
+                 comm_vec=None,bipartite_classes=None,
                  directed=False):
         """
 
         :param intralayer_edges: list of intralayer edges between the nodes. If intralayer_edges.shape[1] > 2\
          intralayer_edges[:,2] is assumed to represent the weights of the edges. Default weight is 1.
         :param layer_vec: vector denoting layer membership for each edge.  Size of network is taken to be\
-        len(layer_vec)
+        len(layer_vec).  For single layer just use [0 for _ in range(N)] 
         :param interlayer_edges: list of edges across layers.  If interlayer_edges.shape[1] > 2\
          interlayer_edges[:,2] is assumed to represent the weights of the edges. Default weight is 1.
         :param comm_vec: Underlying known communitiies of the network.  Default is None
-        :param bipartite_classes : list detail which class each of the nodes is in
+        :param bipartite_classes : list detail which class each of the nodes is in ( [0 , 0 , ... 1, 1 ]
         :param directed:  Are intralayer and interlayer edges directed.  #TODO: allow one or the other to be directed.
         """
 

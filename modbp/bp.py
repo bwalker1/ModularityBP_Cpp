@@ -180,57 +180,6 @@ class BP_Modularity(_object):
 BP_Modularity_swigregister = _bp.BP_Modularity_swigregister
 BP_Modularity_swigregister(BP_Modularity)
 
-class BP_Inference(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, BP_Inference, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, BP_Inference, name)
-    __repr__ = _swig_repr
-
-    def __init__(self, layer_membership, intra_edgelist, inter_edgelist, _n, _nt, q, beta, omega=1.0, resgamma=1.0, verbose=False, transform=False):
-        this = _bp.new_BP_Inference(layer_membership, intra_edgelist, inter_edgelist, _n, _nt, q, beta, omega, resgamma, verbose, transform)
-        try:
-            self.this.append(this)
-        except __builtin__.Exception:
-            self.this = this
-
-    def run(self, maxIters=100):
-        return _bp.BP_Inference_run(self, maxIters)
-
-    def step(self):
-        return _bp.BP_Inference_step(self)
-
-    def compute_marginals(self):
-        return _bp.BP_Inference_compute_marginals(self)
-
-    def compute_bethe_free_energy(self):
-        return _bp.BP_Inference_compute_bethe_free_energy(self)
-
-    def compute_factorized_free_energy(self):
-        return _bp.BP_Inference_compute_factorized_free_energy(self)
-
-    def return_marginals(self):
-        return _bp.BP_Inference_return_marginals(self)
-
-    def getq(self):
-        return _bp.BP_Inference_getq(self)
-
-    def setq(self, new_q):
-        return _bp.BP_Inference_setq(self, new_q)
-
-    def set_compute_bfe(self, b):
-        return _bp.BP_Inference_set_compute_bfe(self, b)
-
-    def getVerbose(self):
-        return _bp.BP_Inference_getVerbose(self)
-
-    def setVerbose(self, arg2):
-        return _bp.BP_Inference_setVerbose(self, arg2)
-    __swig_destroy__ = _bp.delete_BP_Inference
-    __del__ = lambda self: None
-BP_Inference_swigregister = _bp.BP_Inference_swigregister
-BP_Inference_swigregister(BP_Inference)
-
 class SwigPyIterator(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, SwigPyIterator, name, value)

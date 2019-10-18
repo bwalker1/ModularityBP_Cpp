@@ -101,7 +101,7 @@ class ModularityBP():
 
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
-        self._bipart_class_ia =  self._get_bipartpv()
+        self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
 
@@ -353,7 +353,10 @@ class ModularityBP():
     def get_bstar(self,q,omega=0):
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
-        weights=np.append(self.graph.intralayer_weights,
+        if self.graph.nlayers==1:
+            weights=self.graph.intralayer_weights
+        else:
+            weights=np.append(self.graph.intralayer_weights,
                           omega*np.array(self.graph.interlayer_weights))
 
         def avg_weights(bstar, weights, q, c):

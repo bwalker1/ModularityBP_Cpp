@@ -3006,32 +3006,31 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_BP_Inference swig_types[0]
-#define SWIGTYPE_p_BP_Modularity swig_types[1]
-#define SWIGTYPE_p_allocator_type swig_types[2]
-#define SWIGTYPE_p_char swig_types[3]
-#define SWIGTYPE_p_difference_type swig_types[4]
-#define SWIGTYPE_p_first_type swig_types[5]
-#define SWIGTYPE_p_p_PyObject swig_types[6]
-#define SWIGTYPE_p_second_type swig_types[7]
-#define SWIGTYPE_p_size_type swig_types[8]
-#define SWIGTYPE_p_std__allocatorT_double_t swig_types[9]
-#define SWIGTYPE_p_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t swig_types[10]
-#define SWIGTYPE_p_std__allocatorT_std__vectorT_double_std__allocatorT_double_t_t_t swig_types[11]
-#define SWIGTYPE_p_std__allocatorT_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t_t swig_types[12]
-#define SWIGTYPE_p_std__allocatorT_unsigned_long_t swig_types[13]
-#define SWIGTYPE_p_std__invalid_argument swig_types[14]
-#define SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t swig_types[15]
-#define SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t swig_types[16]
-#define SWIGTYPE_p_std__vectorT_std__vectorT_double_std__allocatorT_double_t_t_std__allocatorT_std__vectorT_double_std__allocatorT_double_t_t_t_t swig_types[17]
-#define SWIGTYPE_p_std__vectorT_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t_std__allocatorT_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t_t_t swig_types[18]
-#define SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t swig_types[19]
-#define SWIGTYPE_p_swig__SwigPyIterator swig_types[20]
-#define SWIGTYPE_p_unsigned_char swig_types[21]
-#define SWIGTYPE_p_unsigned_long swig_types[22]
-#define SWIGTYPE_p_value_type swig_types[23]
-static swig_type_info *swig_types[25];
-static swig_module_info swig_module = {swig_types, 24, 0, 0, 0, 0};
+#define SWIGTYPE_p_BP_Modularity swig_types[0]
+#define SWIGTYPE_p_allocator_type swig_types[1]
+#define SWIGTYPE_p_char swig_types[2]
+#define SWIGTYPE_p_difference_type swig_types[3]
+#define SWIGTYPE_p_first_type swig_types[4]
+#define SWIGTYPE_p_p_PyObject swig_types[5]
+#define SWIGTYPE_p_second_type swig_types[6]
+#define SWIGTYPE_p_size_type swig_types[7]
+#define SWIGTYPE_p_std__allocatorT_double_t swig_types[8]
+#define SWIGTYPE_p_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t swig_types[9]
+#define SWIGTYPE_p_std__allocatorT_std__vectorT_double_std__allocatorT_double_t_t_t swig_types[10]
+#define SWIGTYPE_p_std__allocatorT_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t_t swig_types[11]
+#define SWIGTYPE_p_std__allocatorT_unsigned_long_t swig_types[12]
+#define SWIGTYPE_p_std__invalid_argument swig_types[13]
+#define SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t swig_types[14]
+#define SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t swig_types[15]
+#define SWIGTYPE_p_std__vectorT_std__vectorT_double_std__allocatorT_double_t_t_std__allocatorT_std__vectorT_double_std__allocatorT_double_t_t_t_t swig_types[16]
+#define SWIGTYPE_p_std__vectorT_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t_std__allocatorT_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t_t_t swig_types[17]
+#define SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t swig_types[18]
+#define SWIGTYPE_p_swig__SwigPyIterator swig_types[19]
+#define SWIGTYPE_p_unsigned_char swig_types[20]
+#define SWIGTYPE_p_unsigned_long swig_types[21]
+#define SWIGTYPE_p_value_type swig_types[22]
+static swig_type_info *swig_types[24];
+static swig_module_info swig_module = {swig_types, 23, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3136,7 +3135,6 @@ namespace swig {
 }
 
 
-#include "src_cpp/bp_infer.h"
 #include "src_cpp/bp.h"
 typedef unsigned long index_t;
 
@@ -5610,11 +5608,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   int arg7 ;
   index_t arg8 ;
   double arg9 ;
-  double arg10 ;
+  vector< index_t > *arg10 = 0 ;
   double arg11 ;
-  bool arg12 ;
+  double arg12 ;
   bool arg13 ;
-  vector< index_t > *arg14 = 0 ;
+  bool arg14 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -5633,16 +5631,16 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
-  double val10 ;
-  int ecode10 = 0 ;
+  void *argp10 = 0 ;
+  int res10 = 0 ;
   double val11 ;
   int ecode11 = 0 ;
-  bool val12 ;
+  double val12 ;
   int ecode12 = 0 ;
   bool val13 ;
   int ecode13 = 0 ;
-  void *argp14 = 0 ;
-  int res14 = 0 ;
+  bool val14 ;
+  int ecode14 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -5717,35 +5715,35 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_0(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_double(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
-  } 
-  arg10 = static_cast< double >(val10);
+  res10 = SWIG_ConvertPtr(obj9, &argp10, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res10)) {
+    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp10) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg10 = reinterpret_cast< vector< index_t > * >(argp10);
   ecode11 = SWIG_AsVal_double(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
     SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
   } 
   arg11 = static_cast< double >(val11);
-  ecode12 = SWIG_AsVal_bool(obj11, &val12);
+  ecode12 = SWIG_AsVal_double(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "double""'");
   } 
-  arg12 = static_cast< bool >(val12);
+  arg12 = static_cast< double >(val12);
   ecode13 = SWIG_AsVal_bool(obj12, &val13);
   if (!SWIG_IsOK(ecode13)) {
     SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "new_BP_Modularity" "', argument " "13"" of type '" "bool""'");
   } 
   arg13 = static_cast< bool >(val13);
-  res14 = SWIG_ConvertPtr(obj13, &argp14, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res14)) {
-    SWIG_exception_fail(SWIG_ArgError(res14), "in method '" "new_BP_Modularity" "', argument " "14"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp14) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "14"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg14 = reinterpret_cast< vector< index_t > * >(argp14);
-  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,(vector< index_t > const &)*arg14);
+  ecode14 = SWIG_AsVal_bool(obj13, &val14);
+  if (!SWIG_IsOK(ecode14)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "new_BP_Modularity" "', argument " "14"" of type '" "bool""'");
+  } 
+  arg14 = static_cast< bool >(val14);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,(vector< index_t > const &)*arg10,arg11,arg12,arg13,arg14);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -5764,9 +5762,9 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   int arg7 ;
   index_t arg8 ;
   double arg9 ;
-  double arg10 ;
+  vector< index_t > *arg10 = 0 ;
   double arg11 ;
-  bool arg12 ;
+  double arg12 ;
   bool arg13 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -5786,11 +5784,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
-  double val10 ;
-  int ecode10 = 0 ;
+  void *argp10 = 0 ;
+  int res10 = 0 ;
   double val11 ;
   int ecode11 = 0 ;
-  bool val12 ;
+  double val12 ;
   int ecode12 = 0 ;
   bool val13 ;
   int ecode13 = 0 ;
@@ -5867,27 +5865,30 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_1(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_double(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
-  } 
-  arg10 = static_cast< double >(val10);
+  res10 = SWIG_ConvertPtr(obj9, &argp10, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res10)) {
+    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp10) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg10 = reinterpret_cast< vector< index_t > * >(argp10);
   ecode11 = SWIG_AsVal_double(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
     SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
   } 
   arg11 = static_cast< double >(val11);
-  ecode12 = SWIG_AsVal_bool(obj11, &val12);
+  ecode12 = SWIG_AsVal_double(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "double""'");
   } 
-  arg12 = static_cast< bool >(val12);
+  arg12 = static_cast< double >(val12);
   ecode13 = SWIG_AsVal_bool(obj12, &val13);
   if (!SWIG_IsOK(ecode13)) {
     SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "new_BP_Modularity" "', argument " "13"" of type '" "bool""'");
   } 
   arg13 = static_cast< bool >(val13);
-  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,(vector< index_t > const &)*arg10,arg11,arg12,arg13);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -5906,9 +5907,9 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   int arg7 ;
   index_t arg8 ;
   double arg9 ;
-  double arg10 ;
+  vector< index_t > *arg10 = 0 ;
   double arg11 ;
-  bool arg12 ;
+  double arg12 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -5927,11 +5928,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
-  double val10 ;
-  int ecode10 = 0 ;
+  void *argp10 = 0 ;
+  int res10 = 0 ;
   double val11 ;
   int ecode11 = 0 ;
-  bool val12 ;
+  double val12 ;
   int ecode12 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
@@ -6005,22 +6006,25 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_2(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_double(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
-  } 
-  arg10 = static_cast< double >(val10);
+  res10 = SWIG_ConvertPtr(obj9, &argp10, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res10)) {
+    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp10) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg10 = reinterpret_cast< vector< index_t > * >(argp10);
   ecode11 = SWIG_AsVal_double(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
     SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
   } 
   arg11 = static_cast< double >(val11);
-  ecode12 = SWIG_AsVal_bool(obj11, &val12);
+  ecode12 = SWIG_AsVal_double(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "bool""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "new_BP_Modularity" "', argument " "12"" of type '" "double""'");
   } 
-  arg12 = static_cast< bool >(val12);
-  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12);
+  arg12 = static_cast< double >(val12);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,(vector< index_t > const &)*arg10,arg11,arg12);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -6039,7 +6043,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(se
   int arg7 ;
   index_t arg8 ;
   double arg9 ;
-  double arg10 ;
+  vector< index_t > *arg10 = 0 ;
   double arg11 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -6059,8 +6063,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(se
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
-  double val10 ;
-  int ecode10 = 0 ;
+  void *argp10 = 0 ;
+  int res10 = 0 ;
   double val11 ;
   int ecode11 = 0 ;
   PyObject * obj0 = 0 ;
@@ -6134,17 +6138,20 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_3(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_double(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
-  } 
-  arg10 = static_cast< double >(val10);
+  res10 = SWIG_ConvertPtr(obj9, &argp10, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res10)) {
+    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp10) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg10 = reinterpret_cast< vector< index_t > * >(argp10);
   ecode11 = SWIG_AsVal_double(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
     SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Modularity" "', argument " "11"" of type '" "double""'");
   } 
   arg11 = static_cast< double >(val11);
-  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,(vector< index_t > const &)*arg10,arg11);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -6163,7 +6170,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_4(PyObject *SWIGUNUSEDPARM(se
   int arg7 ;
   index_t arg8 ;
   double arg9 ;
-  double arg10 ;
+  vector< index_t > *arg10 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -6182,8 +6189,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_4(PyObject *SWIGUNUSEDPARM(se
   int ecode8 = 0 ;
   double val9 ;
   int ecode9 = 0 ;
-  double val10 ;
-  int ecode10 = 0 ;
+  void *argp10 = 0 ;
+  int res10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -6254,12 +6261,15 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity__SWIG_4(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Modularity" "', argument " "9"" of type '" "double""'");
   } 
   arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_double(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "double""'");
-  } 
-  arg10 = static_cast< double >(val10);
-  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,arg10);
+  res10 = SWIG_ConvertPtr(obj9, &argp10, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
+  if (!SWIG_IsOK(res10)) {
+    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  if (!argp10) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Modularity" "', argument " "10"" of type '" "vector< index_t > const &""'"); 
+  }
+  arg10 = reinterpret_cast< vector< index_t > * >(argp10);
+  result = (BP_Modularity *)new BP_Modularity((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< double > const &)*arg3,(vector< pair< index_t,index_t > > const &)*arg4,arg5,arg6,arg7,arg8,arg9,(vector< index_t > const &)*arg10);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Modularity, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
@@ -6474,10 +6484,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      {
-                        int res = SWIG_AsVal_double(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
+                      int res = SWIG_ConvertPtr(argv[9], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+                      _v = SWIG_CheckState(res);
                       if (_v) {
                         return _wrap_new_BP_Modularity__SWIG_4(self, args);
                       }
@@ -6530,10 +6538,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      {
-                        int res = SWIG_AsVal_double(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
+                      int res = SWIG_ConvertPtr(argv[9], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+                      _v = SWIG_CheckState(res);
                       if (_v) {
                         {
                           int res = SWIG_AsVal_double(argv[10], NULL);
@@ -6592,10 +6598,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      {
-                        int res = SWIG_AsVal_double(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
+                      int res = SWIG_ConvertPtr(argv[9], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+                      _v = SWIG_CheckState(res);
                       if (_v) {
                         {
                           int res = SWIG_AsVal_double(argv[10], NULL);
@@ -6603,7 +6607,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                         }
                         if (_v) {
                           {
-                            int res = SWIG_AsVal_bool(argv[11], NULL);
+                            int res = SWIG_AsVal_double(argv[11], NULL);
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
@@ -6660,10 +6664,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      {
-                        int res = SWIG_AsVal_double(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
+                      int res = SWIG_ConvertPtr(argv[9], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+                      _v = SWIG_CheckState(res);
                       if (_v) {
                         {
                           int res = SWIG_AsVal_double(argv[10], NULL);
@@ -6671,7 +6673,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                         }
                         if (_v) {
                           {
-                            int res = SWIG_AsVal_bool(argv[11], NULL);
+                            int res = SWIG_AsVal_double(argv[11], NULL);
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
@@ -6734,10 +6736,8 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
-                      {
-                        int res = SWIG_AsVal_double(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
+                      int res = SWIG_ConvertPtr(argv[9], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
+                      _v = SWIG_CheckState(res);
                       if (_v) {
                         {
                           int res = SWIG_AsVal_double(argv[10], NULL);
@@ -6745,7 +6745,7 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                         }
                         if (_v) {
                           {
-                            int res = SWIG_AsVal_bool(argv[11], NULL);
+                            int res = SWIG_AsVal_double(argv[11], NULL);
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
@@ -6754,8 +6754,10 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
                               _v = SWIG_CheckState(res);
                             }
                             if (_v) {
-                              int res = SWIG_ConvertPtr(argv[13], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-                              _v = SWIG_CheckState(res);
+                              {
+                                int res = SWIG_AsVal_bool(argv[13], NULL);
+                                _v = SWIG_CheckState(res);
+                              }
                               if (_v) {
                                 return _wrap_new_BP_Modularity__SWIG_0(self, args);
                               }
@@ -6777,11 +6779,11 @@ SWIGINTERN PyObject *_wrap_new_BP_Modularity(PyObject *self, PyObject *args) {
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_BP_Modularity'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const,bool,bool,vector< index_t > const &)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const,bool,bool)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const,bool)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const,double const)\n"
-    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,double const)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,vector< index_t > const &,double const,double const,bool,bool)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,vector< index_t > const &,double const,double const,bool)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,vector< index_t > const &,double const,double const)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,vector< index_t > const &,double const)\n"
+    "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const,vector< index_t > const &)\n"
     "    BP_Modularity::BP_Modularity(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< double > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,index_t const,double const)\n");
   return 0;
 }
@@ -7815,1175 +7817,6 @@ SWIGINTERN PyObject *BP_Modularity_swigregister(PyObject *SWIGUNUSEDPARM(self), 
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
   SWIG_TypeNewClientData(SWIGTYPE_p_BP_Modularity, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
-SWIGINTERN PyObject *_wrap_new_BP_Inference__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  vector< index_t > *arg1 = 0 ;
-  vector< pair< index_t,index_t > > *arg2 = 0 ;
-  vector< pair< index_t,index_t > > *arg3 = 0 ;
-  index_t arg4 ;
-  index_t arg5 ;
-  int arg6 ;
-  double arg7 ;
-  double arg8 ;
-  double arg9 ;
-  bool arg10 ;
-  bool arg11 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  unsigned long val4 ;
-  int ecode4 = 0 ;
-  unsigned long val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  double val7 ;
-  int ecode7 = 0 ;
-  double val8 ;
-  int ecode8 = 0 ;
-  double val9 ;
-  int ecode9 = 0 ;
-  bool val10 ;
-  int ecode10 = 0 ;
-  bool val11 ;
-  int ecode11 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  PyObject * obj8 = 0 ;
-  PyObject * obj9 = 0 ;
-  PyObject * obj10 = 0 ;
-  BP_Inference *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:new_BP_Inference",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg3 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp3);
-  ecode4 = SWIG_AsVal_unsigned_SS_long(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Inference" "', argument " "4"" of type '" "index_t""'");
-  } 
-  arg4 = static_cast< index_t >(val4);
-  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Inference" "', argument " "5"" of type '" "index_t""'");
-  } 
-  arg5 = static_cast< index_t >(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Inference" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = static_cast< int >(val6);
-  ecode7 = SWIG_AsVal_double(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Inference" "', argument " "7"" of type '" "double""'");
-  } 
-  arg7 = static_cast< double >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Inference" "', argument " "8"" of type '" "double""'");
-  } 
-  arg8 = static_cast< double >(val8);
-  ecode9 = SWIG_AsVal_double(obj8, &val9);
-  if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Inference" "', argument " "9"" of type '" "double""'");
-  } 
-  arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_bool(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Inference" "', argument " "10"" of type '" "bool""'");
-  } 
-  arg10 = static_cast< bool >(val10);
-  ecode11 = SWIG_AsVal_bool(obj10, &val11);
-  if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "new_BP_Inference" "', argument " "11"" of type '" "bool""'");
-  } 
-  arg11 = static_cast< bool >(val11);
-  result = (BP_Inference *)new BP_Inference((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< pair< index_t,index_t > > const &)*arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Inference, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_BP_Inference__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  vector< index_t > *arg1 = 0 ;
-  vector< pair< index_t,index_t > > *arg2 = 0 ;
-  vector< pair< index_t,index_t > > *arg3 = 0 ;
-  index_t arg4 ;
-  index_t arg5 ;
-  int arg6 ;
-  double arg7 ;
-  double arg8 ;
-  double arg9 ;
-  bool arg10 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  unsigned long val4 ;
-  int ecode4 = 0 ;
-  unsigned long val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  double val7 ;
-  int ecode7 = 0 ;
-  double val8 ;
-  int ecode8 = 0 ;
-  double val9 ;
-  int ecode9 = 0 ;
-  bool val10 ;
-  int ecode10 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  PyObject * obj8 = 0 ;
-  PyObject * obj9 = 0 ;
-  BP_Inference *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:new_BP_Inference",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg3 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp3);
-  ecode4 = SWIG_AsVal_unsigned_SS_long(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Inference" "', argument " "4"" of type '" "index_t""'");
-  } 
-  arg4 = static_cast< index_t >(val4);
-  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Inference" "', argument " "5"" of type '" "index_t""'");
-  } 
-  arg5 = static_cast< index_t >(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Inference" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = static_cast< int >(val6);
-  ecode7 = SWIG_AsVal_double(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Inference" "', argument " "7"" of type '" "double""'");
-  } 
-  arg7 = static_cast< double >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Inference" "', argument " "8"" of type '" "double""'");
-  } 
-  arg8 = static_cast< double >(val8);
-  ecode9 = SWIG_AsVal_double(obj8, &val9);
-  if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Inference" "', argument " "9"" of type '" "double""'");
-  } 
-  arg9 = static_cast< double >(val9);
-  ecode10 = SWIG_AsVal_bool(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "new_BP_Inference" "', argument " "10"" of type '" "bool""'");
-  } 
-  arg10 = static_cast< bool >(val10);
-  result = (BP_Inference *)new BP_Inference((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< pair< index_t,index_t > > const &)*arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Inference, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_BP_Inference__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  vector< index_t > *arg1 = 0 ;
-  vector< pair< index_t,index_t > > *arg2 = 0 ;
-  vector< pair< index_t,index_t > > *arg3 = 0 ;
-  index_t arg4 ;
-  index_t arg5 ;
-  int arg6 ;
-  double arg7 ;
-  double arg8 ;
-  double arg9 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  unsigned long val4 ;
-  int ecode4 = 0 ;
-  unsigned long val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  double val7 ;
-  int ecode7 = 0 ;
-  double val8 ;
-  int ecode8 = 0 ;
-  double val9 ;
-  int ecode9 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  PyObject * obj8 = 0 ;
-  BP_Inference *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:new_BP_Inference",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg3 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp3);
-  ecode4 = SWIG_AsVal_unsigned_SS_long(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Inference" "', argument " "4"" of type '" "index_t""'");
-  } 
-  arg4 = static_cast< index_t >(val4);
-  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Inference" "', argument " "5"" of type '" "index_t""'");
-  } 
-  arg5 = static_cast< index_t >(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Inference" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = static_cast< int >(val6);
-  ecode7 = SWIG_AsVal_double(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Inference" "', argument " "7"" of type '" "double""'");
-  } 
-  arg7 = static_cast< double >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Inference" "', argument " "8"" of type '" "double""'");
-  } 
-  arg8 = static_cast< double >(val8);
-  ecode9 = SWIG_AsVal_double(obj8, &val9);
-  if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "new_BP_Inference" "', argument " "9"" of type '" "double""'");
-  } 
-  arg9 = static_cast< double >(val9);
-  result = (BP_Inference *)new BP_Inference((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< pair< index_t,index_t > > const &)*arg3,arg4,arg5,arg6,arg7,arg8,arg9);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Inference, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_BP_Inference__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  vector< index_t > *arg1 = 0 ;
-  vector< pair< index_t,index_t > > *arg2 = 0 ;
-  vector< pair< index_t,index_t > > *arg3 = 0 ;
-  index_t arg4 ;
-  index_t arg5 ;
-  int arg6 ;
-  double arg7 ;
-  double arg8 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  unsigned long val4 ;
-  int ecode4 = 0 ;
-  unsigned long val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  double val7 ;
-  int ecode7 = 0 ;
-  double val8 ;
-  int ecode8 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  BP_Inference *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:new_BP_Inference",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg3 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp3);
-  ecode4 = SWIG_AsVal_unsigned_SS_long(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Inference" "', argument " "4"" of type '" "index_t""'");
-  } 
-  arg4 = static_cast< index_t >(val4);
-  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Inference" "', argument " "5"" of type '" "index_t""'");
-  } 
-  arg5 = static_cast< index_t >(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Inference" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = static_cast< int >(val6);
-  ecode7 = SWIG_AsVal_double(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Inference" "', argument " "7"" of type '" "double""'");
-  } 
-  arg7 = static_cast< double >(val7);
-  ecode8 = SWIG_AsVal_double(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "new_BP_Inference" "', argument " "8"" of type '" "double""'");
-  } 
-  arg8 = static_cast< double >(val8);
-  result = (BP_Inference *)new BP_Inference((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< pair< index_t,index_t > > const &)*arg3,arg4,arg5,arg6,arg7,arg8);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Inference, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_BP_Inference__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  vector< index_t > *arg1 = 0 ;
-  vector< pair< index_t,index_t > > *arg2 = 0 ;
-  vector< pair< index_t,index_t > > *arg3 = 0 ;
-  index_t arg4 ;
-  index_t arg5 ;
-  int arg6 ;
-  double arg7 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  unsigned long val4 ;
-  int ecode4 = 0 ;
-  unsigned long val5 ;
-  int ecode5 = 0 ;
-  int val6 ;
-  int ecode6 = 0 ;
-  double val7 ;
-  int ecode7 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  BP_Inference *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:new_BP_Inference",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "1"" of type '" "vector< index_t > const &""'"); 
-  }
-  arg1 = reinterpret_cast< vector< index_t > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "2"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg2 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t,  0  | 0);
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_BP_Inference" "', argument " "3"" of type '" "vector< pair< index_t,index_t > > const &""'"); 
-  }
-  arg3 = reinterpret_cast< vector< pair< index_t,index_t > > * >(argp3);
-  ecode4 = SWIG_AsVal_unsigned_SS_long(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "new_BP_Inference" "', argument " "4"" of type '" "index_t""'");
-  } 
-  arg4 = static_cast< index_t >(val4);
-  ecode5 = SWIG_AsVal_unsigned_SS_long(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "new_BP_Inference" "', argument " "5"" of type '" "index_t""'");
-  } 
-  arg5 = static_cast< index_t >(val5);
-  ecode6 = SWIG_AsVal_int(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "new_BP_Inference" "', argument " "6"" of type '" "int""'");
-  } 
-  arg6 = static_cast< int >(val6);
-  ecode7 = SWIG_AsVal_double(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "new_BP_Inference" "', argument " "7"" of type '" "double""'");
-  } 
-  arg7 = static_cast< double >(val7);
-  result = (BP_Inference *)new BP_Inference((vector< index_t > const &)*arg1,(vector< pair< index_t,index_t > > const &)*arg2,(vector< pair< index_t,index_t > > const &)*arg3,arg4,arg5,arg6,arg7);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_BP_Inference, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_BP_Inference(PyObject *self, PyObject *args) {
-  Py_ssize_t argc;
-  PyObject *argv[12] = {
-    0
-  };
-  Py_ssize_t ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 11) && (ii < argc); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 7) {
-    int _v;
-    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          {
-            int res = SWIG_AsVal_unsigned_SS_long(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                {
-                  int res = SWIG_AsVal_double(argv[6], NULL);
-                  _v = SWIG_CheckState(res);
-                }
-                if (_v) {
-                  return _wrap_new_BP_Inference__SWIG_4(self, args);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 8) {
-    int _v;
-    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          {
-            int res = SWIG_AsVal_unsigned_SS_long(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                {
-                  int res = SWIG_AsVal_double(argv[6], NULL);
-                  _v = SWIG_CheckState(res);
-                }
-                if (_v) {
-                  {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
-                    _v = SWIG_CheckState(res);
-                  }
-                  if (_v) {
-                    return _wrap_new_BP_Inference__SWIG_3(self, args);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 9) {
-    int _v;
-    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          {
-            int res = SWIG_AsVal_unsigned_SS_long(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                {
-                  int res = SWIG_AsVal_double(argv[6], NULL);
-                  _v = SWIG_CheckState(res);
-                }
-                if (_v) {
-                  {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
-                    _v = SWIG_CheckState(res);
-                  }
-                  if (_v) {
-                    {
-                      int res = SWIG_AsVal_double(argv[8], NULL);
-                      _v = SWIG_CheckState(res);
-                    }
-                    if (_v) {
-                      return _wrap_new_BP_Inference__SWIG_2(self, args);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 10) {
-    int _v;
-    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          {
-            int res = SWIG_AsVal_unsigned_SS_long(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                {
-                  int res = SWIG_AsVal_double(argv[6], NULL);
-                  _v = SWIG_CheckState(res);
-                }
-                if (_v) {
-                  {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
-                    _v = SWIG_CheckState(res);
-                  }
-                  if (_v) {
-                    {
-                      int res = SWIG_AsVal_double(argv[8], NULL);
-                      _v = SWIG_CheckState(res);
-                    }
-                    if (_v) {
-                      {
-                        int res = SWIG_AsVal_bool(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
-                      if (_v) {
-                        return _wrap_new_BP_Inference__SWIG_1(self, args);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 11) {
-    int _v;
-    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__vectorT_unsigned_long_std__allocatorT_unsigned_long_t_t, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__vectorT_std__pairT_unsigned_long_unsigned_long_t_std__allocatorT_std__pairT_unsigned_long_unsigned_long_t_t_t, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          {
-            int res = SWIG_AsVal_unsigned_SS_long(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_unsigned_SS_long(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                {
-                  int res = SWIG_AsVal_double(argv[6], NULL);
-                  _v = SWIG_CheckState(res);
-                }
-                if (_v) {
-                  {
-                    int res = SWIG_AsVal_double(argv[7], NULL);
-                    _v = SWIG_CheckState(res);
-                  }
-                  if (_v) {
-                    {
-                      int res = SWIG_AsVal_double(argv[8], NULL);
-                      _v = SWIG_CheckState(res);
-                    }
-                    if (_v) {
-                      {
-                        int res = SWIG_AsVal_bool(argv[9], NULL);
-                        _v = SWIG_CheckState(res);
-                      }
-                      if (_v) {
-                        {
-                          int res = SWIG_AsVal_bool(argv[10], NULL);
-                          _v = SWIG_CheckState(res);
-                        }
-                        if (_v) {
-                          return _wrap_new_BP_Inference__SWIG_0(self, args);
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_BP_Inference'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    BP_Inference::BP_Inference(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const,double const,bool,bool)\n"
-    "    BP_Inference::BP_Inference(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const,double const,bool)\n"
-    "    BP_Inference::BP_Inference(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const,double const)\n"
-    "    BP_Inference::BP_Inference(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const,double const)\n"
-    "    BP_Inference::BP_Inference(vector< index_t > const &,vector< pair< index_t,index_t > > const &,vector< pair< index_t,index_t > > const &,index_t const,index_t const,int const,double const)\n");
-  return 0;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_run__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  unsigned long arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  unsigned long val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  long result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Inference_run",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_run" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  ecode2 = SWIG_AsVal_unsigned_SS_long(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Inference_run" "', argument " "2"" of type '" "unsigned long""'");
-  } 
-  arg2 = static_cast< unsigned long >(val2);
-  result = (long)(arg1)->run(arg2);
-  resultobj = SWIG_From_long(static_cast< long >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_run__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  long result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_run",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_run" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  result = (long)(arg1)->run();
-  resultobj = SWIG_From_long(static_cast< long >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_run(PyObject *self, PyObject *args) {
-  Py_ssize_t argc;
-  PyObject *argv[3] = {
-    0
-  };
-  Py_ssize_t ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 1) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_BP_Inference, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      return _wrap_BP_Inference_run__SWIG_1(self, args);
-    }
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_BP_Inference, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      {
-        int res = SWIG_AsVal_unsigned_SS_long(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        return _wrap_BP_Inference_run__SWIG_0(self, args);
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'BP_Inference_run'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    BP_Inference::run(unsigned long)\n"
-    "    BP_Inference::run()\n");
-  return 0;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_step(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_step",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_step" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  (arg1)->step();
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_compute_marginals(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_compute_marginals",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_compute_marginals" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  (arg1)->compute_marginals();
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_compute_bethe_free_energy(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  double result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_compute_bethe_free_energy",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_compute_bethe_free_energy" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  result = (double)(arg1)->compute_bethe_free_energy();
-  resultobj = SWIG_From_double(static_cast< double >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_compute_factorized_free_energy(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  double result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_compute_factorized_free_energy",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_compute_factorized_free_energy" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  result = (double)(arg1)->compute_factorized_free_energy();
-  resultobj = SWIG_From_double(static_cast< double >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_return_marginals(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  vector< vector< double > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_return_marginals",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_return_marginals" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  result = (arg1)->return_marginals();
-  resultobj = SWIG_NewPointerObj((new vector< vector< double > >(static_cast< const vector< vector< double > >& >(result))), SWIGTYPE_p_std__vectorT_std__vectorT_double_std__allocatorT_double_t_t_std__allocatorT_std__vectorT_double_std__allocatorT_double_t_t_t_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_getq(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  index_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_getq",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_getq" "', argument " "1"" of type '" "BP_Inference const *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  result = (index_t)((BP_Inference const *)arg1)->getq();
-  resultobj = SWIG_From_unsigned_SS_long(static_cast< unsigned long >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_setq(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  double arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  double val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Inference_setq",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_setq" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  ecode2 = SWIG_AsVal_double(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Inference_setq" "', argument " "2"" of type '" "double""'");
-  } 
-  arg2 = static_cast< double >(val2);
-  (arg1)->setq(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_set_compute_bfe(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  bool arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  bool val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Inference_set_compute_bfe",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_set_compute_bfe" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  ecode2 = SWIG_AsVal_bool(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Inference_set_compute_bfe" "', argument " "2"" of type '" "bool""'");
-  } 
-  arg2 = static_cast< bool >(val2);
-  (arg1)->set_compute_bfe(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_getVerbose(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  bool result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:BP_Inference_getVerbose",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_getVerbose" "', argument " "1"" of type '" "BP_Inference const *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  result = (bool)((BP_Inference const *)arg1)->getVerbose();
-  resultobj = SWIG_From_bool(static_cast< bool >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_BP_Inference_setVerbose(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  bool arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  bool val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Inference_setVerbose",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Inference_setVerbose" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  ecode2 = SWIG_AsVal_bool(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Inference_setVerbose" "', argument " "2"" of type '" "bool""'");
-  } 
-  arg2 = static_cast< bool >(val2);
-  (arg1)->setVerbose(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_BP_Inference(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Inference *arg1 = (BP_Inference *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_BP_Inference",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Inference, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_BP_Inference" "', argument " "1"" of type '" "BP_Inference *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Inference * >(argp1);
-  delete arg1;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *BP_Inference_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_BP_Inference, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
 
@@ -19544,20 +18377,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BP_Modularity_merge_communities", _wrap_BP_Modularity_merge_communities, METH_VARARGS, NULL},
 	 { (char *)"delete_BP_Modularity", _wrap_delete_BP_Modularity, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_swigregister", BP_Modularity_swigregister, METH_VARARGS, NULL},
-	 { (char *)"new_BP_Inference", _wrap_new_BP_Inference, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_run", _wrap_BP_Inference_run, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_step", _wrap_BP_Inference_step, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_compute_marginals", _wrap_BP_Inference_compute_marginals, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_compute_bethe_free_energy", _wrap_BP_Inference_compute_bethe_free_energy, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_compute_factorized_free_energy", _wrap_BP_Inference_compute_factorized_free_energy, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_return_marginals", _wrap_BP_Inference_return_marginals, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_getq", _wrap_BP_Inference_getq, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_setq", _wrap_BP_Inference_setq, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_set_compute_bfe", _wrap_BP_Inference_set_compute_bfe, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_getVerbose", _wrap_BP_Inference_getVerbose, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_setVerbose", _wrap_BP_Inference_setVerbose, METH_VARARGS, NULL},
-	 { (char *)"delete_BP_Inference", _wrap_delete_BP_Inference, METH_VARARGS, NULL},
-	 { (char *)"BP_Inference_swigregister", BP_Inference_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_SwigPyIterator", _wrap_delete_SwigPyIterator, METH_VARARGS, NULL},
 	 { (char *)"SwigPyIterator_value", _wrap_SwigPyIterator_value, METH_VARARGS, NULL},
 	 { (char *)"SwigPyIterator_incr", _wrap_SwigPyIterator_incr, METH_VARARGS, NULL},
@@ -19752,7 +18571,6 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static swig_type_info _swigt__p_BP_Inference = {"_p_BP_Inference", "BP_Inference *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_BP_Modularity = {"_p_BP_Modularity", "BP_Modularity *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_allocator_type = {"_p_allocator_type", "allocator_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
@@ -19778,7 +18596,6 @@ static swig_type_info _swigt__p_unsigned_long = {"_p_unsigned_long", "index_t *|
 static swig_type_info _swigt__p_value_type = {"_p_value_type", "value_type *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
-  &_swigt__p_BP_Inference,
   &_swigt__p_BP_Modularity,
   &_swigt__p_allocator_type,
   &_swigt__p_char,
@@ -19804,7 +18621,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_value_type,
 };
 
-static swig_cast_info _swigc__p_BP_Inference[] = {  {&_swigt__p_BP_Inference, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_BP_Modularity[] = {  {&_swigt__p_BP_Modularity, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_allocator_type[] = {  {&_swigt__p_allocator_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -19830,7 +18646,6 @@ static swig_cast_info _swigc__p_unsigned_long[] = {  {&_swigt__p_unsigned_long, 
 static swig_cast_info _swigc__p_value_type[] = {  {&_swigt__p_value_type, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
-  _swigc__p_BP_Inference,
   _swigc__p_BP_Modularity,
   _swigc__p_allocator_type,
   _swigc__p_char,
