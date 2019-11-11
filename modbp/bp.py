@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, *args):
-        this = _bp.new_BP_Modularity(*args)
+    def __init__(self, layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, num_biparte_classes, beta, bipartite_class, omega=1.0, resgamma=1.0, verbose=False, transform=False):
+        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, num_biparte_classes, beta, bipartite_class, omega, resgamma, verbose, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:

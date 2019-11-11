@@ -240,6 +240,7 @@ class MultilayerGraph(object):
 
         self.comm_vec=comm_vec #for known community labels of nodes
         if self.comm_vec is not None:
+            self.comm_vec=np.array(comm_vec)
             self._label_layers(self.comm_vec)
         self.interedgesbylayers=self._create_interlayeredges_by_layers()
 

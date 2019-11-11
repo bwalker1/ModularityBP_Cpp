@@ -30,13 +30,14 @@ def main():
     qmax=4
     bpobj=modbp.ModularityBP(mlgraph=mlgraph,
                              align_communities_across_layers=False)
-
-    betas=[ bpobj.get_bstar(q) for q in range(2,3) ]
+    nruns=3
+    betas=[ bpobj.get_bstar(q) for q in range(2,4) ]
     for beta in betas:
-        bpobj.run_modbp(beta,q=qmax,resgamma=1.0)
+        for i in range(nruns):
+            bpobj.run_modbp(beta,q=qmax,resgamma=1.0,niter=200,reset=True)
 
 
-
+    rm_df = bpobj.retrieval_modularities
 
     return 0
 

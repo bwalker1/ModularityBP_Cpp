@@ -12,30 +12,79 @@ import shutil
 import scipy.io as scio
 import sklearn.metrics as skm
 import itertools
+#generative multilayer benchmark models (now in python)
+import multilayerGM as gm
+from time import time
 
-clusterdir="/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab"
-#arch = "elf64"
+clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
+matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
+matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
 
-#clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/multilayer_benchmark_matlab" #for testing locally
+if not os.path.exists(matlaboutdir):
+    os.makedirs(matlaboutdir)
+#main file for alling matlab
 
-#clusterdir = "/Users/ben/Research (Github)/ModularityBP_Cpp/"
-# finoutdir=os.path.join(clusterdir,'test/modbpdata/LFR_test_data_gamma3_beta2')
+#shell scripts for calling matlab functions from command line
+call_genlouvain_file = os.path.join(clusterdir,"test/genlouvain_mlsbm/call_matlab_genlouvain.sh")
+call_matlab_createbenchmark_file = os.path.join(matlabbench_dir, "call_matlab_multilayer.sh")
 
-matlaboutdir = os.path.join(clusterdir,"/matlab_temp_files")
-call_matlabfile = os.path.join(clusterdir,"call_matlab_multilayer.sh")
+#set architecture flag for compiled files
+oncluster=False
+if re.search("/nas/longleaf",clusterdir):
+    oncluster=True
+arch = "elf64" if oncluster else "x86_64" #for different compiled code to run
 
-# def edges_to_adj(elist):
-#     elist=np.array(elist)
-#     max=np.max(elist)
-#     A=np.zeros((max,max))
-#     for i in range
+
+
+
+def call_gen_louvain(mgraph, gamma, omega, S=None):
+    A, C = mgraph.to_scipy_csr()
+    P = mgraph.create_null_adj()
+
+    rprefix = np.random.randint(100000)
+    scio_outfile = os.path.join(matlaboutdir, "{:d}_temp_matlab_input_file.mat".format(rprefix))
+    matlaboutput = os.path.join(matlaboutdir, "{:d}_temp_matlab_output_file.mat".format(rprefix))
+
+    if S is None:
+        scio.savemat(scio_outfile, {"A": A, "C": C, "P": P})
+    else:
+
+        scio.savemat(scio_outfile, {"A": A, "C": C, "P": P,
+                                    "S0": np.reshape(S, (-1, mgraph.nlayers)).astype(float)})  # add in starting vector
+
+    parameters = [call_genlouvain_file,
+                  scio_outfile,
+                  matlaboutput,
+                  "{:.4f}".format(gamma),
+                  "{:.4f}".format(omega)
+                  ]
+    process = Popen(parameters, stderr=PIPE, stdout=PIPE)
+    stdout, stderr = process.communicate()
+    process.wait()
+    if process.returncode != 0:
+        print("matlab call failed")
+    #     print(stderr)
+
+    S = scio.loadmat(matlaboutput)['S'][:, 0]
+    ami = mgraph.get_AMI_with_communities(S)
+
+    try:
+        os.remove(scio_outfile)
+    except:
+        pass
+    try:
+        os.remove(matlaboutput)
+    except:
+        pass
+
+    return S
 
 def adjacency_to_edges(A,offset=0):
     nnz_inds = np.nonzero(A)
     nnzvals = np.array(A[nnz_inds])
     if len(nnzvals.shape) > 1:
         nnzvals = nnzvals[0]  # handle scipy sparse types
-    return zip(nnz_inds[0]+offset, nnz_inds[1]+offset, nnzvals)
+    return list(zip(nnz_inds[0]+offset, nnz_inds[1]+offset, nnzvals))
 
 def create_ml_graph_from_matlab(moutputfile,ismultiplex=True):
     matoutputdict=scio.loadmat(moutputfile)
@@ -66,189 +115,177 @@ def create_ml_graph_from_matlab(moutputfile,ismultiplex=True):
     return mlgraph
 
 
+def convert_nxmg_to_mbp_multigraph(nxmg, dt):
+    # dt has the interlayer edges in it
+    nodelist = np.array(list(nxmg.adj.keys()))
+    layervec = nodelist[:, 1]
+    N = len(nodelist)
+    layers, layercounts = np.unique(layervec, return_counts=True)
+    assert (len(np.unique(layercounts)) == 1), "Multiplex must have same number of edges in each layer"
+    nodeperlayer = layercounts[0]
 
-def create_multiplex_graph(n=1000,nlayers=40, ep=.99,eta=.1, c=10, mk=20, use_gcc=True,orig=None,layers=None, ismultiplex = False,ncoms=2):
-    rprefix=np.random.randint(100000)
-    rprefix_dir=os.path.join(clusterdir,str(rprefix))
+    layer_adjust_ind_dict = dict(zip(layers, np.append([0], np.cumsum(layercounts)[:-1])))
+    node_inds = dict([((n, lay), layer_adjust_ind_dict[lay] + n) for n, lay in nodelist])
+    interelist = []
+    intraelist = []
+    edges = np.array(nxmg.edges)
+    # seperate edges by type
+    for e1, e2 in edges:
+        ind1 = node_inds[(e1[0], e1[1])]
+        ind2 = node_inds[(e2[0], e2[1])]
+        assert e1[1] == e2[1], "Non intralayer edges identified in multiplex"
+        intraelist.append((ind1, ind2))
+
+    # We create a multiplex interedge list here
+    for i in range(nodeperlayer):  # i is node number
+        curnodes = [i + j * (nodeperlayer) for j in range(len(layers))]
+        for ind1, ind2 in itertools.combinations(curnodes, 2):
+            interelist.append((ind1, ind2))
+
+    partition = list(nxmg.nodes(data='mesoset'))
+
+    partition = list(map(lambda x: (node_inds[x[0]], x[1]), partition))
+    partition = sorted(partition, key=lambda x: x[0])
+    comvec = [x[1] for x in partition]
+    return modbp.MultilayerGraph(comm_vec=comvec, interlayer_edges=interelist,
+                                 intralayer_edges=intraelist,
+                                 layer_vec=layervec)
+
+
+def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_max=150,
+                           k_min=3):
+    theta = 2
+    dt = gm.dependency_tensors.UniformMultiplex(n_nodes, n_layers, p)
+    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=maxcoms)
+    partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
+    # with use the degree corrected SBM to mirror paper
+    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
+    #     return multinet
+    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet, dt)
+    return mbpmulltinet
+
+
+#original mehtod used the matlab code.  have since switched to the python .
+def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,
+                            use_gcc=True, orig=None, layers=None, ismultiplex = False, ncoms=2):
+    rprefix=np.random.randint(1000000)
+    rprefix_dir=os.path.join(matlaboutdir,str(rprefix))
     if not os.path.exists(rprefix_dir):
         os.makedirs(rprefix_dir)
 
     moutputfile=os.path.join(rprefix_dir,'network.mat')
 
-    parameters = [call_matlabfile,
+    parameters = [call_matlab_createbenchmark_file,
                   moutputfile,
                   "{:d}".format(n),
                   "{:d}".format(nlayers),
-                  "{:.5f}".format(ep),
-                  "{:.5f}".format(eta), #eta is the prop of transmitting community label!
+                  "{:.5f}".format(mu),
+                  "{:.5f}".format(p),  #p is the prop of transmitting community label!
                   "{:d}".format(ncoms)
                   ]
     print(parameters)
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
     process.wait()
-    mlgraph=create_ml_graph_from_matlab(moutputfile,ismultiplex=ismultiplex)
-    # for layer in mlgraph.layers:
-    #     print ("k={:.4f}".format(2.0*layer.ecount()/layer.vcount()))
-    # plt.close()
-    # f,a=plt.subplots(1,1,figsize=(6,6))
-    # mlgraph.plot_communities(ax=a)
-    # plt.show()
+    if process.returncode != 0:
+        raise RuntimeError("creating benchmark graph failed : {:}".format(stderr))
 
+    mlgraph=create_multiplex_graph(moutputfile,ismultiplex=ismultiplex)
+
+    #clean out random graph
     if os.path.exists("{:}".format(rprefix_dir)):
         shutil.rmtree("{:}".format(rprefix_dir))
 
     return mlgraph
 
 
-
-# # run SBMBP on the input graph with the chosen q, using the EM algorithm to learn parameters
-# # returns the AMI of the learned partition
-# def run_SBMBP_on_graph(graph):
-#     sbmbpfile = os.path.join(clusterdir,'test/mode_net/sbm')
-#     # outdir = os.path.join(clusterdir,'test/modbpdata/LFR_test_data/')
-#     rprefix = np.random.randint(100000)
-#     tmp_grph_file = os.path.join(finoutdir, '{:d}temporary_graph_file.gml'.format(rprefix))
-#     graph.save(tmp_grph_file)
-#     all_partitions = {}
-#     final_values = {}
-#     for q in range(2, 5):
-#         parameters = [
-#             sbmbpfile, 'learn',
-#             "-l", tmp_grph_file,
-#             '-q', '{:d}'.format(q),
-#             '-M', '{:}_q{:d}_marginals.txt'.format(tmp_grph_file, q),
-#             '-d', '1',
-#             '-i', '1'
-#             #         '-L','{:}_q{:d}_planted_cab.txt'.format(grph_file,q),
-#             #         '--spcmode','{:d}'.format(0),
-#             #         '--wcab','{:}_q{:d}_cab.txt'.format(grph_file,q)
-#         ]
-#         process = Popen(parameters, stderr=PIPE, stdout=PIPE)
-#         stdout, stderr = process.communicate()
-#         if process.returncode != 0:
-#             raise RuntimeError("running SBMBP failed : {:}".format(stderr))
-#         # print(stdout)
-#         marginal_file = '{:}_q{:d}_marginals.txt'.format(tmp_grph_file, q)
-#         marginals = []
-#         partition = []
-#         inmargs = False
-#         inpartition = False
-#         with open(marginal_file, 'r') as f:
-#
-#             for i, line in enumerate(f.readlines()):
-#                 if re.search("\A\s*\Z", line):  # only while space
-#                     continue
-#                 if i == 0:
-#                     fin_vals = dict([tuple(val.split('=')) for val in line.split()])
-#                     for k, val in fin_vals.items():
-#                         fin_vals[k] = float(val)
-#                     final_values[q] = fin_vals
-#                 if re.search('marginals:', line):
-#                     inmargs = True
-#                     inpartition = False
-#                     continue
-#                 if re.search('argmax_configuration', line):
-#                     inmargs = False
-#                     inpartition = True
-#                     continue
-#                 if inmargs:
-#                     marginals.append(line.split())
-#                 if inpartition:
-#                     partition = line.split()
-#
-#         partition = np.array(partition, dtype=int)
-#         all_partitions[q] = partition
-#         if os.path.exists(marginal_file):
-#             os.remove(marginal_file)
-#     if os.path.exists(tmp_grph_file):
-#         os.remove(tmp_grph_file)
-#
-#
-#     minq = sorted(final_values.items(), key=lambda x: x[1]['f'])[0][0]
-#
-#     AMI=skm.adjusted_mutual_info_score(all_partitions[q], graph.vs['block'])
-#     return AMI
-
-#python run_LFR_test_with_sbmbp.py 100 .1 4 1.0 1 2 1.0
+#python run_multilayer_matlab_test.py
 def main():
-    n = int(sys.argv[1])
-    c = float(sys.argv[2])
+    n = int(sys.argv[1]) #node in each layer i think
+    c = float(sys.argv[2]) #average intralayer degree
     nlayers=int(sys.argv[3])
-    ep = float(sys.argv[4])
-    eta= float(sys.argv[5])
+    mu = float(sys.argv[4])
+    p_eta= float(sys.argv[5])
     omega=float(sys.argv[6])
     gamma = float(sys.argv[7])
     ntrials= int(sys.argv[8])
-    ncoms=2
+    ncoms=10
 
-    finoutdir = os.path.join(clusterdir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_k{:.2f}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,c,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_k{:.2f}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,c,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
-    output=pd.DataFrame(columns=['ep','beta', 'resgamma', 'niters', 'AMI','retrieval_modularity','isSBM'])
-    outfile="{:}/multiplex_test_n{:d}_L{:d}_eps{:.4f}_eta{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,ep,eta, gamma,omega,ntrials)
+    output = pd.DataFrame()
+    outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
-
-    qmax=4
-    max_iters=2000
-    print('running {:d} trials at gamma={:.4f} and eps={:.4f}'.format(ntrials,gamma,ep))
+    qmax=10
+    max_iters=4000
+    print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
 
-        graph=create_multiplex_graph(n=n, ep=ep, eta=eta, c=c, mk=20, use_gcc=True,
-                                     nlayers=nlayers,ismultiplex=True,ncoms=ncoms)
-        #graph.layers[0].save('test_LFR_onelayer.graphml.gz')
-        # ami_sbm=run_SBMBP_on_graph(graph)
-        # cind = output.shape[0]
-        # output.loc[cind,['beta','resgamma','niters','retrieval_modularity']]=[None,None,None,None]
-        # output.loc[cind,'AMI']=ami_sbm
-        # output.loc[cind,'isSBM']=True
-        # output.loc[cind,'ep']=ep
+        graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+                                     n_layers=nlayers, maxcoms=ncoms)
+
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities_across_layers=False,
                                   comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(2, qmax)]
+        # bstars = [mlbp.get_bstar(q) for q in range(4, qmax,2)]
+        bstars = [mlbp.get_bstar(ncoms) ]
+
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
-        for beta in betas:
-            mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, resgamma=gamma, omega=omega)
+        for j,beta in enumerate(betas):
+            t=time()
+            mlbp.run_modbp(beta=beta, niter=max_iters, reset=False,
+                           q=qmax, resgamma=gamma, omega=omega)
+            print("time running modbp:{:.3f}. niters={:.3f}".format(time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
-            # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'AMI'])
-            # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'converged'])
-            # print ("AMI:", mlbp_rm.loc[mlbp.nruns - 1, 'niters'])
 
+            cind = output.shape[0]
+            ind = mlbp_rm.index[mlbp_rm.shape[0] - 1]  # get last line
+            for col in mlbp_rm.columns:
+                output.loc[cind, col] = mlbp_rm.loc[ind, col]
+            output.loc[cind, 'isGenLouvain'] = False
+            output.loc[cind, 'mu'] = mu
+            output.loc[cind, 'trial'] = trial
 
-            #print(beta)
+            # run genlouvain on graph
+            t=time()
+            try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
+                if j == 0:
+                    S = call_gen_louvain(graph, gamma, omega)
+                else:
+                    S = call_gen_louvain(graph, gamma, omega, S)  # use output from previous run
 
-            # for debugging
-            # plt.close()
-            # f,a=plt.subplots(1,2,figsize=(8,4))
-            # a=plt.subplot(1,2,1)
-            # a.set_title("ground communities")
-            # mlbp.plot_communities(ax=a)
-            # a = plt.subplot(1, 2, 2)
-            # a.set_title("discovered")
-            # mlbp.plot_communities(ax=a,ind=mlbp.nruns-1)
-            # plt.show()
+                ami_layer = graph.get_AMI_layer_avg_with_communities(S)
+                ami = graph.get_AMI_with_communities(S)
+                cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
+                cind = output.shape[0]
+                output.loc[cind, 'isGenLouvain'] = True
+                output.loc[cind, 'mu'] = mu
+                output.loc[cind, 'trial'] = trial
+                output.loc[cind, 'AMI'] = ami
+                output.loc[cind, 'AMI_layer_avg'] = ami_layer
+                output.loc[cind, 'retrieval_modularity'] = cmod
+                output.loc[cind, 'resgamma'] = gamma
+                output.loc[cind, 'omega'] = omega
+                output.loc[cind, 'gl_iter_num'] = j
+                Scoms, Scnt = np.unique(S, return_counts=True)
+                output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
 
+                matlabfailed = False
+            except:
+                matlabfailed = True
+            print("time running matlab:{:.3f}. sucess: {:}".format(time()-t,str(matlabfailed)))
 
-        # ind2keep=np.where(np.logical_and(mlbp_rm['converged'],~mlbp_rm['is_trivial']))[0]
-        ind2keep=np.where(mlbp_rm['converged'])[0]#we switched to convergence as only criteria
+            if trial == 0:  # write out whole thing
+                with open(outfile, 'w') as fh:
+                    output.to_csv(fh, header=True)
+            else:
+                row2write = 2 if not matlabfailed else 1
+                # row2write = 2 if j == 0 else 1
+                with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
+                    output.iloc[-row2write:, :].to_csv(fh, header=False)
 
-        cind = output.shape[0]
-        if len(ind2keep)>0:
-            minidx = mlbp_rm.iloc[ind2keep]['retrieval_modularity'].idxmax()
-            for col in mlbp_rm.columns.values:
-                output.loc[cind,col]=mlbp_rm.loc[minidx,col]
-        else:
-
-            for col in mlbp_rm.columns.values:
-                #just take first one to get run information
-                output.loc[cind,col]=mlbp_rm.iloc[0][col]
-            output.loc[cind,'converged']=False
-            output.loc[cind,'niters']=max_iters+1
-
-        output.loc[cind,'ep']=ep
-        output.loc[cind,'eta']=eta
 
         if trial == 0:
             with open(outfile, 'w') as fh:
