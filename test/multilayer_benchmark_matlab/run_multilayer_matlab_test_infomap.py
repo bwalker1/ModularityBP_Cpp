@@ -227,16 +227,9 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,
 
 
 #python run_multilayer_matlab_test.py
-def main():
-    n = int(sys.argv[1]) #node in each layer i think
-    nlayers=int(sys.argv[2])
-    mu = float(sys.argv[3])
-    p_eta= float(sys.argv[4])
-    r=float(sys.argv[5])
-    r=-1
-    ntrials= int(sys.argv[6])
-    ncoms=10
 
+def run_infomap_on_multiplex(n, nlayers, mu, p_eta, r, ntrials):
+    ncoms=10
     finoutdir = os.path.join(matlabbench_dir, 'infomap_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
@@ -271,9 +264,17 @@ def main():
             with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
                 output.iloc[-1:, :].to_csv(fh, header=False)
 
-
     return 0
+
+def main():
+    n = int(sys.argv[1]) #node in each layer i think
+    nlayers=int(sys.argv[2])
+    mu = float(sys.argv[3])
+    p_eta= float(sys.argv[4])
+    r=float(sys.argv[5])
+    ntrials= int(sys.argv[6])
+    run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
 
 if __name__ == "__main__":
     #create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
-    main()
+    sys.exit(main())

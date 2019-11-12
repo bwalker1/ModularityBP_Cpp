@@ -201,17 +201,16 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,
 
 #python run_multilayer_matlab_test.py
 def main():
-    n = int(sys.argv[1]) #node in each layer i think
-    c = float(sys.argv[2]) #average intralayer degree
-    nlayers=int(sys.argv[3])
-    mu = float(sys.argv[4])
-    p_eta= float(sys.argv[5])
-    omega=float(sys.argv[6])
-    gamma = float(sys.argv[7])
-    ntrials= int(sys.argv[8])
+    n = int(sys.argv[1]) #nodes per layer
+    nlayers=int(sys.argv[2])
+    mu = float(sys.argv[3])
+    p_eta= float(sys.argv[4])
+    omega=float(sys.argv[5])
+    gamma = float(sys.argv[6])
+    ntrials= int(sys.argv[7])
     ncoms=10
 
-    finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_k{:.2f}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,c,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
@@ -237,7 +236,7 @@ def main():
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=False,
                            q=qmax, resgamma=gamma, omega=omega)
-            print("time running modbp:{:.3f}. niters={:.3f}".format(time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
+            # print("time running modbp:{:.3f}. niters={:.3f}".format(time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
 
             cind = output.shape[0]
