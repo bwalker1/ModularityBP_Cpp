@@ -41,7 +41,7 @@ def main():
                            "sbm_n{:d}_q{:d}_t{:d}_eta{:.2f}_ep{:.2f}_omega{:.2f}_gamma{:.2f}.csv".format(n, q, nlayers,
                                                                                                          eta, ep, omega,
                                                                                                          gamma))
-    print(outfile)
+    # print(outfile)
     qmax = 2 * q
     for trial in range(ntrials):
         mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,c=c,

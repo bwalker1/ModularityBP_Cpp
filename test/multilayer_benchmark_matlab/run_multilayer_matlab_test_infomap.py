@@ -15,6 +15,7 @@ import itertools
 #generative multilayer benchmark models (now in python)
 import multilayerGM as gm
 from time import time
+import infomap
 
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
@@ -35,49 +36,75 @@ if re.search("/nas/longleaf",clusterdir):
 arch = "elf64" if oncluster else "x86_64" #for different compiled code to run
 
 
+def create_tuple_indices(nodesperlayer, nlayers, rev=False):
+    # here we assume equal number of nodes in every layer
+    totN = nlayers * nodesperlayer
+    outdict = dict(zip(range(totN), [(i, j) for j in range(1, nlayers+1) for i in range(1,nodesperlayer+1)]))
+    if rev:
+        return dict([(val, k) for k, val in outdict.items()])
+    return outdict
 
 
-def call_gen_louvain(mgraph, gamma, omega, S=None):
-    A, C = mgraph.to_scipy_csr()
-    P = mgraph.create_null_adj()
+def create_infomap_net(infomapwrapper, multilayernet,single_layer=False):
 
-    rprefix = np.random.randint(100000)
-    scio_outfile = os.path.join(matlaboutdir, "{:d}_temp_matlab_input_file.mat".format(rprefix))
-    matlaboutput = os.path.join(matlaboutdir, "{:d}_temp_matlab_output_file.mat".format(rprefix))
+    net = infomapwrapper.network()
+    assert len(np.unique([l.vcount() for l in multilayernet.layers])) == 1, "All layers must have same length"
+    n = multilayernet.layers[0].vcount()
 
-    if S is None:
-        scio.savemat(scio_outfile, {"A": A, "C": C, "P": P})
+    nodeinddict = create_tuple_indices(n, multilayernet.nlayers)
+
+    # add in intralayer edges
+    for e in multilayernet.intralayer_edges:
+        if len(e) > 2:
+            w = e[2]
+        else:
+            w = 1.0
+        e1 = e[0]
+        e2 = e[1]
+        n1, l1 = nodeinddict[e1]
+        n2, l2 = nodeinddict[e2]
+        net.addMultilayerIntraLink(l1, n1, n2, w)
+    # add in interlayer edges
+    if not single_layer:
+        for e in multilayernet.interlayer_edges:
+            if len(e) > 2:
+                w = e[2]
+            else:
+                w = 1.0
+            e1 = e[0]
+            e2 = e[1]
+            n1, l1 = nodeinddict[e1]
+            n2, l2 = nodeinddict[e2]
+            net.addMultilayerIntraLink(l1, n1, l2, w)
+    net.generateStateNetworkFromMultilayerWithInterLinks()
+    return infomapwrapper
+
+
+def run_infomap(graph, r=.1):
+    assert len(np.unique([l.vcount() for l in graph.layers]))==1,"All layers must have same length"
+    n=graph.layers[0].vcount()
+    infomapSimple = infomap.Infomap("--two-level")
+    if r<0:
+        single_layer=True
     else:
+        single_layer=False
+    infomapSimple = create_infomap_net(infomapSimple, graph,single_layer=single_layer)
+    infomapSimple.multilayerRelaxRate = float(np.max(r,0)) #for single layer use r=0
+    infomapSimple.run()
 
-        scio.savemat(scio_outfile, {"A": A, "C": C, "P": P,
-                                    "S0": np.reshape(S, (-1, mgraph.nlayers)).astype(float)})  # add in starting vector
+    rev_id_dict = create_tuple_indices(n, graph.nlayers, rev=True)
+    outmodules = np.array([-1 for _ in range(graph.N)])
+    cnt=0
+    for node in infomapSimple.iterTree():
+        if node.isLeaf():
+            cnt+=1
+            ind = rev_id_dict[(node.physicalId, node.layerId)]
+            outmodules[ind] = node.moduleIndex()
 
-    parameters = [call_genlouvain_file,
-                  scio_outfile,
-                  matlaboutput,
-                  "{:.4f}".format(gamma),
-                  "{:.4f}".format(omega)
-                  ]
-    process = Popen(parameters, stderr=PIPE, stdout=PIPE)
-    stdout, stderr = process.communicate()
-    process.wait()
-    if process.returncode != 0:
-        print("matlab call failed")
-    #     print(stderr)
-
-    S = scio.loadmat(matlaboutput)['S'][:, 0]
-    ami = mgraph.get_AMI_with_communities(S)
-
-    try:
-        os.remove(scio_outfile)
-    except:
-        pass
-    try:
-        os.remove(matlaboutput)
-    except:
-        pass
-
-    return S
+    #some how you can have missing nodes in the output.  I believe these are dangling nodes but haven't checked
+    #we just leave this as -1 in the output community
+    # assert np.sum(outmodules == -1) == 0, "node module missing:{:}".format(str(np.where(outmodules == -1)[0]))
+    return outmodules
 
 def adjacency_to_edges(A,offset=0):
     nnz_inds = np.nonzero(A)
@@ -202,97 +229,48 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,
 #python run_multilayer_matlab_test.py
 def main():
     n = int(sys.argv[1]) #node in each layer i think
-    c = float(sys.argv[2]) #average intralayer degree
-    nlayers=int(sys.argv[3])
-    mu = float(sys.argv[4])
-    p_eta= float(sys.argv[5])
-    omega=float(sys.argv[6])
-    gamma = float(sys.argv[7])
-    ntrials= int(sys.argv[8])
+    nlayers=int(sys.argv[2])
+    mu = float(sys.argv[3])
+    p_eta= float(sys.argv[4])
+    r=float(sys.argv[5])
+    r=-1
+    ntrials= int(sys.argv[6])
     ncoms=10
 
-    finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_k{:.2f}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,c,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'infomap_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
     output = pd.DataFrame()
-    outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
+    outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_relax{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta,r,ntrials)
 
     qmax=10
     max_iters=4000
-    print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
+    print('running {:d} trials at r={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,r,p_eta,mu))
     for trial in range(ntrials):
 
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                      n_layers=nlayers, maxcoms=ncoms)
 
-        mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities_across_layers=False,
-                                  comm_vec=graph.comm_vec)
-        # bstars = [mlbp.get_bstar(q) for q in range(4, qmax,2)]
-        bstars = [mlbp.get_bstar(ncoms) ]
+        cind=output.shape[0]
+        outpart=run_infomap(graph=graph,r=r)
+        ami_layer=graph.get_AMI_layer_avg_with_communities(outpart)
+        ami=graph.get_AMI_with_communities(outpart)
+        output.loc[cind,'trial']=trial
+        output.loc[cind,'mu']=mu
+        output.loc[cind,'p']=p_eta
 
-        #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
-        betas=bstars
-        for j,beta in enumerate(betas):
-            t=time()
-            mlbp.run_modbp(beta=beta, niter=max_iters, reset=False,
-                           q=qmax, resgamma=gamma, omega=omega)
-            print("time running modbp:{:.3f}. niters={:.3f}".format(time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
-            mlbp_rm = mlbp.retrieval_modularities
-
-            cind = output.shape[0]
-            ind = mlbp_rm.index[mlbp_rm.shape[0] - 1]  # get last line
-            for col in mlbp_rm.columns:
-                output.loc[cind, col] = mlbp_rm.loc[ind, col]
-            output.loc[cind, 'isGenLouvain'] = False
-            output.loc[cind, 'mu'] = mu
-            output.loc[cind, 'trial'] = trial
-
-            # run genlouvain on graph
-            t=time()
-            try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
-                if j == 0:
-                    S = call_gen_louvain(graph, gamma, omega)
-                else:
-                    S = call_gen_louvain(graph, gamma, omega, S)  # use output from previous run
-
-                ami_layer = graph.get_AMI_layer_avg_with_communities(S)
-                ami = graph.get_AMI_with_communities(S)
-                cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
-                cind = output.shape[0]
-                output.loc[cind, 'isGenLouvain'] = True
-                output.loc[cind, 'mu'] = mu
-                output.loc[cind, 'trial'] = trial
-                output.loc[cind, 'AMI'] = ami
-                output.loc[cind, 'AMI_layer_avg'] = ami_layer
-                output.loc[cind, 'retrieval_modularity'] = cmod
-                output.loc[cind, 'resgamma'] = gamma
-                output.loc[cind, 'omega'] = omega
-                output.loc[cind, 'gl_iter_num'] = j
-                Scoms, Scnt = np.unique(S, return_counts=True)
-                output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
-
-                matlabfailed = False
-            except:
-                matlabfailed = True
-            print("time running matlab:{:.3f}. sucess: {:}".format(time()-t,str(matlabfailed)))
-
-            if trial == 0:  # write out whole thing
-                with open(outfile, 'w') as fh:
-                    output.to_csv(fh, header=True)
-            else:
-                row2write = 2 if not matlabfailed else 1
-                # row2write = 2 if j == 0 else 1
-                with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
-                    output.iloc[-row2write:, :].to_csv(fh, header=False)
+        output.loc[cind, 'AMI'] = ami
+        output.loc[cind, 'AMI_layer_avg'] = ami_layer
 
 
-        if trial == 0:
+        if trial == 0:  # write out whole thing
             with open(outfile, 'w') as fh:
                 output.to_csv(fh, header=True)
         else:
-            with open(outfile, 'a') as fh:  # writeout as we go
-                output.iloc[[-1], :].to_csv(fh, header=False)
+            with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
+                output.iloc[-1:, :].to_csv(fh, header=False)
+
 
     return 0
 

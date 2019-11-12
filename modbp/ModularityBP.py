@@ -15,8 +15,8 @@ import seaborn as sbn
 from time import time
 import warnings
 import os,pickle,gzip
-#import #logging
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.DEBUG)
+import logging
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
 ##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.INFO)
 
 class ModularityBP():
@@ -32,7 +32,23 @@ class ModularityBP():
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
                  intralayer_edgelist=None, layer_vec=None,
                  accuracy_off=True, use_effective=False, comm_vec=None,
-                 align_communities_across_layers=True,min_com_size=5):
+                 align_communities_across_layers=True,min_com_size=5,is_bipartite=False):
+
+        """
+
+        :param mlgraph:
+        :param interlayer_edgelist:
+        :param intralayer_edgelist:
+        :param layer_vec:
+        :param accuracy_off:
+        :param use_effective:
+        :param comm_vec:
+        :param align_communities_across_layers:
+        :param min_com_size:
+        :param is_bipartite: if graph is bipartite, change underlying null model for intralayer \
+        to use k_i d_j / m . note edges are still passed in as edge list and bipartiteness is not \
+        checked for.
+        """
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
@@ -42,7 +58,8 @@ class ModularityBP():
             if hasattr(mlgraph, 'get_edgelist'):
                 self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
                                               interlayer_edges=np.zeros((0,2),dtype='int'),
-                                              layer_vec=[0 for _ in range(mlgraph.vcount())])
+                                              layer_vec=[0 for _ in range(mlgraph.vcount())],
+                                              is_bipartite=is_bipartite)
 
             else:
                 self.graph=mlgraph
@@ -51,7 +68,9 @@ class ModularityBP():
             if interlayer_edgelist is None:
                 interlayer_edgelist=np.zeros((0,2),dtype='int')
             self.graph = MultilayerGraph(intralayer_edges=intralayer_edgelist,
-                                         interlayer_edges=interlayer_edgelist,layer_vec=layer_vec)
+                                         interlayer_edges=interlayer_edgelist,
+                                         layer_vec=layer_vec,
+                                         is_bipartite=is_bipartite)
 
         if not comm_vec is None:
             self.graph.comm_vec = comm_vec
@@ -80,11 +99,14 @@ class ModularityBP():
         self.retrieval_modularities=pd.DataFrame(columns=['q','beta','resgamma','omega',
                                                          'retrieval_modularity','niters'],dtype=float)
 
-
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
+        self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
+
+        if self.nlayers>1 and self.graph.is_bipartite:
+            raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,reset=False):
         """
@@ -97,6 +119,7 @@ class ModularityBP():
         :param reset:  If true, the marginals will be rerandomized when this method is called.  Otherwise the state will be maintained from previous runs if existing (assuming q hasn't changed).
         :return: None
         """
+        tot_time=time()
         if beta==0:
             warnings.warn("beta cannot be zero.  Using 10-16")
             beta=np.power(10.0,-16)
@@ -107,6 +130,10 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
         self.retrieval_modularities.loc[self.nruns, 'omega'] = omega
         self.retrieval_modularities.loc[self.nruns, 'resgamma'] = resgamma
+        if self.graph.is_bipartite:
+            num_bipart = len (np.unique(self.graph.bipartite_classes))
+        else:
+            num_bipart = 1
 
         t=time()
         #logging.debug("Creating c++ modbp object")
@@ -117,6 +144,7 @@ class ModularityBP():
                                         intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
+                                      num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
                                       resgamma=resgamma,omega=omega,transform=False,verbose=False)
 
         else:
@@ -135,20 +163,20 @@ class ModularityBP():
             iters_per_run=niter//2 #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
-        #logging.debug('time: {:.4f}'.format(time()-t))
+        logging.debug('creating modbp obj time: {:.4f}'.format(time()-t))
         t=time()
-        #logging.debug('Running modbp at beta={:.3f}'.format(beta))
+        logging.debug('Running modbp at beta={:.3f}'.format(beta))
         converged=False
         iters=self._bpmod.run(iters_per_run)
         cmargs=np.array(self._bpmod.return_marginals())
-        #logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
+        logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
         t=time()
 
         if iters<iters_per_run:
             converged=True
         self.marginals[self.nruns]=cmargs
         #Calculate effective group size and get partitions
-        #logging.debug('Combining marginals')
+        # logging.debug('Combining marginals')
         self._get_community_distances(self.nruns) #sets values in method
         cpartition = self._get_partition(self.nruns, self.use_effective)
         self.partitions[self.nruns] = cpartition
@@ -156,7 +184,7 @@ class ModularityBP():
         if self.use_effective:
             q_new = self._merge_communities_bp(self.nruns)
             q = q_new
-        #logging.debug('time: {:.4f}'.format(time()-t))
+        logging.debug('Combining mariginals time: {:.4f}'.format(time()-t))
         t=time()
 
         # if self._align_communities_across_layers and iters<niter:
@@ -168,12 +196,12 @@ class ModularityBP():
 
 
         if self._align_communities_across_layers and iters<niter:
-            #logging.debug('aligning communities across layers')
+            # logging.debug('aligning communities across layers')
             # print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
             #                                                    self._get_retrieval_modularity(self.nruns)))
             nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
-            #logging.debug('time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
+            logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
             while not (nsweeps==0 and converged==True) and not iters>niter:
@@ -185,7 +213,7 @@ class ModularityBP():
                 iters+=citers
                 if citers<iters_per_run: #it converged
                     converged=True
-                #logging.debug('time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
+                logging.debug('after aligning time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
                 t = time()
                 cmargs = np.array(self._bpmod.return_marginals())
                 self.marginals[self.nruns] = cmargs
@@ -202,8 +230,8 @@ class ModularityBP():
 
             #final combined marginals
 
-                # #logging.debug('time: {:.4f}'.format(time() - t))
-                #logging.debug('nsweeps: {:d}'.format(nsweeps))
+                logging.debug('aligning partitions and combing time: {:.4f}'.format(time() - t))
+                logging.debug('nsweeps to permute: {:d}'.format(nsweeps))
 
         # Perform the merger on the BP side before getting final marginals
         if iters>=niter:
@@ -241,7 +269,7 @@ class ModularityBP():
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'AMI']=self.graph.get_AMI_with_communities(cpartition)
         # self.retrieval_modularities.sort_index(inplace=True)
-
+        logging.debug("Total modbp runtime : {:.3f}".format(time()-tot_time))
         self.nruns+=1
 
     # def _get_edgelist(self):
@@ -281,6 +309,13 @@ class ModularityBP():
 
         return _edgelistpv
 
+    def _get_bipart_vec(self):
+        if self.graph.bipartite_classes is not None:
+            bipart_classpv = IntArray (self.graph.bipartite_classes)
+        else:
+            bipart_classpv = IntArray ([])
+        return bipart_classpv
+
     def _get_partition(self,ind,use_effective=True):
         """ We want to have argmax with randomly broken ties.
 
@@ -319,8 +354,10 @@ class ModularityBP():
     def get_bstar(self,q,omega=0):
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
-
-        weights=np.append(self.graph.intralayer_weights,
+        if self.graph.nlayers==1:
+            weights=self.graph.intralayer_weights
+        else:
+            weights=np.append(self.graph.intralayer_weights,
                           omega*np.array(self.graph.interlayer_weights))
 
         def avg_weights(bstar, weights, q, c):
@@ -838,7 +875,7 @@ class ModularityBP():
 
         assert len(set(self._permutation_vectors[ind][layer].values()))==len(self._permutation_vectors[ind][layer].values()), 'community lost in permutation'
         #sanity check.  Internal communities shouldn't change
-        assert(np.abs(skm.adjusted_mutual_info_score(old_layer,self.partitions[ind][lay_inds])-1)<np.power(10.0,-6))
+        assert(np.abs(skm.adjusted_mutual_info_score(old_layer,self.partitions[ind][lay_inds],average_method='arithmetic')-1)<np.power(10.0,-6))
 
 
 
@@ -1044,5 +1081,9 @@ def calc_modularity(graph,partition,resgamma,omega):
         Phat += layersum
 
     # print("A:{:.2f},P:{:.2f},C:{:.2f}".format(Ahat,Phat,Chat))
-    mu= 2.0*graph.totaledgeweight if not graph.is_directed else graph.totaledgeweight
+    if graph.is_directed:
+        mu = graph.totaledgeweight
+    else:
+        mu= 2.0*graph.totaledgeweight
+
     return (1.0 / mu) * (Ahat - resgamma * Phat + omega * Chat)

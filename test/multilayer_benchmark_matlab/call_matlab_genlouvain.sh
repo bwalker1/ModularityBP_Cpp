@@ -1,17 +1,13 @@
 #!/bin/bash
 
-curwd=`pwd`
-if [[ $curwd == "*longleaf*" ]];then
-    module add matlab
-    matlab_exec=matlab
-    homedir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp'
-else
-    #for local testing
-    matlab_exec=/Applications/MATLAB_R2016b.app/bin/matlab
-    homedir='/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp'
-fi
 
+module add matlab
+matlab_exec=matlab
+homedir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp'
 
+#for local testing
+#matlab_exec=/Applications/MATLAB_R2016b.app/bin/matlab
+#homedir='/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp'
 
 
 export MATLABPATH="${homedir}/test/genlouvain_mlsbm/"

@@ -51,7 +51,7 @@ public:
     edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int _q, const double _beta, const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt), num_edges(_nt), n(_n), nt(_nt), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt),theta_bipartite(_num_biparte_classes), num_edges(_nt), n(_n), nt(_nt), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     if (intra_edgeweight.size() > 0)
     {
@@ -60,6 +60,11 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     else
     {
         weighted = false;
+    }
+    bool is_bipartite = true;
+    if (bipartite_class.empty() or num_biparte_classes==1)
+    {
+        is_bipartite = false;
     }
     //fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
     eps = 1e-8;
@@ -241,7 +246,16 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        double temp_inside = c_strength*theta[t][s] + marginals[q*i+s];
+        double field;
+        index_t bpclass;
+        if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
+            {bpclass=bipartite_class[i];
+            field = c_strength*theta_bipartite[bpclass][s];
+            }
+         else
+            { field=c_strength*theta[t][s];}
+
+        double temp_inside = field + marginals[q*i+s];
         marginals[q*i+s] = exp(temp_inside);
         
         Z += marginals[q*i + s];
@@ -352,7 +366,23 @@ void BP_Modularity::step()
         compute_marginal(i);
         for (index_t s = 0; s < q; ++s)
         {
-            theta[t][s] += -beta*resgamma/(2*num_edges[t])* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
+            if (is_bipartite)
+            {
+                index_t bpclass = bipartite_class[i];
+                for(index_t c = 0; c<num_biparte_classes; ++c){
+                    if (c!=bpclass) //each node only contributes to nulll models outside of it's class
+                    {
+                        theta_bipartite[c][s] += -beta*resgamma/(total_strength)* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
+                    }
+
+                }
+            }
+            else
+            {
+                theta[t][s] += -beta*resgamma/(2*num_edges[t])* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
+            }
+
+
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -398,7 +428,17 @@ void BP_Modularity::step()
                 }
                 // evaluate the rest of the update equation
 //                printf("cscratch: %.3f , c_strength: %.3f, theta[t][s]: %.3f\n",scratch[nn*s+idx],c_strength,theta[t][s]);
-                double temp = exp(c_strength*theta[t][s] + scratch[nn*s+idx]);
+
+                double field;
+                index_t bpclass;
+                if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
+                    {bpclass=bipartite_class[i];
+                    field = c_strength*theta_bipartite[bpclass][s];
+                    }
+                 else
+                    { field=c_strength*theta[t][s];}
+
+                double temp = exp(field + scratch[nn*s+idx]);
                 scratch[nn*s+idx] = temp;
             }
         }
@@ -675,7 +715,13 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     if (init_beliefs)
         initializeBeliefs();
     if (init_theta)
-        initializeTheta();
+    {
+        if (is_bipartite)
+                {initializeTheta_bipartite();}
+            else
+                {initializeTheta();}
+    }
+
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
 }
 
@@ -729,6 +775,67 @@ void BP_Modularity::initializeBeliefs() {
     {
         beliefs_old[i] = 0;
     }
+}
+
+void BP_Modularity::initializeTheta_bipartite() {
+    //this is in the case of the bipartite graph where we have a
+    //different theta for each class of node
+
+    //TODO: This only works with a bipartite (or multipartite) graph that is single layer
+
+//    for (index_t t = 0; t < nt; ++t)  // for right now we only allow single layer bipartite
+//    {
+    theta_bipartite.resize(num_biparte_classes);
+    for (index_t bpclass = 0; bpclass < num_biparte_classes ; ++ bpclass)
+    {
+    // make sure the size is correct
+        theta_bipartite[bpclass].resize(q);
+        for (index_t s = 0; s<q;++s)
+        {
+            theta_bipartite[bpclass][s] = beta*resgamma/(q);
+        }
+    }
+    //}
+    //compute marginals and zero these back out for now
+    // why do these have to be zeroed?
+    compute_marginals();
+    for (index_t t = 0; t < nt; ++t)
+    {
+        for (index_t s=0;s<q;++s)
+        {
+            theta_bipartite[t][s]=0;
+
+        }
+    }
+
+    for (index_t i=0;i<n;++i)
+        {
+            index_t cur = bipartite_class[i];
+            double nn = node_strengths[i];
+            for (index_t c=0; c<num_biparte_classes; ++c){
+
+                if (c!=cur){
+                    //node i only contributes to the theta of classes other than it's own
+                    for (index_t s = 0; s<q; ++s)
+                    {
+                            theta_bipartite[c][s] += nn * marginals[q*i + s];
+                    }
+                }
+            }
+
+        }
+
+
+        for (index_t c = 0; c < num_biparte_classes; ++c)
+            {
+                // fold in prefactor to theta
+                for (index_t s = 0; s<q;++s)
+                {
+                    theta[c][s] *= -(beta*resgamma/(total_strength));
+                }
+            }
+
+
 }
 
 void BP_Modularity::initializeTheta() { 
