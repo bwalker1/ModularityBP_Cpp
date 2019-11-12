@@ -12,9 +12,9 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-# clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 # clusterdir = "/home/wweir/Modularity_BP_proj/ModularityBP_Cpp" #lccc
-clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+# clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 #
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
 # python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
@@ -34,7 +34,7 @@ def main():
 
 
 
-    finoutdir = os.path.join(clusterdir, 'test/modbpdata/SBM_test_data_n{:}_q{:d}_nt{:}'.format(n, q, ntrials))
+    finoutdir = os.path.join(clusterdir, 'test/DSBM_experiments/modbpdata/SBM_test_data_n{:}_q{:d}_nt{:}_chen'.format(n, q, ntrials))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
     outfile = os.path.join(finoutdir,
@@ -63,7 +63,7 @@ def main():
             mlbp_rm['n'] = n
             mlbp_rm['q_true'] = q
             #append as we complete beta of each trial
-            if False and ( trial == 0 and j==0):
+            if ( trial == 0 and j==0):
                 with open(outfile, 'w') as fh:
                     mlbp_rm.to_csv(fh, header=True)
             else:
