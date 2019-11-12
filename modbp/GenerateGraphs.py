@@ -100,7 +100,7 @@ class RandomSBMGraph(RandomGraph):
         :return: AMI
         :rtype: float
         """
-        return skm.adjusted_mutual_info_score(labels_pred=labels,labels_true=self.block)
+        return skm.adjusted_mutual_info_score(labels_pred=labels,labels_true=self.block,average_method='arithmetic')
 
     def get_pin_pout_ratio(self):
         """
@@ -418,7 +418,7 @@ class MultilayerGraph(object):
         """
         if self.comm_vec is None:
             raise ValueError("Must provide communities lables for Multilayer Graph")
-        return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels)
+        return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels,average_method='arithmetic')
 
     def get_AMI_layer_avg_with_communities(self,labels):
         """
@@ -435,7 +435,7 @@ class MultilayerGraph(object):
         lay_vals=np.unique(self.layer_vec)
         for lay_val in lay_vals:
             cinds=np.where(self.layer_vec==lay_val)[0]
-            la_amis.append(len(cinds)/(1.0*self.N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds]))
+            la_amis.append(len(cinds)/(1.0*self.N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
 
         return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         

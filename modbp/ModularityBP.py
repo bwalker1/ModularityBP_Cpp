@@ -875,7 +875,7 @@ class ModularityBP():
 
         assert len(set(self._permutation_vectors[ind][layer].values()))==len(self._permutation_vectors[ind][layer].values()), 'community lost in permutation'
         #sanity check.  Internal communities shouldn't change
-        assert(np.abs(skm.adjusted_mutual_info_score(old_layer,self.partitions[ind][lay_inds])-1)<np.power(10.0,-6))
+        assert(np.abs(skm.adjusted_mutual_info_score(old_layer,self.partitions[ind][lay_inds],average_method='arithmetic')-1)<np.power(10.0,-6))
 
 
 
