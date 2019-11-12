@@ -217,7 +217,7 @@ def main():
     output = pd.DataFrame()
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
-    qmax=10
+    qmax=14
     max_iters=4000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
@@ -227,18 +227,20 @@ def main():
 
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities_across_layers=False,
                                   comm_vec=graph.comm_vec)
-        # bstars = [mlbp.get_bstar(q) for q in range(4, qmax,2)]
-        bstars = [mlbp.get_bstar(ncoms) ]
+        bstars = [mlbp.get_bstar(q) for q in range(4, qmax,2)]
+        # bstars = [mlbp.get_bstar(ncoms) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
+        notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=False,
                            q=qmax, resgamma=gamma, omega=omega)
-            # print("time running modbp:{:.3f}. niters={:.3f}".format(time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
+            print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
-
+            if mlbp_rm.iloc[-1,:]['converged'] == False: #keep track of how many converges we have
+                notconverged+=1
             cind = output.shape[0]
             ind = mlbp_rm.index[mlbp_rm.shape[0] - 1]  # get last line
             for col in mlbp_rm.columns:
@@ -284,7 +286,8 @@ def main():
                 # row2write = 2 if j == 0 else 1
                 with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
                     output.iloc[-row2write:, :].to_csv(fh, header=False)
-
+            if notconverged>1: #hasn't converged twice now.
+                break
 
         if trial == 0:
             with open(outfile, 'w') as fh:
