@@ -75,7 +75,7 @@ def create_infomap_net(infomapwrapper, multilayernet,single_layer=False):
             e2 = e[1]
             n1, l1 = nodeinddict[e1]
             n2, l2 = nodeinddict[e2]
-            net.addMultilayerIntraLink(l1, n1, l2, w)
+            net.addMultilayerInterLink(l1, n1, l2, w)
     net.generateStateNetworkFromMultilayerWithInterLinks()
     return infomapwrapper
 
@@ -187,7 +187,6 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_
     partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
     # with use the degree corrected SBM to mirror paper
     multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
-    #     return multinet
     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet, dt)
     return mbpmulltinet
 
@@ -242,8 +241,10 @@ def run_infomap_on_multiplex(n, nlayers, mu, p_eta, r, ntrials):
     print('running {:d} trials at r={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,r,p_eta,mu))
     for trial in range(ntrials):
 
+        t=time()
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                      n_layers=nlayers, maxcoms=ncoms)
+        print('time creating graph: {:.3f}'.format(time()-t))
 
         cind=output.shape[0]
         outpart=run_infomap(graph=graph,r=r)
@@ -252,6 +253,7 @@ def run_infomap_on_multiplex(n, nlayers, mu, p_eta, r, ntrials):
         output.loc[cind,'trial']=trial
         output.loc[cind,'mu']=mu
         output.loc[cind,'p']=p_eta
+        output.loc[cind,'r']=r
 
         output.loc[cind, 'AMI'] = ami
         output.loc[cind, 'AMI_layer_avg'] = ami_layer
@@ -273,6 +275,7 @@ def main():
     p_eta= float(sys.argv[4])
     r=float(sys.argv[5])
     ntrials= int(sys.argv[6])
+    # run_infomap_on_multiplex(n=999,nlayers=15,mu=0,p_eta=1.0,r=.1,ntrials=2)
     run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
 
 if __name__ == "__main__":

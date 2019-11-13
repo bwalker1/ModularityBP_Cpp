@@ -9,6 +9,7 @@ from subprocess import Popen,PIPE
 import re
 import os
 import shutil
+import gzip,pickle
 import scipy.io as scio
 import sklearn.metrics as skm
 import itertools
@@ -200,14 +201,8 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,
 
 
 #python run_multilayer_matlab_test.py
-def main():
-    n = int(sys.argv[1]) #nodes per layer
-    nlayers=int(sys.argv[2])
-    mu = float(sys.argv[3])
-    p_eta= float(sys.argv[4])
-    omega=float(sys.argv[5])
-    gamma = float(sys.argv[6])
-    ntrials= int(sys.argv[7])
+
+def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     ncoms=10
 
     finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
@@ -217,17 +212,20 @@ def main():
     output = pd.DataFrame()
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
-    qmax=14
+    qmax=12
     max_iters=4000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
 
+        t=time()
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                      n_layers=nlayers, maxcoms=ncoms)
-
+        print('time creating graph: {:.3f}'.format(time()-t))
+        with gzip.open("notworking_graph.gz",'wb') as fh:
+            pickle.dump(graph,fh)
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities_across_layers=False,
                                   comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(4, qmax,2)]
+        bstars = [mlbp.get_bstar(q) for q in range(4, qmax+2,2)]
         # bstars = [mlbp.get_bstar(ncoms) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
@@ -298,6 +296,19 @@ def main():
 
     return 0
 
+
+def main():
+    n = int(sys.argv[1])  # nodes per layer
+    nlayers = int(sys.argv[2])
+    mu = float(sys.argv[3])
+    p_eta = float(sys.argv[4])
+    omega = float(sys.argv[5])
+    gamma = float(sys.argv[6])
+    ntrials = int(sys.argv[7])
+    run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
+    # run_louvain_multiplex_test(n=1000,nlayers=5,mu=1.0,p_eta=.5,omega=.023,gamma=1.0,ntrials=1)
+
+    return 0
+
 if __name__ == "__main__":
-    #create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
-    main()
+    sys.exit(main())
