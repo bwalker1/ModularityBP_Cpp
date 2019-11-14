@@ -57,7 +57,7 @@ def create_netfile(graph, filename):
     with open(filename, 'w') as fh:
         # layer node layer node [weight]
         alledges = np.append(graph.intralayer_edges, graph.interlayer_edges, axis=0)
-        alledges = graph.intralayer_edges
+        # alledges = graph.intralayer_edges
         #         fh.write("*Vertices {:d}\n".format(n))
         #         for i in range(1,n+1):
         #             fh.write('{:d} "node {:d}\n"'.format(i,i))
