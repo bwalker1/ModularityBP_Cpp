@@ -3,10 +3,10 @@ gammas=( 1.0 )
 omegas=( 0  1.000e-03, 3.72e-03, 1.389e-02, 5.179e-02, 1.931e-01, 7.197e-01, 2.682e+00, 1.000e+01 )
 #gammas=(1.0)
 omegas=(1.0)
-#ps=( .5 .85 .95 .99 1.0 )
-ps=( .99 )
-#mus=( seq 0 1 .1 )
-mus=( .1 .2 )
+ps=( .5 .85 .95 .99 1.0 )
+#ps=( .99 )
+mus=(`seq 0 .1 1`)
+#mus=( .1 .2 )
 for omega in "${omegas[@]}"
     do
     for gamma in "${gammas[@]}"
