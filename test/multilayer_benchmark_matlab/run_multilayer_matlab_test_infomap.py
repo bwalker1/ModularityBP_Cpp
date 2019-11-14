@@ -387,8 +387,8 @@ def main():
     p_eta= float(sys.argv[4])
     r=float(sys.argv[5])
     ntrials= int(sys.argv[6])
-    run_infomap_on_multiplex(n=200,nlayers=5,mu=0,p_eta=1.0,r=.1,ntrials=1)
-    # run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
+    #run_infomap_on_multiplex(n=200,nlayers=5,mu=0,p_eta=1.0,r=.1,ntrials=1)
+    run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
 
 if __name__ == "__main__":
     #create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
