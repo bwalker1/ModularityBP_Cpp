@@ -143,7 +143,7 @@ private:
     
     bool changed;
     bool computed_marginals;
-    bool is_bipartite;
+    bool is_bipartite = false;
     inline index_t n_neighbors(index_t i) { return (index_t) neighbors_offsets[i+1]-neighbors_offsets[i]; }
     
     default_random_engine rng;

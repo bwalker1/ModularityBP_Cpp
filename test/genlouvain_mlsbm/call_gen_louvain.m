@@ -1,20 +1,11 @@
 function call_gen_louvain(input_file,output_file,gamma,coupling)
     load(input_file);
     A=sparse(A);
-    A=max(A,A');
+    A=max(A,A'); %symmetrize these
     C=max(C,C');
     %P should be in the file already
-    %P=P;
-    offset=0;
-    % we manually setup P here.
-    P=zeros(size(A));
-    nlayers=size(degs);
-    for i=1:nlayers(1),
-        k=degs(i,:); %row vector here
-        twom=sum(k);
-        P(offset+(1:length(k)),offset+(1:length(k)))=k'*k/twom;
-        offset=offset+length(k);
-    end
+    P=P;
+
 
     B=A-gamma*P+coupling*C;
     rng('shuffle');

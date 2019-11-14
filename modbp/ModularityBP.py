@@ -15,9 +15,9 @@ import seaborn as sbn
 from time import time
 import warnings
 import os,pickle,gzip
-import logging
-##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
+# import logging
+##logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=#logging.debug)
+# logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
 
 class ModularityBP():
 
@@ -136,7 +136,7 @@ class ModularityBP():
             num_bipart = 1
 
         t=time()
-        #logging.debug("Creating c++ modbp object")
+        ##logging.debug("Creating c++ modbp object")
         if self._bpmod is None:
             #print("Creating c++ modbp object")
             #print(list(self._cpp_intra_weights))
@@ -163,20 +163,20 @@ class ModularityBP():
             iters_per_run=niter//2 #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
-        logging.debug('creating modbp obj time: {:.4f}'.format(time()-t))
+        #logging.debug('creating modbp obj time: {:.4f}'.format(time()-t))
         t=time()
-        logging.debug('Running modbp at beta={:.3f}'.format(beta))
+        #logging.debug('Running modbp at beta={:.3f}'.format(beta))
         converged=False
         iters=self._bpmod.run(iters_per_run)
         cmargs=np.array(self._bpmod.return_marginals())
-        logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
+        #logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
         t=time()
 
         if iters<iters_per_run:
             converged=True
         self.marginals[self.nruns]=cmargs
         #Calculate effective group size and get partitions
-        # logging.debug('Combining marginals')
+        # #logging.debug('Combining marginals')
         self._get_community_distances(self.nruns) #sets values in method
         cpartition = self._get_partition(self.nruns, self.use_effective)
         self.partitions[self.nruns] = cpartition
@@ -184,11 +184,11 @@ class ModularityBP():
         if self.use_effective:
             q_new = self._merge_communities_bp(self.nruns)
             q = q_new
-        logging.debug('Combining mariginals time: {:.4f}'.format(time()-t))
+        #logging.debug('Combining mariginals time: {:.4f}'.format(time()-t))
         t=time()
 
         # if self._align_communities_across_layers and iters<niter:
-        #     #logging.debug('aligning communities across layers')
+        #     ##logging.debug('aligning communities across layers')
         #     # print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
         #     #                                                    self._get_retrieval_modularity(self.nruns)))
         #     nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
@@ -196,24 +196,24 @@ class ModularityBP():
 
 
         if self._align_communities_across_layers and iters<niter:
-            # logging.debug('aligning communities across layers')
+            # #logging.debug('aligning communities across layers')
             # print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
             #                                                    self._get_retrieval_modularity(self.nruns)))
             nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
-            logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
+            #logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
             while not (nsweeps==0 and converged==True) and not iters>niter:
                 #plots for debugging
-                #logging.debug("rerunning modbp with realigned:")
+                ##logging.debug("rerunning modbp with realigned:")
                 self._switch_beliefs_bp(self.nruns)
                 #can't go more than the alloted number of runs
                 citers = self._bpmod.run(iters_per_run)
                 iters+=citers
                 if citers<iters_per_run: #it converged
                     converged=True
-                logging.debug('after aligning time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
+                #logging.debug('after aligning time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
                 t = time()
                 cmargs = np.array(self._bpmod.return_marginals())
                 self.marginals[self.nruns] = cmargs
@@ -230,12 +230,12 @@ class ModularityBP():
 
             #final combined marginals
 
-                logging.debug('aligning partitions and combing time: {:.4f}'.format(time() - t))
-                logging.debug('nsweeps to permute: {:d}'.format(nsweeps))
+                #logging.debug('aligning partitions and combing time: {:.4f}'.format(time() - t))
+                #logging.debug('nsweeps to permute: {:d}'.format(nsweeps))
 
         # Perform the merger on the BP side before getting final marginals
         if iters>=niter:
-            #logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
+            ##logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
             pass
 
 
@@ -243,7 +243,7 @@ class ModularityBP():
         self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
         self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
         retmod=self._get_retrieval_modularity(self.nruns)
-        #logging.debug('calculating bethe_free energy')
+        ##logging.debug('calculating bethe_free energy')
         bethe_energy=self._get_bethe_free_energy()
         self.retrieval_modularities.loc[self.nruns,'retrieval_modularity']=retmod
         self.retrieval_modularities.loc[self.nruns,'bethe_free_energy']=bethe_energy
@@ -269,7 +269,7 @@ class ModularityBP():
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
         # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'AMI']=self.graph.get_AMI_with_communities(cpartition)
         # self.retrieval_modularities.sort_index(inplace=True)
-        logging.debug("Total modbp runtime : {:.3f}".format(time()-tot_time))
+        #logging.debug("Total modbp runtime : {:.3f}".format(time()-tot_time))
         self.nruns+=1
 
     # def _get_edgelist(self):

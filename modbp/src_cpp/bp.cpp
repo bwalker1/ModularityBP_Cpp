@@ -61,11 +61,16 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     {
         weighted = false;
     }
-    bool is_bipartite = true;
-    if (bipartite_class.empty() or num_biparte_classes==1)
+    bool is_bipartite = false;
+    //fprintf(stdout,"is bipartite is not\n");
+
+    if (num_biparte_classes>1 and ! bipartite_class.empty())
     {
-        is_bipartite = false;
+        is_bipartite = true;
+        fprintf(stdout,"setting is_bipartite\n");
     }
+
+    //fprintf(stdout,"is_bipartite:%s\n", is_bipartite ? "true" : "false");
     //fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
     eps = 1e-8;
     computed_marginals = false;
@@ -247,9 +252,8 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
         }
         // evaluate the rest of the update equation
         double field;
-        index_t bpclass;
         if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
-            {bpclass=bipartite_class[i];
+            {index_t bpclass=bipartite_class[i];
             field = c_strength*theta_bipartite[bpclass][s];
             }
          else
@@ -370,7 +374,7 @@ void BP_Modularity::step()
             {
                 index_t bpclass = bipartite_class[i];
                 for(index_t c = 0; c<num_biparte_classes; ++c){
-                    if (c!=bpclass) //each node only contributes to nulll models outside of it's class
+                    if (c!=bpclass) //each node only contributes to null models outside of it's class
                     {
                         theta_bipartite[c][s] += -beta*resgamma/(total_strength)* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
                     }
@@ -430,9 +434,9 @@ void BP_Modularity::step()
 //                printf("cscratch: %.3f , c_strength: %.3f, theta[t][s]: %.3f\n",scratch[nn*s+idx],c_strength,theta[t][s]);
 
                 double field;
-                index_t bpclass;
+
                 if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
-                    {bpclass=bipartite_class[i];
+                    {index_t bpclass=bipartite_class[i];
                     field = c_strength*theta_bipartite[bpclass][s];
                     }
                  else
@@ -556,7 +560,7 @@ void BP_Modularity::step()
             }
             bfe += beta/(4*num_edges[t]) * temp;
         }
-        bfe /= (-1*beta*n);
+        bfe /= (-1*beta*n); //normalize out by beta a n
     }
 
     
@@ -716,9 +720,12 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
         initializeBeliefs();
     if (init_theta)
     {
+        //fprintf(stdout,"is_bipartite2:%s\n", is_bipartite ? "true" : "false");
         if (is_bipartite)
-                {initializeTheta_bipartite();}
-            else
+                {
+                //fprintf(stdout,"call to initialize bipartite theta\n");
+                initializeTheta_bipartite();}
+        else
                 {initializeTheta();}
     }
 
@@ -778,6 +785,9 @@ void BP_Modularity::initializeBeliefs() {
 }
 
 void BP_Modularity::initializeTheta_bipartite() {
+
+    fprintf(stdout,"initializing bipartite theta.\n");
+
     //this is in the case of the bipartite graph where we have a
     //different theta for each class of node
 

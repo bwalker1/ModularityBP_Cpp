@@ -9,6 +9,7 @@ from subprocess import Popen,PIPE
 import re
 import os
 import shutil
+import gzip,pickle
 import scipy.io as scio
 import sklearn.metrics as skm
 import itertools
@@ -44,14 +45,13 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
     rprefix = np.random.randint(100000)
     scio_outfile = os.path.join(matlaboutdir, "{:d}_temp_matlab_input_file.mat".format(rprefix))
     matlaboutput = os.path.join(matlaboutdir, "{:d}_temp_matlab_output_file.mat".format(rprefix))
-
     if S is None:
         scio.savemat(scio_outfile, {"A": A, "C": C, "P": P})
     else:
 
         scio.savemat(scio_outfile, {"A": A, "C": C, "P": P,
                                     "S0": np.reshape(S, (-1, mgraph.nlayers)).astype(float)})  # add in starting vector
-
+    print(call_genlouvain_file)
     parameters = [call_genlouvain_file,
                   scio_outfile,
                   matlaboutput,
@@ -61,9 +61,10 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
     process.wait()
+
     if process.returncode != 0:
         print("matlab call failed")
-    #     print(stderr)
+        print(stderr)
 
     S = scio.loadmat(matlaboutput)['S'][:, 0]
     ami = mgraph.get_AMI_with_communities(S)
@@ -200,14 +201,8 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,
 
 
 #python run_multilayer_matlab_test.py
-def main():
-    n = int(sys.argv[1]) #nodes per layer
-    nlayers=int(sys.argv[2])
-    mu = float(sys.argv[3])
-    p_eta= float(sys.argv[4])
-    omega=float(sys.argv[5])
-    gamma = float(sys.argv[6])
-    ntrials= int(sys.argv[7])
+
+def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     ncoms=10
 
     finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
@@ -217,17 +212,20 @@ def main():
     output = pd.DataFrame()
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
-    qmax=14
+    qmax=12
     max_iters=4000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
 
+        t=time()
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                      n_layers=nlayers, maxcoms=ncoms)
-
+        print('time creating graph: {:.3f}'.format(time()-t))
+        with gzip.open("notworking_graph.gz",'wb') as fh:
+            pickle.dump(graph,fh)
         mlbp = modbp.ModularityBP(mlgraph=graph,accuracy_off=True,use_effective=True,align_communities_across_layers=False,
                                   comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(4, qmax,2)]
+        bstars = [mlbp.get_bstar(q) for q in range(4, qmax+2,2)]
         # bstars = [mlbp.get_bstar(ncoms) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
@@ -252,6 +250,7 @@ def main():
             # run genlouvain on graph
             t=time()
             try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
+
                 if j == 0:
                     S = call_gen_louvain(graph, gamma, omega)
                 else:
@@ -276,28 +275,40 @@ def main():
                 matlabfailed = False
             except:
                 matlabfailed = True
-            print("time running matlab:{:.3f}. sucess: {:}".format(time()-t,str(matlabfailed)))
+            print("time running matlab:{:.3f}. sucess: {:}".format(time()-t,str(not matlabfailed)))
 
             if trial == 0:  # write out whole thing
                 with open(outfile, 'w') as fh:
                     output.to_csv(fh, header=True)
             else:
                 row2write = 2 if not matlabfailed else 1
-                # row2write = 2 if j == 0 else 1
                 with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
                     output.iloc[-row2write:, :].to_csv(fh, header=False)
             if notconverged>1: #hasn't converged twice now.
                 break
 
-        if trial == 0:
-            with open(outfile, 'w') as fh:
-                output.to_csv(fh, header=True)
-        else:
-            with open(outfile, 'a') as fh:  # writeout as we go
-                output.iloc[[-1], :].to_csv(fh, header=False)
+        # if trial == 0:
+        #     with open(outfile, 'w') as fh:
+        #         output.to_csv(fh, header=True)
+        # else:
+        #     with open(outfile, 'a') as fh:  # writeout as we go
+        #         output.iloc[[-1], :].to_csv(fh, header=False)
+
+    return 0
+
+
+def main():
+    n = int(sys.argv[1])  # nodes per layer
+    nlayers = int(sys.argv[2])
+    mu = float(sys.argv[3])
+    p_eta = float(sys.argv[4])
+    omega = float(sys.argv[5])
+    gamma = float(sys.argv[6])
+    ntrials = int(sys.argv[7])
+    run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
+    #run_louvain_multiplex_test(n=300,nlayers=5,mu=1.0,p_eta=.5,omega=.023,gamma=1.0,ntrials=1)
 
     return 0
 
 if __name__ == "__main__":
-    #create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
-    main()
+    sys.exit(main())

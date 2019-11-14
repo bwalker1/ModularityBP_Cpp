@@ -36,13 +36,124 @@ if re.search("/nas/longleaf",clusterdir):
 arch = "elf64" if oncluster else "x86_64" #for different compiled code to run
 
 
+infomap_dir = os.path.join(clusterdir, "test/Infomap")
+infomap_file = os.path.join(infomap_dir, "Infomap")
+infomapoutdir = os.path.join(matlabbench_dir, "infomap_outputs")
+
+
 def create_tuple_indices(nodesperlayer, nlayers, rev=False):
     # here we assume equal number of nodes in every layer
     totN = nlayers * nodesperlayer
-    outdict = dict(zip(range(totN), [(i, j) for j in range(1, nlayers+1) for i in range(1,nodesperlayer+1)]))
+    outdict = dict(zip(range(totN), [(i, j) for j in range(1, nlayers + 1) for i in range(1, nodesperlayer + 1)]))
     if rev:
         return dict([(val, k) for k, val in outdict.items()])
     return outdict
+
+
+def create_netfile(graph, filename):
+    assert len(np.unique([l.vcount() for l in graph.layers])) == 1, "All layers must have same length"
+    n = graph.layers[0].vcount()
+    indict = create_tuple_indices(n, graph.nlayers)
+    with open(filename, 'w') as fh:
+        # layer node layer node [weight]
+        alledges = np.append(graph.intralayer_edges, graph.interlayer_edges, axis=0)
+        alledges = graph.intralayer_edges
+        #         fh.write("*Vertices {:d}\n".format(n))
+        #         for i in range(1,n+1):
+        #             fh.write('{:d} "node {:d}\n"'.format(i,i))
+        fh.write("*Multiplex\n")
+        fh.write('# layer node layer node [weight]\n')
+        for e in alledges:
+            w = 1 if len(e) < 3 else e[2]
+            n1, l1 = indict[e[0]]
+            n2, l2 = indict[e[1]]
+            fh.write("{:d} {:d} {:d} {:d} {:.6f}\n".format(l1, n1, l2, n2, w))
+    return filename
+
+
+def create_netfile_singlelayer(graph, filename):
+    assert len(np.unique([l.vcount() for l in graph.layers])) == 1, "All layers must have same length"
+    n = graph.layers[0].vcount()
+    with open(filename, 'w') as fh:
+        # layer node layer node [weight]
+        alledges = np.append(graph.intralayer_edges, graph.interlayer_edges, axis=0)
+        #         alledges=graph.intralayer_edges
+        fh.write("*Vertices {:d}\n".format(graph.N))
+        for i in range(0, n):
+            fh.write('{:d} "node {:d}"\n'.format(i, i))
+        fh.write("*Edges {}\n".format(len(alledges)))
+        for e in alledges:
+            w = 1 if len(e) < 3 else e[2]
+            fh.write("{:d} {:d} {:.6f}\n".format(e[0], e[1], w))
+    return filename
+
+
+def loadclusters(revdict, filename):
+    outcluster = []
+    clusters = pd.read_table(filename, sep=' ', skiprows=2, header=None)
+    clusters.columns = ['layer', 'node', 'cluster', 'flow']
+    clusters['nid'] = list(map(lambda x: revdict[(x[0], x[1])], zip(clusters['node'], clusters['layer'])))
+    return clusters
+
+
+def loadclusters_single(filename):
+    outcluster = []
+    clusters = pd.read_table(filename, sep=' ', skiprows=2, header=None)
+    clusters.columns = ['node', 'cluster', 'flow']
+    clusters['nid'] = clusters['node']
+    return clusters
+
+
+def call_infomap(graph, r):
+    assert len(np.unique([l.vcount() for l in graph.layers])) == 1, "All layers must have same length"
+    n = graph.layers[0].vcount()
+    revindict = create_tuple_indices(n, graph.nlayers, rev=True)
+    rprefix = np.random.randint(1000000)
+    rprefix_dir = os.path.join(infomapoutdir, str(rprefix))
+    if not os.path.exists(rprefix_dir):
+        os.makedirs(rprefix_dir)
+    networkfile = os.path.join(rprefix_dir, 'network.net')
+    single_layer = r < 0
+
+    if single_layer:
+        clusteroutfile = re.sub(".net\Z", ".clu", networkfile)
+        create_netfile_singlelayer(graph, networkfile)
+        parameters = [infomap_file,
+                      "-i", "pajek",
+                      "--clu", "--tree", '--expanded',
+                      '-z',
+                      "{:}".format(networkfile),
+                      "{:}".format(rprefix_dir),
+                      ]
+    else:
+        clusteroutfile = re.sub(".net\Z", "_expanded.clu", networkfile)
+        create_netfile(graph, networkfile)
+        parameters = [infomap_file,
+                      "-i", "multilayer",
+                      "--clu", "--tree", '--expanded',
+                      "--multilayer-relax-rate", "{:.5f}".format(r),
+                      "{:}".format(networkfile),
+                      "{:}".format(rprefix_dir),
+                      ]
+    process = Popen(parameters, stderr=PIPE, stdout=PIPE)
+    stdout, stderr = process.communicate()
+    process.wait()
+    if process.returncode != 0:
+        raise RuntimeError("running infomap failed : {:}".format(stderr))
+    if single_layer:
+        outcluster = loadclusters_single(clusteroutfile)
+    else:
+        outcluster = loadclusters(revindict, clusteroutfile)
+    cluster = np.array(([-1 for _ in range(graph.N)]))
+    for ind in outcluster.index:
+        cluster[outcluster.loc[ind, 'nid']] = outcluster.loc[ind, 'cluster']
+
+    try:
+        shutil.rmtree(rprefix_dir)
+    except:
+        pass
+
+    return cluster
 
 
 def create_infomap_net(infomapwrapper, multilayernet,single_layer=False):
@@ -75,12 +186,13 @@ def create_infomap_net(infomapwrapper, multilayernet,single_layer=False):
             e2 = e[1]
             n1, l1 = nodeinddict[e1]
             n2, l2 = nodeinddict[e2]
-            net.addMultilayerIntraLink(l1, n1, l2, w)
+            net.addMultilayerInterLink(l1, n1, l2, w)
     net.generateStateNetworkFromMultilayerWithInterLinks()
     return infomapwrapper
 
 
-def run_infomap(graph, r=.1):
+#had trouble getting this to work
+def run_infomap_python(graph, r=.1):
     assert len(np.unique([l.vcount() for l in graph.layers]))==1,"All layers must have same length"
     n=graph.layers[0].vcount()
     infomapSimple = infomap.Infomap("--two-level")
@@ -187,7 +299,6 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_
     partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
     # with use the degree corrected SBM to mirror paper
     multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
-    #     return multinet
     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet, dt)
     return mbpmulltinet
 
@@ -242,16 +353,19 @@ def run_infomap_on_multiplex(n, nlayers, mu, p_eta, r, ntrials):
     print('running {:d} trials at r={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,r,p_eta,mu))
     for trial in range(ntrials):
 
+        t=time()
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                      n_layers=nlayers, maxcoms=ncoms)
+        print('time creating graph: {:.3f}'.format(time()-t))
 
         cind=output.shape[0]
-        outpart=run_infomap(graph=graph,r=r)
+        outpart=call_infomap(graph=graph, r=r)
         ami_layer=graph.get_AMI_layer_avg_with_communities(outpart)
         ami=graph.get_AMI_with_communities(outpart)
         output.loc[cind,'trial']=trial
         output.loc[cind,'mu']=mu
         output.loc[cind,'p']=p_eta
+        output.loc[cind,'r']=r
 
         output.loc[cind, 'AMI'] = ami
         output.loc[cind, 'AMI_layer_avg'] = ami_layer
@@ -273,7 +387,8 @@ def main():
     p_eta= float(sys.argv[4])
     r=float(sys.argv[5])
     ntrials= int(sys.argv[6])
-    run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
+    run_infomap_on_multiplex(n=200,nlayers=5,mu=0,p_eta=1.0,r=.1,ntrials=1)
+    # run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
 
 if __name__ == "__main__":
     #create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
