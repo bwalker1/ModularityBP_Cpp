@@ -560,7 +560,7 @@ void BP_Modularity::step()
             }
             bfe += beta/(4*num_edges[t]) * temp;
         }
-        bfe /= (-1*beta*n);
+        bfe /= (-1*beta*n); //normalize out by beta a n
     }
 
     

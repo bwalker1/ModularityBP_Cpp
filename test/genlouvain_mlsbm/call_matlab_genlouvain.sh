@@ -19,10 +19,12 @@ export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-mas
 
 #X="addpath $matlab_func_file;"$'\n'
 
+#function call gets written to shell script
 X="call_gen_louvain('${1}','${2}',${3},${4})"
+#X="which(call_gen_louvain)"
+
 dir=${1%/*} #get directory of input file 
 base=${1##*/}
-#echo ${X}
 echo ${X} > $dir/matlab_command_$base.m
 # cat matlab_command_${2}.m
 # chown 0777 matlab_command_${2}.m
