@@ -15,7 +15,7 @@ import itertools
 #generative multilayer benchmark models (now in python)
 import multilayerGM as gm
 from time import time
-import infomap
+#import infomap
 
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
