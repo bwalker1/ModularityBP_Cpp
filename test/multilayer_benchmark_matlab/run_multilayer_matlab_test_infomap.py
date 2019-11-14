@@ -155,68 +155,68 @@ def call_infomap(graph, r):
 
     return cluster
 
-
-def create_infomap_net(infomapwrapper, multilayernet,single_layer=False):
-
-    net = infomapwrapper.network()
-    assert len(np.unique([l.vcount() for l in multilayernet.layers])) == 1, "All layers must have same length"
-    n = multilayernet.layers[0].vcount()
-
-    nodeinddict = create_tuple_indices(n, multilayernet.nlayers)
-
-    # add in intralayer edges
-    for e in multilayernet.intralayer_edges:
-        if len(e) > 2:
-            w = e[2]
-        else:
-            w = 1.0
-        e1 = e[0]
-        e2 = e[1]
-        n1, l1 = nodeinddict[e1]
-        n2, l2 = nodeinddict[e2]
-        net.addMultilayerIntraLink(l1, n1, n2, w)
-    # add in interlayer edges
-    if not single_layer:
-        for e in multilayernet.interlayer_edges:
-            if len(e) > 2:
-                w = e[2]
-            else:
-                w = 1.0
-            e1 = e[0]
-            e2 = e[1]
-            n1, l1 = nodeinddict[e1]
-            n2, l2 = nodeinddict[e2]
-            net.addMultilayerInterLink(l1, n1, l2, w)
-    net.generateStateNetworkFromMultilayerWithInterLinks()
-    return infomapwrapper
+#These infomap methods just did not work on the cluster
+# def create_infomap_net(infomapwrapper, multilayernet,single_layer=False):
+#
+#     net = infomapwrapper.network()
+#     assert len(np.unique([l.vcount() for l in multilayernet.layers])) == 1, "All layers must have same length"
+#     n = multilayernet.layers[0].vcount()
+#
+#     nodeinddict = create_tuple_indices(n, multilayernet.nlayers)
+#
+#     # add in intralayer edges
+#     for e in multilayernet.intralayer_edges:
+#         if len(e) > 2:
+#             w = e[2]
+#         else:
+#             w = 1.0
+#         e1 = e[0]
+#         e2 = e[1]
+#         n1, l1 = nodeinddict[e1]
+#         n2, l2 = nodeinddict[e2]
+#         net.addMultilayerIntraLink(l1, n1, n2, w)
+#     # add in interlayer edges
+#     if not single_layer:
+#         for e in multilayernet.interlayer_edges:
+#             if len(e) > 2:
+#                 w = e[2]
+#             else:
+#                 w = 1.0
+#             e1 = e[0]
+#             e2 = e[1]
+#             n1, l1 = nodeinddict[e1]
+#             n2, l2 = nodeinddict[e2]
+#             net.addMultilayerInterLink(l1, n1, l2, w)
+#     net.generateStateNetworkFromMultilayerWithInterLinks()
+#     return infomapwrapper
 
 
 #had trouble getting this to work
-def run_infomap_python(graph, r=.1):
-    assert len(np.unique([l.vcount() for l in graph.layers]))==1,"All layers must have same length"
-    n=graph.layers[0].vcount()
-    infomapSimple = infomap.Infomap("--two-level")
-    if r<0:
-        single_layer=True
-    else:
-        single_layer=False
-    infomapSimple = create_infomap_net(infomapSimple, graph,single_layer=single_layer)
-    infomapSimple.multilayerRelaxRate = float(np.max(r,0)) #for single layer use r=0
-    infomapSimple.run()
-
-    rev_id_dict = create_tuple_indices(n, graph.nlayers, rev=True)
-    outmodules = np.array([-1 for _ in range(graph.N)])
-    cnt=0
-    for node in infomapSimple.iterTree():
-        if node.isLeaf():
-            cnt+=1
-            ind = rev_id_dict[(node.physicalId, node.layerId)]
-            outmodules[ind] = node.moduleIndex()
-
-    #some how you can have missing nodes in the output.  I believe these are dangling nodes but haven't checked
-    #we just leave this as -1 in the output community
-    # assert np.sum(outmodules == -1) == 0, "node module missing:{:}".format(str(np.where(outmodules == -1)[0]))
-    return outmodules
+# def run_infomap_python(graph, r=.1):
+#     assert len(np.unique([l.vcount() for l in graph.layers]))==1,"All layers must have same length"
+#     n=graph.layers[0].vcount()
+#     infomapSimple = infomap.Infomap("--two-level")
+#     if r<0:
+#         single_layer=True
+#     else:
+#         single_layer=False
+#     infomapSimple = create_infomap_net(infomapSimple, graph,single_layer=single_layer)
+#     infomapSimple.multilayerRelaxRate = float(np.max(r,0)) #for single layer use r=0
+#     infomapSimple.run()
+#
+#     rev_id_dict = create_tuple_indices(n, graph.nlayers, rev=True)
+#     outmodules = np.array([-1 for _ in range(graph.N)])
+#     cnt=0
+#     for node in infomapSimple.iterTree():
+#         if node.isLeaf():
+#             cnt+=1
+#             ind = rev_id_dict[(node.physicalId, node.layerId)]
+#             outmodules[ind] = node.moduleIndex()
+#
+#     #some how you can have missing nodes in the output.  I believe these are dangling nodes but haven't checked
+#     #we just leave this as -1 in the output community
+#     # assert np.sum(outmodules == -1) == 0, "node module missing:{:}".format(str(np.where(outmodules == -1)[0]))
+#     return outmodules
 
 def adjacency_to_edges(A,offset=0):
     nnz_inds = np.nonzero(A)
