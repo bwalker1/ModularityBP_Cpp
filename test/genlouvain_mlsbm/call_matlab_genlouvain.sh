@@ -16,6 +16,9 @@ fi
 
 export MATLABPATH="${homedir}/test/genlouvain_mlsbm/"
 export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-master"
+export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-master/HelperFunctions"
+export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-master/Assignment"
+export MATLABPATH="${MATLABPATH}:${homedir}/test/genlouvain_mlsbm/GenLouvain-master/MEX_SRC"
 
 #X="addpath $matlab_func_file;"$'\n'
 

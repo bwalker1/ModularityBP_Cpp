@@ -29,7 +29,7 @@ def main():
 
     qmax=4
     bpobj=modbp.ModularityBP(mlgraph=mlgraph,
-                             align_communities_across_layers=False)
+                             align_communities_across_layers_temporal=False)
     nruns=3
     betas=[ bpobj.get_bstar(q) for q in range(2,4) ]
     for beta in betas:

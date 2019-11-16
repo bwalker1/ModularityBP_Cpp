@@ -512,9 +512,13 @@ class MultilayerGraph(object):
 
         return scispa.csr_matrix((data,(row_ind,col_ind)),shape=(N,N),dtype=float)
 
+
     def reorder_nodes(self):
         """
-        Resort all objects in the MultilayerGraph object by their community label
+        Resort all objects in the MultilayerGraph object by their community label\
+        while staying within layer.  This only sorts the first layer and then other\
+        subsequent layers are sorted in the same order (assuming that nodes are initially\
+        sorted by multilpex order
         :return:
         """
         new_com_vec=np.array([])
@@ -533,6 +537,7 @@ class MultilayerGraph(object):
                 for j, val in enumerate(cperm_vec):
                     rev_perm_vec[val - offset] = j + offset  # offset for nodes in previous layers
                 assert -1 not in rev_perm_vec
+
             else:
                c_new_comvec = [0 for _ in range(len(ccom_vec))]
                #use the old rev_perm_vec for permuting this layer (just offset new values)

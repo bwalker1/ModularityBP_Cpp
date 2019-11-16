@@ -114,7 +114,7 @@ def test_qstar():
 
     sbm = modbp.GenerateGraphs.generate_planted_partitions_sbm(n=n, c=c, epsilon=ep, ncoms=q)
     mbp_obj = modbp.ModularityBP(mlgraph=sbm, accuracy_off=True,
-                                 align_communities_across_layers=True)
+                                 align_communities_across_layers_temporal=True)
 
     omega = 0
     gamma = 1
@@ -314,7 +314,7 @@ def test_community_swapping_ml():
         #add
 
         mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
-                                    align_communities_across_layers=True)
+                                  align_communities_across_layers_temporal=True)
 
         bstars = [mlbp.get_bstar(q_, omega) for q_ in range(2, qmax + 1)]
         betas = np.linspace(bstars[0], bstars[-1], 3 * len(bstars))
@@ -378,7 +378,7 @@ def test_cpp_permutation():
     weights=[1.0 for _ in range(len(mgraph.intralayer_edges))]
     mgraph.interlayer_weights=weights
     mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
-                              align_communities_across_layers=False)
+                              align_communities_across_layers_temporal=False)
 
     bstar = mlbp.get_bstar(qmax, omega)
 
@@ -388,7 +388,7 @@ def test_cpp_permutation():
     f, a = plt.subplots(1, 1)
     mlbp.plot_communities(0, ax=a)
     plt.show()
-    mlbp._perform_permuation_sweep(ind=0)
+    mlbp._perform_permuation_sweep_temporal(ind=0)
     mlbp._switch_beliefs_bp(0)
     # #after realignment
     plt.close()
@@ -438,7 +438,7 @@ def test_bethe_free_energy_calc():
                                    comm_vec=ml_sbm.get_all_layers_block())
 
     mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False,
-                              align_communities_across_layers=True)
+                              align_communities_across_layers_temporal=True)
     bstar = mlbp.get_bstar(qmax, omega)
     print('running')
     mlbp.run_modbp(beta=bstar, niter=4, q=qmax, resgamma=gamma, omega=omega,reset=False)
@@ -468,7 +468,7 @@ def test_spinglass():
     mler_graph = modbp.MultilayerGraph(intralayer_edges=er_graph.get_edgelist(),
                                        layer_vec=[0] * er_graph.n)
     mbp_obj = modbp.ModularityBP(mlgraph=mler_graph, accuracy_off=True,
-                                 align_communities_across_layers=True)
+                                 align_communities_across_layers_temporal=True)
 
     for gamma in [1]:
         for j, beta in enumerate(betas):

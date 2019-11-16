@@ -32,7 +32,9 @@ class ModularityBP():
     def __init__(self, mlgraph=None, interlayer_edgelist=None,
                  intralayer_edgelist=None, layer_vec=None,
                  accuracy_off=True, use_effective=False, comm_vec=None,
-                 align_communities_across_layers=True,min_com_size=5,is_bipartite=False):
+                 align_communities_across_layers_temporal=False,
+                 align_communities_across_layers_multiplex=False,
+                 min_com_size=5, is_bipartite=False):
 
         """
 
@@ -43,7 +45,7 @@ class ModularityBP():
         :param accuracy_off:
         :param use_effective:
         :param comm_vec:
-        :param align_communities_across_layers:
+        :param align_communities_across_layers_temporal:
         :param min_com_size:
         :param is_bipartite: if graph is bipartite, change underlying null model for intralayer \
         to use k_i d_j / m . note edges are still passed in as edge list and bipartiteness is not \
@@ -52,6 +54,7 @@ class ModularityBP():
 
         assert not (mlgraph is None) or not ( intralayer_edgelist is None and layer_vec is None)
 
+        assert not (align_communities_across_layers_multiplex and align_communities_across_layers_temporal), "Cannot use both multiplex and temporal alignment postprocessing.  Please set one to False"
 
         if mlgraph is not None:
             # this is just a single layer igraph. We create a mlgraph with empty interlayer edges
@@ -82,9 +85,11 @@ class ModularityBP():
         self._cpp_intra_weights=self._get_cpp_intra_weights()
         self.layer_vec=np.array(self.graph.layer_vec)
         self._layer_vec_ia=IntArray([int(i) for i in self.layer_vec])#must be integers!
-        self.layers_unique=sorted(np.unique(self.layer_vec))
+        self.layers_unique=np.unique(self.layer_vec)
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
-        self._align_communities_across_layers=align_communities_across_layers
+        self._align_communities_across_layers_temporal=align_communities_across_layers_temporal
+        self._align_communities_across_layers_multiplex=align_communities_across_layers_multiplex
+
         self.marginals={}
         self.partitions={} # max of marginals
         self.niters={}
@@ -93,7 +98,8 @@ class ModularityBP():
         self.group_distances={}
         self.use_effective=use_effective
         self.nruns=0 #how many times has the BP algorithm been run.  Also serves as index for outputs
-        self._permutation_vectors={} # This is used to keep track of which vertices are switched after as sweep
+        self._permutation_vectors={} # This is used to keep track of which vertices are switched after as sweep.
+
         #make single index
         # rm_index=pd.MultiIndex(labels=[[],[],[],[]],levels=[[],[],[],[]],names=['q','beta','resgamma','omega'])
         self.retrieval_modularities=pd.DataFrame(columns=['q','beta','resgamma','omega',
@@ -159,7 +165,7 @@ class ModularityBP():
                 
 
 
-        if self._align_communities_across_layers:
+        if self._align_communities_across_layers_temporal:
             iters_per_run=niter//2 #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
@@ -193,24 +199,29 @@ class ModularityBP():
         #     #                                                    self._get_retrieval_modularity(self.nruns)))
         #     nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
 
+        to_align = self._align_communities_across_layers_temporal or self._align_communities_across_layers_multiplex
+
+        if to_align:
+            alignment_function = self._perform_permuation_sweep_temporal if self._align_communities_across_layers_temporal else self._perform_permuation_sweep_multiplex
 
 
-        if self._align_communities_across_layers and iters<niter:
+        if to_align and iters<niter:
             # #logging.debug('aligning communities across layers')
             # print ("Bethe : {:.3f}, Modularity: {:.3f}".format(self._bpmod.compute_bethe_free_energy(),
             #                                                    self._get_retrieval_modularity(self.nruns)))
-            nsweeps=self._perform_permuation_sweep(self.nruns) # modifies partition directly
+            nsweeps=alignment_function(self.nruns) # modifies partition directly
 
             #logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
+            #keep alternating with more BP runs and alignment sweeps until either
+            #converged or we've exceded max number iterations
             while not (nsweeps==0 and converged==True) and not iters>niter:
-                #plots for debugging
-                ##logging.debug("rerunning modbp with realigned:")
                 self._switch_beliefs_bp(self.nruns)
                 #can't go more than the alloted number of runs
                 citers = self._bpmod.run(iters_per_run)
                 iters+=citers
+                # print("cnt", cnt, 'iters', iters)
                 if citers<iters_per_run: #it converged
                     converged=True
                 #logging.debug('after aligning time: {:.4f}, {:d} iterations more. total iters: {:d}'.format(time() - t,citers,iters))
@@ -226,7 +237,7 @@ class ModularityBP():
                     q = q_new
                 cnt+=1
 
-                nsweeps = self._perform_permuation_sweep(self.nruns)  # modifies partition directly
+                nsweeps = alignment_function(self.nruns)  # modifies partition directly
 
             #final combined marginals
 
@@ -265,19 +276,8 @@ class ModularityBP():
 
         self.retrieval_modularities.loc[self.nruns,'is_trivial']=self._is_trivial(self.nruns)
 
-        # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'retrieval_modularity']=retmod
-        # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'niters']=iters
-        # self.retrieval_modularities.loc[(q,beta,resgamma,omega),'AMI']=self.graph.get_AMI_with_communities(cpartition)
-        # self.retrieval_modularities.sort_index(inplace=True)
         #logging.debug("Total modbp runtime : {:.3f}".format(time()-tot_time))
         self.nruns+=1
-
-    # def _get_edgelist(self):
-    #     edgelist=self.graph.get_edgelist()
-    #     if not self.graph.intralayer_weights is None:
-    #         elist_weights=sorted(zip(self.graph.),key=lambda (x):x[0],x[1])
-    #     edgelist.sort()
-    #     return edgelist
 
 
     def _get_bethe_free_energy(self):
@@ -524,6 +524,8 @@ class ModularityBP():
         else:
             return False
 
+
+
     def _get_number_switched_single_layer(self,layer,partition,percent=False):
 
         layers = self.layers_unique
@@ -549,23 +551,75 @@ class ModularityBP():
     def _initialize_final_permutation_dict_all_layers(self,ind):
         """
         this object keeps track of which community every community is mapped to in each layer \
-        in the permutation sweep to try and align the layers.
+        in the permutation sweep to try and align the layers.  This is used at the end\
+        to permute the marginals when re-running the modularity bp algorithm
 
         :param ind:
-        :return: list with one dictionary for each layer
+        :return: list with one dictionary for each layer mapping communities across layers
         """
         layers=self.layers_unique
         final_permutation_dict = [ ]
         for i,layer in enumerate(layers):
             lay_inds=np.where(self.layer_vec==layer)[0]
-            #all the possible community labels
+            #all the community labels across all layers
             partvals=np.unique(list(self.marginal_to_comm_number[ind].values()))
-            #map to itself
+            #map to itself at begining
             final_permutation_dict.append(dict(zip(partvals,partvals)))
         return final_permutation_dict
 
+    def _compute_persistence_multiplex(self,ind):
 
-    def _perform_permuation_sweep(self,ind):
+        """taken from https://epubs.siam.org/doi/pdf/10.1137/15M1009615.
+        Persistence is number of communities that don't change when moving across a interlayeredge
+        """
+        curpart=self.partitions[ind]
+        persistence=0
+        for edge in self.interlayer_edges:
+            n1,n2=edge
+            if curpart[n1]==curpart[n2]:
+                persistence+=1
+        persistence=persistence/len(self.interlayer_edges)
+        return persistence
+
+
+    def _perform_permuation_sweep_multiplex(self, ind):
+        """
+        Calculate largest difference between adjacent layers\
+        then perform flip for everylayer afterwards.  Repeat until \
+        persistence no longer improves or max number of iterations are reached
+
+        :param ind: partition to perform permutation on
+        :return: number of sweeps performed. To keep track of whether \
+        any layers were actually shuffled.
+        """
+        max_iters=100
+        niters=-1 #first sweep doesn't count (if it only does one sweep then it didn't improve)
+
+        #for each sweep perform we keep track of which communities are switched within each
+        #layer.  We start out with each community mapped to itself.
+        self._permutation_vectors[ind]=self._initialize_final_permutation_dict_all_layers(ind=ind)
+
+        curpersistence=self._compute_persistence_multiplex(ind)
+        prev_per=-np.inf
+        while curpersistence-prev_per>0 and niters<max_iters: #this could also be a while loop but added max number of cycles
+
+            for layer in np.random.choice(self.layers_unique,replace=False,size=self.nlayers):
+
+            #create permutation dictionary to swap layer to next
+            #note that this diction
+                permdict = self._create_layer_permutation_all_other_layer(ind,layer)
+                self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
+
+            #check that we are improving.
+            prev_per=curpersistence
+            curpersistence=self._compute_persistence_multiplex(ind)
+
+            # print("Improvement:",curpersistence-prev_per,niters)
+            niters+=1
+        return niters
+
+
+    def _perform_permuation_sweep_temporal(self, ind):
         """
         Calculate largest difference between adjacent layers\
         then perform flip for everylayer afterwards
@@ -577,59 +631,21 @@ class ModularityBP():
         """
         max_iters=100
         niters=0
-        #go through at least once
-        # number_switched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
-        # max_layer_switched = np.argmax(number_switched)
-        # permdict = self._create_layer_permutation_single_layer(ind, max_layer_switched)
-        # print(number_switched[max_layer_switched],max_layer_switched,permdict)
-        # plt.close()
-        # plt.subplots(1,2,figsize=(10,5))
-        # a=plt.subplot(1,2,1)
-        # a.set_title('before')
-        # self.plot_communities(ind,layers=[max_layer_switched-1,
-        #                                   max_layer_switched],ax=a,numbers=True)
-        # for layer in range(max_layer_switched, self.layers_unique[-1] + 1):  # permute all layers behind
-        #     self._permute_layer_with_dict(ind, layer=layer, permutation=permdict)
-        # a = plt.subplot(1, 2, 2)
-        # a.set_title('after')
-        # self.plot_communities(ind, layers=[max_layer_switched - 1,
-        #                                    max_layer_switched], ax=a, numbers=True)
-        # plt.show()
-
-
 
         #for each sweep perform we keep track of which communities are switched within each
         #layer.  We start out with each community mapped to itself.
         self._permutation_vectors[ind]=self._initialize_final_permutation_dict_all_layers(ind=ind)
 
 
-        while niters<max_iters:
+        while niters<max_iters: #this could also be a while loop but added max number of cycles
         # for clayer in self.layers_unique:
+            #we swap the layer with the most number of mismatching nodes here
             number_switched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
             max_layer_switched=np.argmax(number_switched)
+            #create permutation dictionary to swap layer to nex
+            #note that this diction
             permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
-            # print (number_switched)
-            # print(number_switched[max_layer_switched], max_layer_switched, permdict)
-            # oldpart=self.partitions[ind] #before switch
-            # plt.close()
-            # plt.subplots(1, 2, figsize=(10, 5))
-            # a = plt.subplot(1, 2, 1)
-            # a.set_title('before')
-            # self.plot_communities(ind, layers=[max_layer_switched - 1,
-            #                                    max_layer_switched], ax=a)
-            # self._permute_layer_with_dict(ind, layer=max_layer_switched, permutation=permdict)
-            # a = plt.subplot(1, 2, 2)
-            # a.set_title('after')
-            # self.plot_communities(ind, layers=[max_layer_switched - 1,
-            #                                    max_layer_switched], ax=a)
-            # plt.show()
-            # #
-            # dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
-            # with gzip.open(os.path.join(dir,'test_case_partswitch.txt'),'w') as fh:
-            #     pickle.dump((self.layer_vec,max_layer_switched,oldpart),fh)
-            # print(max_layer_switched,permdict)
-            #
-            # print()
+
             if all([k==v for k,v in permdict.items()]):
                 break #nothing changed
             for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
@@ -637,18 +653,6 @@ class ModularityBP():
             niters+=1
         return niters
 
-        # plt.close()
-        # f, a = plt.subplots(1, 2, figsize=(6, 3))
-        # a = plt.subplot(1, 2, 1)
-        # self.plot_communities(ax=a)
-        # a = plt.subplot(1, 2, 2)
-        # self.plot_communities(ind, ax=a)
-        # plt.show()
-        # dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test"
-        # with gzip.open(os.path.join(dir,'test_case_partswitch.txt'),'w') as fh:
-        #     pickle.dump((self.layer_vec,max_layer_switched,oldpart),fh)
-        # print(max_layer_switched,permdict)
-        # print(niters)
 
     def get_number_nodes_switched_all_layers(self, ind, percent=False):
         """
@@ -668,24 +672,44 @@ class ModularityBP():
 
         return switched
 
-    # def _create_com_dist_map_to_minimize(self,ind,layer):
-    #     layers=self.layers_unique
-    #     prev_layer = layers[np.where(layers == layer)[0][0] - 1]
-    #     cind=np.where(self.layer_vec==layer)[0]
-    #     prevind=np.where(self.layer_vec==prev_layer)[0]
-    #
-    #     curpart=self.partitions[ind][cind]
-    #     prevpart=self.partitions[ind][prevind]
-    #     curcoms=np.unique(curpart)
-    #     prevcoms = np.unique(prevpart)
-    #     distmat=np.zeros((len(prevcoms),len(curcoms)))
-    #     #the index within the current layer partition
-    #     prev_inds={ com:np.where(prevpart==com)[0] for com in prevcoms }
-    #     for i,prevcom in enumerate(prevcoms):
-    #         for j,curcom in enumerate(curcoms):
-    #             #how many of the currentl communities are not in the previous community
-    #             distmat[i,j]=np.sum(curpart[prev_inds[prevcom]]!=curcom)
-    #     return distmat
+    def _get_multiplex_layer_inds_dict(self,layer1,layer2):
+        """
+        returns 2 dictionaries, mapping the indices of the nodes in the previous layer to that \
+        in the current layer. This is used to define the adjacent layer of nodes.
+
+        creates interlayer_edge_dict={ node1 : [nodes with interlayer connections], node2 : []}
+        if not already available.
+        :return: layer1tolayer2_inds = dict mapping from current layer id to previous layer ids based on interalyer edges \
+        layer2tolayer1_inds = dict mapping from previous layer to current layer.  Both these are based on the interlayer \
+        edges and neither are strictly one-to-one
+
+
+        """
+        if layer1==0: #nothing in the previous layer
+            return {},{}
+
+        if "interlayer_edge_dict" not in self.__dict__:
+            self.interlayer_edge_dict={}
+            for e in self.interlayer_edges:
+                ei,ej=e[0],e[1]
+                self.interlayer_edge_dict[ei]=self.interlayer_edge_dict.get(ei,[])+[ej]
+                self.interlayer_edge_dict[ej]=self.interlayer_edge_dict.get(ej,[])+[ei]
+
+        layer1_inds=np.where(self.layer_vec==layer1)[0]
+        layer2_inds=np.where(self.layer_vec==layer2)[0]
+        layer2tolayer1_inds={}
+        layer1tolayer2_inds={}
+        for ind in layer2_inds:
+            if ind in self.interlayer_edge_dict:
+                layer2tolayer1_inds[ind]=list(set(self.interlayer_edge_dict[ind]).intersection(layer1_inds))
+
+        #construct mapping other direction
+        for prevind in layer2tolayer1_inds.keys():
+            for cind in layer2tolayer1_inds.get(prevind,[]):
+                layer1tolayer2_inds[cind]=list(set(layer1tolayer2_inds.get(cind,[])+[prevind]))
+
+        return layer1tolayer2_inds,layer2tolayer1_inds
+
 
     def _get_previous_layer_inds_dict(self,layer):
         """
@@ -758,6 +782,7 @@ class ModularityBP():
         prevcoms2_i=dict(zip(prevcoms,range(len(prevcoms))))
         curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
 
+        #this sets upf the distance matrix to compute optimal switches
         for prev_ind in prev2cur_inds.keys():
             pre_com=self.partitions[ind][prev_ind]
             i=prevcoms2_i[pre_com]
@@ -778,16 +803,6 @@ class ModularityBP():
                 distmat[i, j] -= (1.0 / len(cur2prev_inds[cur_ind]))
 
 
-        #below works for multiplex, but not for more general multilayer topologies.
-        # for i, prevcom in enumerate(prevcoms):
-        #     for j, curcom in enumerate(curcoms):
-        #         # how many of the currentl communities are not in the previous community
-        #         #plus how many of the previous communities are not in the current community
-        #         #have to figure out which of the nodes from previous layer are actually in this layer
-        #         #(in the case where it's not multiplex)
-        #         distmat[i, j] = np.sum(curpart[prev_inds[prevcom]] != curcom) + \
-        #                         np.sum(prevpart[cur_inds[curcom]] != prevcom)
-
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
         colcoms= list(map(lambda x : curcoms[x],col_ind))
@@ -795,6 +810,7 @@ class ModularityBP():
         com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
 
         #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
+        # i.e communities that aren't in either of the layers
         coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
         comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
         #things that are in both get mapped to themselves first
@@ -804,31 +820,83 @@ class ModularityBP():
             comsnotmapped.remove(com)
         for com in comsnotmapped:
             com_map_dict[com]=coms_remaining.pop()
+        return com_map_dict
 
+    def _create_layer_permutation_all_other_layer(self,ind,layer):
+        """
+        Identify the permutation of community labels that minimizes the number\
+        switched across all other layers (in multiplex context)
+
+        :param ind:
+        :return: com_map_dict mapping to apply to layer to minimize number of switches
+        """
+
+        cind = np.where(self.layer_vec == layer)[0]
+
+        layers2compare=self.layers_unique
+        layers2compare=layers2compare[np.where(layers2compare!=layer)[0]]
+
+
+        #we switch only the communiites in that layer
+        layer_inds=np.where(self.layer_vec==layer)[0]
+
+        #set up distmat to include all possible communities
+        curcoms = np.unique(self.partitions[ind])
+
+        distmat = np.zeros((len(curcoms), len(curcoms)))
+
+        for curlayer_compare in layers2compare:
+
+            cur2other_inds, other2cur_inds = self._get_multiplex_layer_inds_dict(layer,curlayer_compare)
+
+            # the index within the current layer partition
+            prevcoms2_i=dict(zip(curcoms,range(len(curcoms))))
+            curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
+
+            #this sets upf the distance matrix to compute optimal switches
+            for prev_ind in other2cur_inds.keys():
+                pre_com=self.partitions[ind][prev_ind]
+                i=prevcoms2_i[pre_com]
+                for cur_ind in other2cur_inds[prev_ind]:
+                    cur_com=self.partitions[ind][cur_ind]
+                    j=curcoms2_j[cur_com]
+                    distmat[ i , : ]+=(1.0/len(other2cur_inds[prev_ind]))
+                    distmat[ i , j ]-=(1.0/len(other2cur_inds[prev_ind]))
+
+            for cur_ind in cur2other_inds.keys():
+                cur_com = self.partitions[ind][cur_ind]
+                j = curcoms2_j[cur_com]
+                for prev_ind in cur2other_inds[cur_ind]:
+                    prev_com = self.partitions[ind][prev_ind]
+                    i = prevcoms2_i[prev_com]
+                    # distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+                    distmat[:, j] += (1.0 / len(cur2other_inds[cur_ind]))
+                    distmat[i, j] -= (1.0 / len(cur2other_inds[cur_ind]))
+
+
+        #solve bipartite min cost matching with munkre algorithm
+        row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
+        colcoms= list(map(lambda x : curcoms[x],col_ind))
+        rwcoms= list(map(lambda x : curcoms[x],row_ind))
+        com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
+
+
+        #this shoudln't be a problem since all communities have been considered above.
+
+        #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
+        # i.e communities that aren't in either of the layers
+        # coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
+        # comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
+        # #things that are in both get mapped to themselves first
+        # for com in coms_remaining.intersection(comsnotmapped):
+        #     com_map_dict[com]=com
+        #     coms_remaining.remove(com)
+        #     comsnotmapped.remove(com)
+        # for com in comsnotmapped:
+        #     com_map_dict[com]=coms_remaining.pop()
 
         return com_map_dict
 
-        #found more efficient method above
-        # com_map_dict=dict(zip(coms,coms) )
-        # remaining = [com for com in coms]
-        # for i, com in enumerate(coms_by_size):
-        #     minchange=1
-        #     mincom=com
-        #     for com2test in remaining:
-        #         com_map_dict[com]=com2test
-        #         #swap out with current changes
-        #         cpart[layer_inds]=map(lambda x : com_map_dict[x],cpart[layer_inds])
-        #         new_change=self._get_number_switched_single_layer(layer,partition=cpart,percent=True)
-        #         if new_change<minchange:
-        #             minchange=new_change
-        #             mincom=com2test
-        #         cpart=self.partitions[ind].copy() #copy back over from original
-        #     com_map_dict[com]=mincom # use the new minimum swap
-        #     remaining.remove(mincom)
-        # assert(len(com_map_dict.values())==len(set(com_map_dict.values())))
-        # assert(len(com_map_dict.keys())==len(coms_by_size)) #all communities must be present
-        # print(com_map_dict)
-        # return com_map_dict
 
     def _permute_layer_with_dict(self,ind,layer,permutation):
         """
@@ -843,11 +911,11 @@ class ModularityBP():
 
         """
 
-
         lay_inds=np.where(self.layer_vec==layer)[0]
         old_layer=self.partitions[ind][lay_inds]
         curcoms=np.unique(self.partitions[ind]) #use all communities here.
-        curpermutation={k:v for k,v in permutation.items()}
+        #copy dictionary to add things later
+        curpermutation=permutation.copy()
 
         #ensure that things don't get map to that aren't mapped so some other community
         comsremain=set(list(curcoms)+list(permutation.keys())).difference(permutation.values())
@@ -917,9 +985,10 @@ class ModularityBP():
         return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
 
+
     def _switch_beliefs_bp(self, ind):
         """
-        This switches the belefs.  Should only be called after _perform_permutation_sweep
+        This switches the belefs on the c++ side.  Should only be called after _perform_permutation_sweep
         :param ind: modbp run index
         :returns: permutes the beliefs or marginals
         """
@@ -946,7 +1015,8 @@ class ModularityBP():
         def get_partition_matrix(partition, layer_vec):
             # assumes partiton in same ordering for each layer
             vals = np.unique(layer_vec)
-            nodeperlayer = len(layer_vec) / len(vals)
+            nodeperlayer = len(layer_vec) // len(vals)
+            assert len(layer_vec)%len(vals) == 0 , "number of nodes in each layer must be equal"
             com_matrix = np.zeros((nodeperlayer, len(vals)))
             for i, val in enumerate(vals):
                 cind = np.where(layer_vec == val)[0]
