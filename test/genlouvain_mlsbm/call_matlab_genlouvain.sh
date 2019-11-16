@@ -1,7 +1,7 @@
 #!/bin/bash
 
 curwd=`pwd`
-if [[ $curwd == "*longleaf*" ]];then
+if [[ $curwd == *"longleaf"* ]];then
     module add matlab
     matlab_exec=matlab
     homedir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp'
