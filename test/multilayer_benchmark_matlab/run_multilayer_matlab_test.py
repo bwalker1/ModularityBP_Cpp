@@ -73,7 +73,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
     except:
         print(stderr)
         os.remove(scio_outfile)
-        raise AssertionError,"matlab failed to run. can't find output file" #this should still in intercepted below
+        raise (AssertionError,"matlab failed to run. can't find output file") #this should still in intercepted below
     ami = mgraph.get_AMI_with_communities(S)
 
     try:
