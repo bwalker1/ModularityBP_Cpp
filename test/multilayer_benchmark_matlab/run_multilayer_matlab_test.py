@@ -110,12 +110,10 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                      n_layers=nlayers, maxcoms=ncoms)
         print('time creating graph: {:.3f}'.format(time()-t))
-        with gzip.open("notworking_graph.gz",'wb') as fh:
-            pickle.dump(graph,fh)
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q) for q in range(2, qmax+2,2)]
-        bstars = [mlbp.get_bstar(qmax) ]
+        # bstars = [mlbp.get_bstar(qmax) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
