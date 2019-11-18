@@ -212,7 +212,6 @@ class ModularityBP():
             #                                                    self._get_retrieval_modularity(self.nruns)))
             t=time()
             nsweeps=alignment_function(self.nruns) # modifies partition directly
-
             logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
@@ -625,10 +624,9 @@ class ModularityBP():
 
         curpersistence=self._compute_persistence_multiplex(ind)
         prev_per=-np.inf
-        while curpersistence-prev_per>0 and niters<max_iters: #this could also be a while loop but added max number of cycles
+        while curpersistence-prev_per>0 and niters<max_iters:
 
             t=time()
-
             distmat_dict=self._create_all_layer2layer_distmats(ind)
             for layer in np.random.choice(self.layers_unique,replace=False,size=self.nlayers):
 
@@ -641,8 +639,6 @@ class ModularityBP():
                 distmat_dict=self._permute_layer_with_dict(ind,layer=layer,permutation=permdict,dismat_dict=distmat_dict)
                 if(self._compute_persistence_multiplex(ind)-curpersistence)<0:
                     raise AssertionError
-
-
             #check that we are improving.
             prev_per=curpersistence
             curpersistence=self._compute_persistence_multiplex(ind)

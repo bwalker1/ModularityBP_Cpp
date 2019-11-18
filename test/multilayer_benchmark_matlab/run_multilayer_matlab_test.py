@@ -92,7 +92,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
 #python run_multilayer_matlab_test.py
 
 def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
-    ncoms=4
+    ncoms=10
 
     finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
@@ -101,7 +101,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     output = pd.DataFrame()
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
-    qmax=6
+    qmax=12
     max_iters=4000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
@@ -132,6 +132,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
                 output.loc[cind, col] = mlbp_rm.loc[ind, col]
             output.loc[cind, 'isGenLouvain'] = False
             output.loc[cind, 'mu'] = mu
+            output.loc[cind, 'p'] = p_eta
             output.loc[cind, 'trial'] = trial
 
             # run genlouvain on graph
@@ -157,6 +158,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
             cind = output.shape[0]
             output.loc[cind, 'isGenLouvain'] = True
             output.loc[cind, 'mu'] = mu
+            output.loc[cind, 'p'] = p_eta
             output.loc[cind, 'trial'] = trial
             output.loc[cind, 'AMI'] = ami
             output.loc[cind, 'AMI_layer_avg'] = ami_layer
@@ -193,8 +195,8 @@ def main():
     omega = float(sys.argv[5])
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
-    # run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    run_louvain_multiplex_test(n=200,nlayers=6,mu=.1,p_eta=.5,omega=.5,gamma=1.0,ntrials=1)
+    run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
+    #run_louvain_multiplex_test(n=400,nlayers=10,mu=.1,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
 
     return 0
 
