@@ -90,9 +90,9 @@ def run_multiplex_modularity():
 	gamma=1.0
 	omegas=np.append([0],np.logspace(-2.5,.5,8))
 	mus = np.linspace(0, 1, 11)
-	# ps = np.array([.5, .85, .95, .99, 1])
-	ps = np.array([.5])
-	ntrials = 10
+	ps = np.array([.5, .85, .95, .99, 1])
+	# ps = np.array([.5])
+	ntrials = 100
 	#note the order must be correct here
 	args = list(itertools.product([n], [nlayers], [mus], ps, omegas,[gamma],[ntrials]))
 	output = run_parallel(wrap_function_louvain, args, numprocesses=10)
