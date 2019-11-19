@@ -200,7 +200,7 @@ def main():
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-`   #run_louvain_multiplex_test(n=400,nlayers=10,mu=.8,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
+    #run_louvain_multiplex_test(n=400,nlayers=10,mu=.8,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
 
     return 0
 
