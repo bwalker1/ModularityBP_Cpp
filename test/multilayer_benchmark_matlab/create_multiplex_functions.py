@@ -85,6 +85,20 @@ def convert_nxmg_to_mbp_multigraph(nxmg):
                                  layer_vec=layervec)
 
 
+def create_multiplex_graph_block(n_nodes=100, n_layers=5, mu=.99,
+                                 p_in=.8,p_out=0,nblocks=3, maxcoms=10, k_max=150,k_min=3):
+    theta = 1
+    dt = gm.dependency_tensors.BlockMultiplex(n_nodes, n_layers, nblocks=nblocks,p_in=p_in,p_out=p_out)
+    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=maxcoms)
+    partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
+    # with use the degree corrected SBM to mirror paper
+    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
+    #     return multinet
+    #the multiplex connections should be the same here
+    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet)
+    return mbpmulltinet
+
+
 def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_max=150,k_min=3):
     theta = 1
     dt = gm.dependency_tensors.UniformMultiplex(n_nodes, n_layers, p)
