@@ -409,7 +409,7 @@ class MultilayerGraph(object):
             degrees[ej]=degrees[ej]+toadd
         return degrees
 
-    def get_AMI_with_communities(self,labels):
+    def get_AMI_with_communities(self,labels,useNMI=False):
         """
         Calculate adjusted mutual information of labels with underlying community of network.
         :param labels: commmunity to assess agreement with.  Len(labels) must \
@@ -418,9 +418,11 @@ class MultilayerGraph(object):
         """
         if self.comm_vec is None:
             raise ValueError("Must provide communities lables for Multilayer Graph")
+        if useNMI:
+            return skm.normalized_mutual_info_score(self.comm_vec,labels_pred=labels,average_method='arithmetic')
         return skm.adjusted_mutual_info_score(self.comm_vec,labels_pred=labels,average_method='arithmetic')
 
-    def get_AMI_layer_avg_with_communities(self,labels):
+    def get_AMI_layer_avg_with_communities(self,labels,useNMI=False):
         """
         Calculate AMI of each layer with corresponding community in labels.  Return \
         average AMI weighted by number of nodes in each layer.
@@ -435,7 +437,10 @@ class MultilayerGraph(object):
         lay_vals=np.unique(self.layer_vec)
         for lay_val in lay_vals:
             cinds=np.where(self.layer_vec==lay_val)[0]
-            la_amis.append(len(cinds)/(1.0*self.N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
+            if useNMI:
+                la_amis.append(len(cinds) / (1.0 * self.N) * skm.normalized_mutual_info_score(labels_true=labels[cinds], labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
+            else:
+                la_amis.append(len(cinds)/(1.0*self.N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
 
         return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         

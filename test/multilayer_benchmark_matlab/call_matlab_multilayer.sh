@@ -13,8 +13,8 @@ else
 fi
 
 export MATLABPATH="${homedir}/test/multilayer_benchmark_matlab/"
-export MATLABPATH="${MATLABPATH}:${homedir}/test/multilayer_benchmark_matlab/MultilayerBenchmark-master"
-export MATLABPATH="${MATLABPATH}:${homedir}/test/multilayer_benchmark_matlab/MultilayerBenchmark-master/OptionStruct"
+export MATLABPATH="${MATLABPATH}:${homedir}/test/multilayer_benchmark_matlab/MultilayerGM-MATLAB-master"
+#export MATLABPATH="${MATLABPATH}:${homedir}/test/multilayer_benchmark_matlab/MultilayerBenchmark-master/OptionStruct"
 
 #X="addpath $matlab_func_file;"$'\n'
 

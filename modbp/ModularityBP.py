@@ -292,6 +292,9 @@ class ModularityBP():
         if self.graph.comm_vec is not None:
             self.retrieval_modularities.loc[self.nruns,'AMI_layer_avg']=self.graph.get_AMI_layer_avg_with_communities(cpartition)
             self.retrieval_modularities.loc[self.nruns,'AMI']=self.graph.get_AMI_with_communities(cpartition)
+            self.retrieval_modularities.loc[
+                self.nruns, 'NMI_layer_avg'] = self.graph.get_AMI_layer_avg_with_communities(cpartition,useNMI=True)
+            self.retrieval_modularities.loc[self.nruns, 'NMI'] = self.graph.get_AMI_with_communities(cpartition,useNMI=True)
 
             if not self._accuracy_off: #for low number of communities
                 self.retrieval_modularities.loc[self.nruns,'Accuracy_layer_avg']=self.graph.get_accuracy_layer_averaged_with_communities(cpartition)

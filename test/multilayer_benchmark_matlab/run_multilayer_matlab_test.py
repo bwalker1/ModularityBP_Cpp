@@ -154,6 +154,9 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
             S = call_gen_louvain(graph, gamma, omega)
             ami_layer = graph.get_AMI_layer_avg_with_communities(S)
             ami = graph.get_AMI_with_communities(S)
+            nmi =  graph.get_AMI_with_communities(S,useNMI=True)
+            nmi_layer  =  graph.get_AMI_layer_avg_with_communities(S,useNMI=True)
+
             cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
             cind = output.shape[0]
             output.loc[cind, 'isGenLouvain'] = True
@@ -162,6 +165,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
             output.loc[cind, 'trial'] = trial
             output.loc[cind, 'AMI'] = ami
             output.loc[cind, 'AMI_layer_avg'] = ami_layer
+            output.loc[cind, 'NMI'] = nmi
+            output.loc[cind, 'NMI_layer_avg'] = nmi_layer
             output.loc[cind, 'retrieval_modularity'] = cmod
             output.loc[cind, 'resgamma'] = gamma
             output.loc[cind, 'omega'] = omega
@@ -176,7 +181,6 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
                 output.iloc[-1:, :].to_csv(fh, header=False)
 
         print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
-
         # if trial == 0:
         #     with open(outfile, 'w') as fh:
         #         output.to_csv(fh, header=True)
@@ -196,7 +200,7 @@ def main():
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    #run_louvain_multiplex_test(n=400,nlayers=10,mu=.1,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
+`   #run_louvain_multiplex_test(n=400,nlayers=10,mu=.8,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
 
     return 0
 
