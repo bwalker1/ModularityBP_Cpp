@@ -179,7 +179,7 @@ class ModularityBP():
             iters=self._bpmod.run(iters_per_run)
         else:
             # omega_update_scheme=np.linspace(0,omega,30)
-            omega_update_scheme=np.append([0],np.logspace(-4,np.log10(omega),100))
+            omega_update_scheme=np.append([0],np.logspace(-3,np.log10(omega),100))
 
             runs=[10,10,10,5,5,5,2,2,2,1,1]
             iters=0
@@ -204,8 +204,9 @@ class ModularityBP():
                 iters+=1
             citers=self._bpmod.run(iters_per_run)
             iters+=citers
+
         cmargs=np.array(self._bpmod.return_marginals())
-        logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
+        logging.debug('modbp run time: {:.4f}, {:d} iterations '.format(time() - t, iters))
         t=time()
 
         if iters<iters_per_run:
@@ -220,7 +221,7 @@ class ModularityBP():
         if self.use_effective:
             q_new = self._merge_communities_bp(self.nruns)
             q = q_new
-        logging.debug('Combining mariginals time: {:.4f}'.format(time()-t))
+        # logging.debug('Combining mariginals time: {:.4f}'.format(time()-t))
         t=time()
 
         # if self._align_communities_across_layers and iters<niter:
@@ -244,8 +245,8 @@ class ModularityBP():
             logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
-            if self._align_communities_across_layers_multiplex :
-                iterate_alignment=False #this iteration doesn't work well with mulitplex.
+            # if self._align_communities_across_layers_multiplex :
+            #     iterate_alignment=False #this iteration doesn't work well with mulitplex.
 
             #keep alternating with more BP runs and alignment sweeps until either
             #converged or we've exceded max number iterations
@@ -266,7 +267,7 @@ class ModularityBP():
                 # a.set_title('after rerunning')
                 # plt.show()
 
-                logging.debug("BFE:{:.3f}".format(self._get_bethe_free_energy()))
+                # logging.debug("BFE:{:.3f}".format(self._get_bethe_free_energy()))
 
 
                 iters+=citers
@@ -289,9 +290,9 @@ class ModularityBP():
                     'after aligning time: {:.4f}, {:d} iterations more. total iters: {:d}.  Number align iteration:{:.3f}'.format(time() - t, citers,
                                                                                                                                   iters,cnt))
                 t = time()
-                logging.debug("before persistence:{:.3f}".format(self._compute_persistence_multiplex(self.nruns)))
+                # logging.debug("before persistence:{:.3f}".format(self._compute_persistence_multiplex(self.nruns)))
                 nsweeps = alignment_function(self.nruns)  # modifies partition directly
-                logging.debug("after persistence:{:.3f}".format(self._compute_persistence_multiplex(self.nruns)))
+                # logging.debug("after persistence:{:.3f}".format(self._compute_persistence_multiplex(self.nruns)))
             #final combined marginals
 
                 logging.debug('aligning partitions and combing time: {:.4f}'.format(time() - t))
@@ -674,7 +675,7 @@ class ModularityBP():
             #check that we are improving.
             prev_per=curpersistence
             curpersistence=self._compute_persistence_multiplex(ind)
-            logging.debug('time performing 1 multiplex sweep: {:.3f}. Improvement: {:.3f}'.format(time()-t,curpersistence-prev_per))
+            # logging.debug('time performing 1 multiplex sweep: {:.3f}. Improvement: {:.3f}'.format(time()-t,curpersistence-prev_per))
 
             # print("Improvement:",curpersistence-prev_per,niters)
             niters+=1

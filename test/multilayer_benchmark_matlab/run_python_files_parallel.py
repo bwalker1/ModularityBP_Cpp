@@ -92,7 +92,7 @@ def run_multiplex_modularity():
 	mus = np.linspace(0, 1, 11)
 	ps = np.array([.5, .85, .95, .99, 1])
 	# ps = np.array([.5])
-	ntrials = 15
+	ntrials = 10
 	#note the order must be correct here
 	args = list(itertools.product([n], [nlayers], [mus], ps, omegas,[gamma],[ntrials]))
 	output = run_parallel(wrap_function_louvain, args, numprocesses=10)
@@ -100,5 +100,5 @@ def run_multiplex_modularity():
 
 
 if __name__=='__main__':
-    sys.exit(run_infomap())
-	# sys.exit(run_multiplex_modularity())
+    # sys.exit(run_infomap())
+	sys.exit(run_multiplex_modularity())
