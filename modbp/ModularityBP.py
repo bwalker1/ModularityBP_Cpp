@@ -115,7 +115,7 @@ class ModularityBP():
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,
-                  reset=False,iterate_alignment=True):
+                  reset=False,iterate_alignment=True,anneal_omega=False):
         """
 
         :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
@@ -174,7 +174,36 @@ class ModularityBP():
         t=time()
         #logging.debug('Running modbp at beta={:.3f}'.format(beta))
         converged=False
-        iters=self._bpmod.run(iters_per_run)
+
+        if not anneal_omega:
+            iters=self._bpmod.run(iters_per_run)
+        else:
+            # omega_update_scheme=np.linspace(0,omega,30)
+            omega_update_scheme=np.append([0],np.logspace(-4,np.log10(omega),100))
+
+            runs=[10,10,10,5,5,5,2,2,2,1,1]
+            iters=0
+            for i,cur_omega in enumerate(omega_update_scheme):
+                self._bpmod.setOmega(cur_omega,reset=False)
+                self._bpmod.step()
+                if i%25 ==0:
+                    cmargs = np.array(self._bpmod.return_marginals())
+                    self.marginals[self.nruns] = cmargs
+                    # Calculate effective group size and get partitions
+                    # logging.debug('Combining marginals')
+                    self._get_community_distances(self.nruns)  # sets values in method
+                    cpartition = self._get_partition(self.nruns, self.use_effective)
+                    self.partitions[self.nruns] = cpartition
+                    self._perform_permuation_sweep_multiplex(self.nruns)
+                    self._switch_beliefs_bp(self.nruns)
+
+                logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega,1))
+                logging.debug("cur modularity={:.5f}".format(self._get_retrieval_modularity(0)))
+
+                # iters+=citers
+                iters+=1
+            citers=self._bpmod.run(iters_per_run)
+            iters+=citers
         cmargs=np.array(self._bpmod.return_marginals())
         logging.debug('time: {:.4f}, {:d} iterations '.format(time() - t, iters))
         t=time()
@@ -633,8 +662,8 @@ class ModularityBP():
             distmat_dict=self._create_all_layer2layer_distmats(ind)
             for layer in np.random.choice(self.layers_unique,replace=False,size=self.nlayers):
 
-            #create permutation dictionary to swap layer to next
-            #note that this diction
+                #create permutation dictionary to the current layer based on best move
+                #note that this diction
                 permdict = self._create_layer_permutation_all_other_layer(ind,layer,distmat_dict)
                 if np.all([ k==val for k,val in permdict.items() ]):
                     continue #nothing has changes
@@ -1047,9 +1076,9 @@ class ModularityBP():
 
         for i,layer in enumerate(layers):
 
-            currow = range(numcoms)
             #use the final mapping dictionary to map each of the communities in this layer
-            currow = list(map ( lambda  x : self._permutation_vectors[ind][layer][x],currow))
+            currow = list(zip(*sorted(list(self._permutation_vectors[ind][layer].items()),key=lambda x: x[1])))[0]
+            # currow = list(map ( lambda  x : self._permutation_vectors[ind][layer][x],range(numcoms)))
             outarray[i,:]=currow
 
         return outarray

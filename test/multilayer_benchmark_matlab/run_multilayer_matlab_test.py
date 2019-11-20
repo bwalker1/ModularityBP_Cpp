@@ -112,16 +112,19 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(4, qmax+2,2)]
+        bstars = [mlbp.get_bstar(q) for q in range(1, qmax+2,1)]
+        bstars = np.linspace(1,4,10)
+
         # bstars = [mlbp.get_bstar(qmax) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
+        betas=[.84]
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
-            mlbp.run_modbp(beta=beta, niter=max_iters, reset=False,
-                           q=qmax, resgamma=gamma, omega=omega)
+            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
+                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
             if mlbp_rm.iloc[-1,:]['converged'] == False: #keep track of how many converges we have
@@ -138,6 +141,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             # run genlouvain on graph
             t=time()
 
+            print(output.loc[cind,['beta','niters','AMI','AMI_layer_avg']])
 
             if trial == 0:  # write out whole thing
                 with open(outfile, 'w') as fh:
@@ -146,8 +150,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                 with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
                     output.iloc[-1:, :].to_csv(fh, header=False)
 
-            if notconverged>1: #hasn't converged twice now.
-                break
+            # if notconverged>1: #hasn't converged twice now.
+            #     break
         #we now only call this once each trial with iterated version
         t=time()
         try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
@@ -187,7 +191,13 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # else:
         #     with open(outfile, 'a') as fh:  # writeout as we go
         #         output.iloc[[-1], :].to_csv(fh, header=False)
+    plt.close()
+    f,a=plt.subplots(1,1,figsize=(5,5))
+    a.scatter(output['beta'].values,output['niters'].values)
+    a2=a.twinx()
+    a2.scatter(output['beta'].values,output['AMI_layer_avg'].values)
 
+    plt.show()
     return 0
 
 
@@ -199,8 +209,8 @@ def main():
     omega = float(sys.argv[5])
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
-    run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    #run_louvain_multiplex_test(n=400,nlayers=10,mu=.8,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
+    # run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
+    run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=3,gamma=1.0,ntrials=1)
 
     return 0
 

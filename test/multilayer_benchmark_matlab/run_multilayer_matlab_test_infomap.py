@@ -58,18 +58,25 @@ def create_netfile(graph, filename):
     indict = create_tuple_indices(n, graph.nlayers)
     with open(filename, 'w') as fh:
         # layer node layer node [weight]
-        alledges = np.append(graph.intralayer_edges, graph.interlayer_edges, axis=0)
+        # alledges = np.append(graph.intralayer_edges, graph.interlayer_edges, axis=0)
         # alledges = graph.intralayer_edges
         #         fh.write("*Vertices {:d}\n".format(n))
         #         for i in range(1,n+1):
         #             fh.write('{:d} "node {:d}\n"'.format(i,i))
-        fh.write("*Multiplex\n")
-        fh.write('# layer node layer node [weight]\n')
-        for e in alledges:
+        fh.write("*Intra\n")
+        fh.write('# layer node node [weight]\n')
+        for e in graph.intralayer_edges:
             w = 1 if len(e) < 3 else e[2]
             n1, l1 = indict[e[0]]
             n2, l2 = indict[e[1]]
-            fh.write("{:d} {:d} {:d} {:d} {:.6f}\n".format(l1, n1, l2, n2, w))
+            fh.write("{:d} {:d} {:d} {:.6f}\n".format(l1, n1, n2, w))
+        fh.write("*Inter\n")
+        fh.write('# layer node layer [weight]\n')
+        for e in graph.interlayer_edges:
+            w = 1 if len(e) < 3 else e[2]
+            n1, l1 = indict[e[0]]
+            n2, l2 = indict[e[1]]
+            fh.write("{:d} {:d} {:d} {:.6f}\n".format(l1, n1, l2, w))
     return filename
 
 
@@ -137,6 +144,8 @@ def call_infomap(graph, r):
                       "{:}".format(networkfile),
                       "{:}".format(rprefix_dir),
                       ]
+
+    print (parameters)
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
     process.wait()
@@ -150,10 +159,10 @@ def call_infomap(graph, r):
     for ind in outcluster.index:
         cluster[outcluster.loc[ind, 'nid']] = outcluster.loc[ind, 'cluster']
 
-    try:
-        shutil.rmtree(rprefix_dir)
-    except:
-        pass
+    # try:
+    #     shutil.rmtree(rprefix_dir)
+    # except:
+    #     pass
 
     return cluster
 
@@ -231,7 +240,7 @@ def run_infomap_on_multiplex(n, nlayers, mu, p_eta, r, ntrials):
     output = pd.DataFrame()
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_relax{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta,r,ntrials)
 
-    qmax=10
+    qmax=12
     max_iters=4000
     print('running {:d} trials at r={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,r,p_eta,mu))
     for trial in range(ntrials):
@@ -270,8 +279,8 @@ def main():
     p_eta= float(sys.argv[4])
     r=float(sys.argv[5])
     ntrials= int(sys.argv[6])
-    #run_infomap_on_multiplex(n=200,nlayers=5,mu=0,p_eta=1.0,r=.1,ntrials=1)
-    run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
+    run_infomap_on_multiplex(n=1000,nlayers=15,mu=0,p_eta=.51,r=.1,ntrials=1)
+    # run_infomap_on_multiplex(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,r=r,ntrials=ntrials)
 
 if __name__ == "__main__":
     #create_lfr_graph(n=1000, ep=.1, c=4, mk=12, use_gcc=True,orig=2,layers=2, multiplex = True)
