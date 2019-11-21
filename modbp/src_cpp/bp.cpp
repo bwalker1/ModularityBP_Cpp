@@ -72,7 +72,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
 
     //fprintf(stdout,"is_bipartite:%s\n", is_bipartite ? "true" : "false");
     //fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
-    eps = 1e-8;
+    eps = 1e-16;
     computed_marginals = false;
     typedef pair<index_t, bool> ibpair;
     vector<vector< edge_data > > edges(n);
@@ -672,7 +672,7 @@ void BP_Modularity::setResgamma(double in, bool reset) {
 
 void BP_Modularity::setOmega(double in, bool reset) {
     omega = in;
-    reinit(reset,true);
+    reinit(reset,reset);
 }
 
 void BP_Modularity::setq(double new_q) {
