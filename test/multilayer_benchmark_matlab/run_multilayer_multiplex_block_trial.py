@@ -18,7 +18,7 @@ import multilayerGM as gm
 from time import time
 
 from create_multiplex_functions import create_multiplex_graph
-from create_multiplex_functions import create_multiplex_graph_block
+from create_multiplex_functions import create_multiplex_graph_matlab
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
@@ -107,14 +107,14 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     for trial in range(ntrials):
 
         t=time()
-        graph=create_multiplex_graph_block(n_nodes=n, mu=mu, p_in=p_eta,
-                                           p_out=0,nblocks=3,n_layers=nlayers, maxcoms=ncoms)
+        graph=create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,
+                                           p_out=0,nblocks=3,nlayers=nlayers, ncoms=ncoms,ismultiplex=True)
         print('time creating graph: {:.3f}'.format(time()-t))
+
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(4, qmax+2,2)]
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
         # bstars = [mlbp.get_bstar(qmax) ]
-
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
         notconverged = 0
@@ -200,7 +200,7 @@ def main():
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    #run_louvain_multiplex_test(n=400,nlayers=10,mu=.8,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
+    # run_louvain_multiplex_test(n=200,nlayers=15,mu=.8,p_eta=.5,omega=.5,gamma=1.0,ntrials=3)
 
     return 0
 
