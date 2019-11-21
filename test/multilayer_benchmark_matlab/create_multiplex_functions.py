@@ -84,19 +84,19 @@ def convert_nxmg_to_mbp_multigraph(nxmg):
                                  intralayer_edges=intraelist,
                                  layer_vec=layervec)
 
-
-def create_multiplex_graph_block(n_nodes=100, n_layers=5, mu=.99,
-                                 p_in=.8,p_out=0,nblocks=3, maxcoms=10, k_max=150,k_min=3):
-    theta = 1
-    dt = gm.dependency_tensors.BlockMultiplex(n_nodes, n_layers, nblocks=nblocks,p_in=p_in,p_out=p_out)
-    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=maxcoms)
-    partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
-    # with use the degree corrected SBM to mirror paper
-    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
-    #     return multinet
-    #the multiplex connections should be the same here
-    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet)
-    return mbpmulltinet
+#THIS HASN"T BEEN IMPLEMENTED IN PYTHON YET
+# def create_multiplex_graph_block(n_nodes=100, n_layers=5, mu=.99,
+#                                  p_in=.8,p_out=0,nblocks=3, maxcoms=10, k_max=150,k_min=3):
+#     theta = 1
+#     dt = gm.dependency_tensors.BlockMultiplex(n_nodes, n_layers, nblocks=nblocks,p_in=p_in,p_out=p_out)
+#     null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=maxcoms)
+#     partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
+#     # with use the degree corrected SBM to mirror paper
+#     multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
+#     #     return multinet
+#     #the multiplex connections should be the same here
+#     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet)
+#     return mbpmulltinet
 
 
 def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_max=150,k_min=3):
@@ -113,7 +113,7 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_
 
 
 #original mehtod used the matlab code.  have since switched to the python .
-def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,ismultiplex = False, ncoms=2):
+def create_multiplex_graph_matlab(n_nodes=1000, nlayers=15, mu=.99,nblocks=3,p_in=.9,p_out=0,ismultiplex = False, ncoms=2):
     rprefix=np.random.randint(1000000)
     rprefix_dir=os.path.join(matlaboutdir,str(rprefix))
     if not os.path.exists(rprefix_dir):
@@ -123,10 +123,12 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,ismultiplex =
 
     parameters = [call_matlab_createbenchmark_file,
                   moutputfile,
-                  "{:d}".format(n),
+                  "{:d}".format(n_nodes),
                   "{:d}".format(nlayers),
+                  "{:d}".format(nblocks),
                   "{:.5f}".format(mu),
-                  "{:.5f}".format(p),  #p is the prop of transmitting community label!
+                  "{:.5f}".format(p_in),
+                  "{:.5f}".format(p_out),
                   "{:d}".format(ncoms)
                   ]
     print(parameters)
@@ -136,7 +138,9 @@ def create_multiplex_graph_matlab(n=1000, nlayers=40, mu=.99, p=.1,ismultiplex =
     if process.returncode != 0:
         raise RuntimeError("creating benchmark graph failed : {:}".format(stderr))
 
-    mlgraph=create_multiplex_graph(moutputfile,ismultiplex=ismultiplex)
+    print(stderr)
+
+    mlgraph=create_ml_graph_from_matlab(moutputfile,ismultiplex=ismultiplex)
 
     #clean out random graph
     if os.path.exists("{:}".format(rprefix_dir)):

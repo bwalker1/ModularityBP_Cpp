@@ -18,7 +18,7 @@ export MATLABPATH="${MATLABPATH}:${homedir}/test/multilayer_benchmark_matlab/Mul
 
 #X="addpath $matlab_func_file;"$'\n'
 
-X="call_multilayer_multiplex_matlab('${1}',${2}, ${3},${4},${5},${6})"
+X="call_multilayer_multiplex_block_matlab('${1}',${2},${3},${4},${5},${6},${7},${8})"
 dir=${1%/*} #get directory of input file 
 base=${1##*/}
 #echo ${X}
