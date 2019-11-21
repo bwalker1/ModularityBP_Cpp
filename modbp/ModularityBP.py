@@ -178,27 +178,42 @@ class ModularityBP():
         if not anneal_omega:
             iters=self._bpmod.run(iters_per_run)
         else:
-            # omega_update_scheme=np.linspace(0,omega,30)
-            omega_update_scheme=np.append([0],np.logspace(-3,np.log10(omega),100))
-
+            # omega_update_scheme=np.linspace(0,omega,50)
+            omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),100))
+            omega_update_scheme=np.flip(omega_update_scheme)
             runs=[10,10,10,5,5,5,2,2,2,1,1]
             iters=0
             for i,cur_omega in enumerate(omega_update_scheme):
                 self._bpmod.setOmega(cur_omega,reset=False)
                 self._bpmod.step()
-                if i%25 ==0:
+                citers=1
+                # citers=self._bpmod.run(1)
+                iters+=citers
+                if i%5 == 0:
                     cmargs = np.array(self._bpmod.return_marginals())
-                    self.marginals[self.nruns] = cmargs
-                    # Calculate effective group size and get partitions
-                    # logging.debug('Combining marginals')
-                    self._get_community_distances(self.nruns)  # sets values in method
-                    cpartition = self._get_partition(self.nruns, self.use_effective)
-                    self.partitions[self.nruns] = cpartition
-                    self._perform_permuation_sweep_multiplex(self.nruns)
-                    self._switch_beliefs_bp(self.nruns)
+                    centrop=_get_avg_entropy(cmargs)
+                    print('entropy: {:.2e}'.format(centrop))
+                    if centrop>.1:
+                #     # Calculate effective group size and get partitions
+                #     # logging.debug('Combining marginals')
+                        citers=self._bpmod.run(iters_per_run)
+                        logging.debug("run: {:d}".format(citers))
+                        self.marginals[self.nruns] = cmargs
+                        self._get_community_distances(self.nruns,use_effective=False)  # sets values in method
+                        cpartition = self._get_partition(self.nruns, use_effective=False)
+                #
+                        self.partitions[self.nruns] = cpartition
+                        self._perform_permuation_sweep_multiplex(self.nruns)
+                        self._switch_beliefs_bp(self.nruns)
+                        logging.debug("cur modularity={:.5f}, cur AMI : {:.3f}, cur entropy: {:.2e}".format(self._get_retrieval_modularity(0),
+                                                                                       self.graph.get_AMI_layer_avg_with_communities(cpartition,
+                                                                                        _get_avg_entropy(cmargs))))
+                        break
 
-                logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega,1))
-                logging.debug("cur modularity={:.5f}".format(self._get_retrieval_modularity(0)))
+
+
+                logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
+
 
                 # iters+=citers
                 iters+=1
@@ -458,7 +473,7 @@ class ModularityBP():
         return calc_modularity(self.graph,partition=cpartition,resgamma=resgamma,omega=omega)
         
 
-    def _get_community_distances(self,ind,thresh=np.power(10.0,-3)):
+    def _get_community_distances(self,ind,thresh=np.power(10.0,-3),use_effective=True):
         """
         Here we calculate the average distance between the mariginals of each of the \
         communities as defined by:
@@ -485,18 +500,19 @@ class ModularityBP():
         # We merge sets together every time pairwise distance is less.
         groups=dict(zip(range(q),[{i} for i in range(q)]))
 
+        if use_effective:
+            #if not use effective we leave each marginal mapped to itself.
+            for k,l in itertools.combinations(range(q),2):
 
-        for k,l in itertools.combinations(range(q),2):
+                dist_kl=np.mean(np.power(cmarginal[:,k]-cmarginal[:,l],2.0))
 
-            dist_kl=np.mean(np.power(cmarginal[:,k]-cmarginal[:,l],2.0))
+                distmat[k,l]=dist_kl
+                distmat[l,k]=dist_kl
 
-            distmat[k,l]=dist_kl
-            distmat[l,k]=dist_kl
-
-            if dist_kl <=thresh:
-                comb=groups[l].union(groups[k])
-                for val in comb: #have to update everyone's groups
-                    groups[val]=comb
+                if dist_kl <=thresh:
+                    comb=groups[l].union(groups[k])
+                    for val in comb: #have to update everyone's groups
+                        groups[val]=comb
 
 
         self.marginal_index_to_close_marginals[ind]=groups
@@ -675,7 +691,7 @@ class ModularityBP():
             #check that we are improving.
             prev_per=curpersistence
             curpersistence=self._compute_persistence_multiplex(ind)
-            # logging.debug('time performing 1 multiplex sweep: {:.3f}. Improvement: {:.3f}'.format(time()-t,curpersistence-prev_per))
+            logging.debug('time performing 1 multiplex sweep: {:.3f}. Improvement: {:.3f}'.format(time()-t,curpersistence-prev_per))
 
             # print("Improvement:",curpersistence-prev_per,niters)
             niters+=1

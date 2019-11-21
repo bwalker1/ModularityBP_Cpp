@@ -107,8 +107,14 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     for trial in range(ntrials):
 
         t=time()
-        graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
-                                     n_layers=nlayers, maxcoms=ncoms)
+        # graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+        #                              n_layers=nlayers, maxcoms=ncoms)
+        # with gzip.open("working_graph.gz",'wb') as fh:
+        #     pickle.dump(graph,fh)
+
+        with gzip.open("working_graph.gz",'rb') as fh:
+            graph=pickle.load(fh)
+
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
@@ -118,7 +124,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # bstars = [mlbp.get_bstar(qmax) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
-        betas=bstars
+        # betas=bstars
         # betas=[.84]
         notconverged = 0
         for j,beta in enumerate(betas):
@@ -210,7 +216,7 @@ def main():
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    # run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=3,gamma=1.0,ntrials=1)
+    # run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
 
     return 0
 
