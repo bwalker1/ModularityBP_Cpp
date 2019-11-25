@@ -16,8 +16,8 @@ from time import time
 import warnings
 import os,pickle,gzip
 import logging
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-# logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
 
 class ModularityBP():
 
@@ -166,7 +166,7 @@ class ModularityBP():
                 
 
 
-        if self._align_communities_across_layers_temporal:
+        if self._align_communities_across_layers_temporal or self._align_communities_across_layers_multiplex:
             iters_per_run=niter//2 #somewhat arbitrary divisor
         else:
             iters_per_run=niter # run as many times as possible on first run.
@@ -260,8 +260,10 @@ class ModularityBP():
             logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
+
+
             # if self._align_communities_across_layers_multiplex :
-            #     iterate_alignment=False #this iteration doesn't work well with mulitplex.
+            #     iterate_alignment=False
 
             #keep alternating with more BP runs and alignment sweeps until either
             #converged or we've exceded max number iterations

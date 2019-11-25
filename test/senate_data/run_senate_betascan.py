@@ -48,7 +48,7 @@ def adjacency_to_edges(A,directed=False):
         nnzvals = nnzvals[0]  # handle scipy sparse types
     return list(zip(nnz_inds[0], nnz_inds[1], nnzvals))
 
-def run_senate(gamma,omega):
+def run_senate(gamma,omega,beta):
 
     #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
     #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
@@ -85,57 +85,35 @@ def run_senate(gamma,omega):
     else:
         A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
         intra_edges = adjacency_to_edges(A_knn)
-        #intra_edges = adjacency_to_edges(A)
         inter_edges = adjacency_to_edges(C)
         with gzip.open(intra_edge_file,'wb') as fh:
             pickle.dump(intra_edges,fh)
 
 
 
-
-
-    # A_gtools=nt.create_gt_graph_from_adj(A_knn)
-    # for e in inter_edges:
-    #     cedge=A_gtools.add_edge(e[0],e[1])
-    #     A_gtools.ep['weight'][cedge]=1.0/10
-    # A_gtools.save(os.path.join(senate_out_dir,"senate_{}_knn.graphml.gz".format(k)))
-
     mgraph = modbp.MultilayerGraph(interlayer_edges=inter_edges,
                                    intralayer_edges=intra_edges,
                                    layer_vec=layer_vec,directed=False)
 
     q_max_val = 15
-    #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
-    #omega_vals = [0.0, 1, 2, 4, 8]
 
-    modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, align_communities_across_layers_temporal=True,
-                                   accuracy_off=True, comm_vec=parties)
+    modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, align_communities_across_layers_temporal=True,accuracy_off=True, comm_vec=parties)
 
-    partition_out = os.path.join(senate_out_dir, "zippe_partitions_knn10")
     rm_df_out = os.path.join(senate_out_dir, "senate_ret_mod_dfs_knn10")
-    if not os.path.exists(partition_out):
-        os.makedirs(partition_out)
+
     if not os.path.exists(rm_df_out):
         os.makedirs(rm_df_out)
 
-    partitions_out = os.path.join(partition_out, "senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma, omega))
-    dataframe_outfile = os.path.join(rm_df_out, "senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma, omega))
+    dataframe_outfile = os.path.join(rm_df_out, "senate_ret_mod_df_{:.4f}_{:.4f}_{:.5f}.csv".format(gamma, omega,beta))
 
-    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val)))
-    for i,beta in enumerate(bstars):
-        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
-                            omega=omega,resgamma=gamma,reset=False)
-        if i==0:
-            with open(dataframe_outfile, 'w') as fh:
-                modbp_obj.retrieval_modularities.to_csv(fh, header=True)
-            with gzip.open(partitions_out,'w') as fh:
-                pickle.dump(modbp_obj.partitions,fh)
-        else:
-            with open(dataframe_outfile, 'a') as fh:
-                modbp_obj.retrieval_modularities.iloc[[-1], :].to_csv(fh, header=False)
-            #some redudancy here
-            with gzip.open(partitions_out, 'w') as fh:
-                pickle.dump(modbp_obj.partitions, fh)
+
+    modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=3000,
+                        omega=omega,resgamma=gamma,reset=True)
+
+    with open(dataframe_outfile, 'w') as fh:
+        modbp_obj.retrieval_modularities.to_csv(fh, header=True)
+
+
 
 
 def main():
