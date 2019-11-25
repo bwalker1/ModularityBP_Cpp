@@ -107,24 +107,24 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     for trial in range(ntrials):
 
         t=time()
-        # graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
-        #                              n_layers=nlayers, maxcoms=ncoms)
+        graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+                                      n_layers=nlayers, maxcoms=ncoms)
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
 
-        with gzip.open("working_graph.gz",'rb') as fh:
-            graph=pickle.load(fh)
+        #with gzip.open("working_graph.gz",'rb') as fh:
+        #   graph=pickle.load(fh)
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q) for q in range(4, qmax+2,2)]
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
         # bstars = np.linspace(1,4,10)
 
         # bstars = [mlbp.get_bstar(qmax) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
-        # betas=bstars
+        betas=bstars
         # betas=[.84]
         notconverged = 0
         for j,beta in enumerate(betas):
