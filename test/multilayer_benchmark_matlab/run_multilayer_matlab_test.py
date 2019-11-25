@@ -18,7 +18,6 @@ import multilayerGM as gm
 from time import time
 
 from create_multiplex_functions import create_multiplex_graph
-from create_multiplex_functions import create_multiplex_graph_block
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
