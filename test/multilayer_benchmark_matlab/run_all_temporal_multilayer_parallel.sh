@@ -18,7 +18,7 @@ for omega in "${omegas[@]}"
 	            #echo "${eps} ${gamma} ${omega}"
                 sbatch -t 4000 -n 1 -o /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/test_multilayer_temporal.txt -p general \
                 --wrap "python3 /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/run_multilayer_temporal_test.py\
-                1000 15 ${mu} ${p} ${omega} ${gamma} 100"
+                150 100 ${mu} ${p} ${omega} ${gamma} 100"
                 done
             done
         done
