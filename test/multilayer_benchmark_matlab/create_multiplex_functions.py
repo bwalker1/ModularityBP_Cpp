@@ -48,7 +48,7 @@ def create_ml_graph_from_matlab(moutputfile,ismultiplex=True):
     return mlgraph
 
 
-def convert_nxmg_to_mbp_multigraph(nxmg):
+def convert_nxmg_to_mbp_multigraph(nxmg,multiplex=True):
     # dt has the interlayer edges in it
     nodelist = np.array(list(nxmg.adj.keys()))
     layervec = nodelist[:, 1]
@@ -72,8 +72,13 @@ def convert_nxmg_to_mbp_multigraph(nxmg):
     # We create a multiplex interedge list here
     for i in range(nodeperlayer):  # i is node number
         curnodes = [i + j * (nodeperlayer) for j in range(len(layers))]
-        for ind1, ind2 in itertools.combinations(curnodes, 2):
-            interelist.append((ind1, ind2))
+        if multiplex:
+            for ind1, ind2 in itertools.combinations(curnodes, 2):
+                interelist.append((ind1, ind2))
+        else: #temporal - use only the next layer's node
+            for k,ind1 in enumerate(curnodes[:-1]):
+                ind2=curnodes[k+1]
+                interelist.append((ind1, ind2))
 
     partition = list(nxmg.nodes(data='mesoset'))
 
@@ -98,11 +103,23 @@ def convert_nxmg_to_mbp_multigraph(nxmg):
 #     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet)
 #     return mbpmulltinet
 
+def create_temporal_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=150,k_min=3):
+    theta = 1
+    dt = gm.dependency_tensors.Temporal(n_nodes, n_layers, p)
+    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=ncoms)
+    partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
 
-def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_max=150,k_min=3):
+    # with use the degree corrected SBM to mirror paper
+    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
+    #     return multinet
+    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet,multiplex=False)
+    return mbpmulltinet
+
+
+def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=150,k_min=3):
     theta = 1
     dt = gm.dependency_tensors.UniformMultiplex(n_nodes, n_layers, p)
-    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=maxcoms)
+    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=ncoms)
     partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
 
     # with use the degree corrected SBM to mirror paper
@@ -112,8 +129,10 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, maxcoms=10, k_
     return mbpmulltinet
 
 
-#original mehtod used the matlab code.  have since switched to the python .
-def create_multiplex_graph_matlab(n_nodes=1000, nlayers=15, mu=.99,nblocks=3,p_in=.9,p_out=0,ismultiplex = False, ncoms=2):
+#For the block multiplex we have to use the matlab
+# since the dependency matrix hadn't been implemented in python
+#at the time of running
+def create_multiplex_graph_matlab(n_nodes=1000, nlayers=15, mu=.99,nblocks=3,p_in=.9,p_out=0,ismultiplex = True, ncoms=2):
     rprefix=np.random.randint(1000000)
     rprefix_dir=os.path.join(matlaboutdir,str(rprefix))
     if not os.path.exists(rprefix_dir):
