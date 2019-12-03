@@ -34,6 +34,7 @@ class ModularityBP():
                  accuracy_off=True, use_effective=False, comm_vec=None,
                  align_communities_across_layers_temporal=False,
                  align_communities_across_layers_multiplex=False,
+                 normalize_edge_weights=False,
                  min_com_size=5, is_bipartite=False):
 
         """
@@ -89,6 +90,7 @@ class ModularityBP():
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
         self._align_communities_across_layers_temporal=align_communities_across_layers_temporal
         self._align_communities_across_layers_multiplex=align_communities_across_layers_multiplex
+        self.normalize_edge_weights = normalize_edge_weights
 
         self.marginals={}
         self.partitions={} # max of marginals
@@ -116,7 +118,7 @@ class ModularityBP():
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,
                   reset=False,iterate_alignment=True,anneal_omega=False,
-                  normalize_edge_weights=False):
+                  normalize_edge_weights=None):
         """
 
         :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
@@ -144,6 +146,11 @@ class ModularityBP():
             num_bipart = 1
 
         t=time()
+
+        #if not supplied use the default when modbp object was created
+        if normalize_edge_weights is None:
+            normalize_edge_weights=self.normalize_edge_weights
+
         if normalize_edge_weights:
             self._normalize_edge_weights(omega=omega)
 
@@ -432,11 +439,18 @@ class ModularityBP():
     def get_bstar(self,q,omega=0):
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
+
+        if self.normalize_edge_weights:
+            self._normalize_edge_weights(omega=omega)
+            set_omega=1.0
+        else:
+            set_omega=omega
+
         if self.graph.nlayers==1:
             weights=self.graph.intralayer_weights
         else:
             weights=np.append(self.graph.intralayer_weights,
-                          omega*np.array(self.graph.interlayer_weights))
+                              set_omega*np.array(self.graph.interlayer_weights))
 
         def avg_weights(bstar, weights, q, c):
             # bstar should be scalar
@@ -1132,7 +1146,7 @@ class ModularityBP():
 
         self._bpmod.permute_beliefs(perm_vec_c)
 
-    def normalize_edge_weights(self,omega=1.0):
+    def _normalize_edge_weights(self,omega=1.0):
         """
         We scale the intralayer edges by 1/omega while fixing the interlayer edges to be one
         :param omega:
