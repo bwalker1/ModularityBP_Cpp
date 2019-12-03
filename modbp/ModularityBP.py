@@ -115,7 +115,8 @@ class ModularityBP():
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,
-                  reset=False,iterate_alignment=True,anneal_omega=False):
+                  reset=False,iterate_alignment=True,anneal_omega=False,
+                  normalize_edge_weights=False):
         """
 
         :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
@@ -143,8 +144,13 @@ class ModularityBP():
             num_bipart = 1
 
         t=time()
+        if normalize_edge_weights:
+            self._normalize_edge_weights(omega=omega)
+
+        omega_set = omega if not normalize_edge_weights else 1.0
+
         #logging.debug("Creating c++ modbp object")
-        if self._bpmod is None:
+        if self._bpmod is None or normalize_edge_weights:
             #print("Creating c++ modbp object")
             #print(list(self._cpp_intra_weights))
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
@@ -152,7 +158,7 @@ class ModularityBP():
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
@@ -209,8 +215,6 @@ class ModularityBP():
                                                                                        self.graph.get_AMI_layer_avg_with_communities(cpartition,
                                                                                         _get_avg_entropy(cmargs))))
                         break
-
-
 
                 logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
 
@@ -1127,6 +1131,25 @@ class ModularityBP():
         perm_vec_c=IntMatrix([[int(x) for x in y] for y in perm_vec_c])
 
         self._bpmod.permute_beliefs(perm_vec_c)
+
+    def normalize_edge_weights(self,omega=1.0):
+        """
+        We scale the intralayer edges by 1/omega while fixing the interlayer edges to be one
+        :param omega:
+        :return:
+        """
+
+        new_intralayer_weights = 1/omega*np.array(self.graph.intralayer_weights)
+        #these variables have to also be updated
+        self.graph.intralayer_weights = new_intralayer_weights
+
+        self.totaledgeweight = self.graph.totaledgeweight
+        self.intralayer_edges = self.graph.intralayer_edges
+        self._cpp_intra_weights = self._get_cpp_intra_weights()
+
+
+
+
 
 
     def plot_communities(self,ind=None,layers=None,ax=None,cmap=None):
