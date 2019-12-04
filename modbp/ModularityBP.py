@@ -16,8 +16,8 @@ from time import time
 import warnings
 import os,pickle,gzip
 import logging
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
 
 class ModularityBP():
 
@@ -116,7 +116,7 @@ class ModularityBP():
         if self.nlayers>1 and self.graph.is_bipartite:
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
-    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,
+    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,dumping_rate=1.0,
                   reset=False,iterate_alignment=True,anneal_omega=False,
                   normalize_edge_weights=None):
         """
@@ -164,6 +164,7 @@ class ModularityBP():
                                         intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
+                                      dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
                                       resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
 
@@ -176,6 +177,8 @@ class ModularityBP():
                 self._bpmod.setResgamma(resgamma)
             if self._bpmod.getOmega() != omega:
                 self._bpmod.setOmega(omega)
+            if self._bpmod.getDumpingRate() != dumping_rate:
+                self._bpmod.setDumpingRate(dumping_rate)
                 
 
 

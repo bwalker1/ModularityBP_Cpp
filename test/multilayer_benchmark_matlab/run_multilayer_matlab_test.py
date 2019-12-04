@@ -106,13 +106,13 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     for trial in range(ntrials):
 
         t=time()
-        graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
-                                      n_layers=nlayers, maxcoms=ncoms)
+        # graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+        #                               n_layers=nlayers, ncoms=ncoms)
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
 
-        #with gzip.open("working_graph.gz",'rb') as fh:
-        #   graph=pickle.load(fh)
+        with gzip.open("working_graph.gz",'rb') as fh:
+          graph=pickle.load(fh)
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
@@ -128,8 +128,10 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
-            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
+            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,dumping_rate=.2,
+                           normalize_edge_weights=False,
                            q=qmax, resgamma=gamma, omega=omega,anneal_omega=False)
+
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
             if mlbp_rm.iloc[-1,:]['converged'] == False: #keep track of how many converges we have
@@ -214,8 +216,8 @@ def main():
     omega = float(sys.argv[5])
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
-    run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    # run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
+    # run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
+    run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
 
     return 0
 

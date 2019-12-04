@@ -51,7 +51,7 @@ public:
     edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt),theta_bipartite(_num_biparte_classes), num_edges(_nt), n(_n), nt(_nt), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _dumping_rate, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt),theta_bipartite(_num_biparte_classes), num_edges(_nt), n(_n), nt(_nt), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), dumping_rate(_dumping_rate), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
 {
     if (intra_edgeweight.size() > 0)
     {
@@ -486,7 +486,7 @@ void BP_Modularity::step()
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
                 assert(!::isnan(scratch[nn*s+idx]));
-                beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
+                beliefs[beliefs_offsets[k]+nnk*s+idx_out] = dumping_rate*scratch[nn*s+idx] +(1.0-dumping_rate)*beliefs[beliefs_offsets[k]+nnk*s+idx_out]; //weighted average of previous and current belief
             }
         }
     }
@@ -673,6 +673,10 @@ void BP_Modularity::setResgamma(double in, bool reset) {
 void BP_Modularity::setOmega(double in, bool reset) {
     omega = in;
     reinit(reset,reset);
+}
+
+void BP_Modularity::setDumpingRate(double in) {
+    dumping_rate = in;
 }
 
 void BP_Modularity::setq(double new_q) {

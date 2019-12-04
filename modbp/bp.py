@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, num_biparte_classes, beta, bipartite_class, omega=1.0, resgamma=1.0, verbose=False, transform=False):
-        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, num_biparte_classes, beta, bipartite_class, omega, resgamma, verbose, transform)
+    def __init__(self, layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, num_biparte_classes, beta, bipartite_class, omega=1.0, dumping_rate=1.0, resgamma=1.0, verbose=False, transform=False):
+        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgelist, _n, _nt, q, num_biparte_classes, beta, bipartite_class, omega, dumping_rate, resgamma, verbose, transform)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -148,6 +148,12 @@ class BP_Modularity(_object):
 
     def setOmega(self, arg2, reset=True):
         return _bp.BP_Modularity_setOmega(self, arg2, reset)
+
+    def getDumpingRate(self):
+        return _bp.BP_Modularity_getDumpingRate(self)
+
+    def setDumpingRate(self, arg2):
+        return _bp.BP_Modularity_setDumpingRate(self, arg2)
 
     def getq(self):
         return _bp.BP_Modularity_getq(self)
