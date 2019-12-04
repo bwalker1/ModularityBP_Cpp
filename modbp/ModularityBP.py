@@ -154,7 +154,7 @@ class ModularityBP():
         if normalize_edge_weights:
             self._normalize_edge_weights(omega=omega)
 
-        omega_set = omega if not normalize_edge_weights else 1.0
+        set_omega = omega if not normalize_edge_weights else np.min([omega,1.0])
 
         #logging.debug("Creating c++ modbp object")
         if self._bpmod is None or normalize_edge_weights:
@@ -166,7 +166,7 @@ class ModularityBP():
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=set_omega,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
@@ -195,38 +195,59 @@ class ModularityBP():
             iters=self._bpmod.run(iters_per_run)
         else:
             # omega_update_scheme=np.linspace(0,omega,50)
-            omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),100))
-            omega_update_scheme=np.flip(omega_update_scheme)
+            omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
+            bstar=self.get_bstar(q=10,omega=omega)
+            print('bstar',bstar)
+            beta_update_scheme=np.logspace(-1,np.log10(bstar),100)
+
+            # omega_update_scheme=np.flip(omega_update_scheme)
             runs=[10,10,10,5,5,5,2,2,2,1,1]
             iters=0
-            for i,cur_omega in enumerate(omega_update_scheme):
-                self._bpmod.setOmega(cur_omega,reset=False)
-                self._bpmod.step()
-                citers=1
-                # citers=self._bpmod.run(1)
-                iters+=citers
-                if i%5 == 0:
+            initq=self._get_qval(beta,omega) #for adjusting beta as we go for differnt omegas
+            print('initq',initq)
+            num_iters=50
+            cur_beta=.1
+            step=.05
+            # for i,cur_omega in enumerate(omega_update_scheme):
+            # for i,cur_beta in enumerate(beta_update_scheme):
+            ent_targets=[.7,.4,.2,.1]
+            for target_ent in ent_targets:
+                curiters=0
+                while curiters<num_iters:
+                    # self._bpmod.setOmega(cur_omega,reset=False)
+                    # cbeta=self.get_bstar(q=initq,omega=cur_omega)
+                    self._bpmod.setBeta(cur_beta,reset=False)
+                    self._bpmod.step()
+                    citers=1
+                    # citers=self._bpmod.run(1)
+                    iters+=citers
+
                     cmargs = np.array(self._bpmod.return_marginals())
                     centrop=_get_avg_entropy(cmargs)
-                    print('entropy: {:.2e}'.format(centrop))
-                    if centrop>.1:
-                #     # Calculate effective group size and get partitions
-                #     # logging.debug('Combining marginals')
-                        citers=self._bpmod.run(iters_per_run)
-                        logging.debug("run: {:d}".format(citers))
-                        self.marginals[self.nruns] = cmargs
-                        self._get_community_distances(self.nruns,use_effective=False)  # sets values in method
-                        cpartition = self._get_partition(self.nruns, use_effective=False)
-                #
-                        self.partitions[self.nruns] = cpartition
-                        self._perform_permuation_sweep_multiplex(self.nruns)
-                        self._switch_beliefs_bp(self.nruns)
-                        logging.debug("cur modularity={:.5f}, cur AMI : {:.3f}, cur entropy: {:.2e}".format(self._get_retrieval_modularity(0),
-                                                                                       self.graph.get_AMI_layer_avg_with_communities(cpartition,
-                                                                                        _get_avg_entropy(cmargs))))
-                        break
+                    if np.abs(centrop-target_ent)<np.power(10.0,-1.0): #once close enough start counting
+                        curiters+=1
+                    cur_step=np.min([(centrop - target_ent)/(target_ent),1])
+                    cur_beta=np.min([(centrop - target_ent)/(target_ent),1])*step+cur_beta
+                    self.marginals[self.nruns] = cmargs
+                    self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
+                    cpartition = self._get_partition(self.nruns, use_effective=False)
+                    cami=self.graph.get_AMI_layer_avg_with_communities(cpartition)
+                    self.partitions[self.nruns]=cpartition
+                    print('curstep:{:.4f},curiters: {:d}, entropy: {:.2e} , AMI : {:.3f}'.format(cur_step,curiters,
+                                                                                                 centrop,cami))
+                    # if centrop<.6:
 
-                logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
+                #         citers=self._bpmod.run(iters_per_run)
+                #         logging.debug("run: {:d}".format(citers))
+                #
+                #         self._perform_permuation_sweep_multiplex(self.nruns)
+                #         self._switch_beliefs_bp(self.nruns)
+                #         logging.debug("cur modularity={:.5f}, cur AMI : {:.3f}, cur entropy: {:.2e}".format(self._get_retrieval_modularity(0),
+                #                                                                        self.graph.get_AMI_layer_avg_with_communities(cpartition),
+                #                                                                         _get_avg_entropy(cmargs)))
+                        # break
+
+                    logging.debug("Update scheme at omega={:.5f},beta={:.4f}.  iters = {:d}".format(omega,cur_beta, citers))
 
 
                 # iters+=citers
@@ -434,7 +455,9 @@ class ModularityBP():
             return parts
 
     def _get_excess_degree(self):
-        degrees = self.graph.intradegrees + self.graph.interdegrees
+        """get excess degree.  Note that this is unweighted degree """
+        degrees = self.graph.get_intralayer_degrees(weighted=False)+ self.graph.get_interlayer_degrees()
+        # degrees = self.graph.intradegrees + self.graph.interdegrees
         d_avg = np.mean(degrees)
         d2=np.mean(np.power(degrees,2.0))
         return d2/d_avg - 1
@@ -445,7 +468,7 @@ class ModularityBP():
 
         if self.normalize_edge_weights:
             self._normalize_edge_weights(omega=omega)
-            set_omega=1.0
+            set_omega=np.min([omega,1.0]) # we don't flip the weights if omega < 1
         else:
             set_omega=omega
 
@@ -463,6 +486,23 @@ class ModularityBP():
         deg_excess=self._get_excess_degree()
         bstar = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))[0]
         return bstar
+
+    def _get_qval(self, bstar, omega):
+        "given a choice of bstar and omega, what value of q was given intially"
+        if self.graph.nlayers == 1:
+            weights = self.graph.intralayer_weights
+        else:
+            weights = np.append(self.graph.intralayer_weights,
+                                omega * np.array(self.graph.interlayer_weights))
+
+        def avg_weights(q, weights, bstar, c):
+            # bstar should be scalar
+            exp_b_w = np.exp(bstar * weights)
+            return np.mean(np.power((exp_b_w - 1) / (exp_b_w + q - 1), 2.0)) * c - 1
+
+        deg_excess = self._get_excess_degree()
+        q = sciopt.fsolve(avg_weights, x0=.5, args=(weights, bstar, deg_excess))[0]
+        return q
 
     # def get_bstar(self,q,omega=0):
     #     #c is supposed to be the average excess degree
@@ -1156,7 +1196,8 @@ class ModularityBP():
         :return:
         """
 
-        new_intralayer_weights = 1/omega*np.array(self.graph.intralayer_weights)
+        factor = np.min([1/omega,1.0])
+        new_intralayer_weights = factor*np.array(self.graph.intralayer_weights)
         #these variables have to also be updated
         self.graph.intralayer_weights = new_intralayer_weights
 
