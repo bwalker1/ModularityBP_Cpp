@@ -106,29 +106,20 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     for trial in range(ntrials):
 
         t=time()
-        # graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
-        #                               n_layers=nlayers, ncoms=ncoms)
-        # with gzip.open("working_graph.gz",'wb') as fh:
-        #     pickle.dump(graph,fh)
+        graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+                                      n_layers=nlayers, ncoms=ncoms)
 
-        with gzip.open("working_graph.gz",'rb') as fh:
-          graph=pickle.load(fh)
+
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
-        # bstars = np.linspace(1,4,10)
-
-        # bstars = [mlbp.get_bstar(qmax) ]
-
-        #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
-        # betas=[.84]
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
-            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,dumping_rate=.2,
+            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
                            normalize_edge_weights=False,
                            q=qmax, resgamma=gamma, omega=omega,anneal_omega=False)
 
@@ -192,19 +183,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                 output.iloc[-1:, :].to_csv(fh, header=False)
 
         print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
-        # if trial == 0:
-        #     with open(outfile, 'w') as fh:
-        #         output.to_csv(fh, header=True)
-        # else:
-        #     with open(outfile, 'a') as fh:  # writeout as we go
-        #         output.iloc[[-1], :].to_csv(fh, header=False)
-    plt.close()
-    f,a=plt.subplots(1,1,figsize=(5,5))
-    a.scatter(output['beta'].values,output['niters'].values)
-    a2=a.twinx()
-    a2.scatter(output['beta'].values,output['AMI_layer_avg'].values)
 
-    plt.show()
     return 0
 
 
@@ -216,8 +195,8 @@ def main():
     omega = float(sys.argv[5])
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
-    # run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
+    run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
+    # run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
 
     return 0
 

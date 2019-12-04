@@ -156,10 +156,7 @@ class ModularityBP():
 
         omega_set = omega if not normalize_edge_weights else 1.0
 
-        #logging.debug("Creating c++ modbp object")
         if self._bpmod is None or normalize_edge_weights:
-            #print("Creating c++ modbp object")
-            #print(list(self._cpp_intra_weights))
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
                                         intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
@@ -463,6 +460,8 @@ class ModularityBP():
         deg_excess=self._get_excess_degree()
         bstar = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))[0]
         return bstar
+
+    
 
     # def get_bstar(self,q,omega=0):
     #     #c is supposed to be the average excess degree
