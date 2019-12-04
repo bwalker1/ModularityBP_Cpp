@@ -154,19 +154,16 @@ class ModularityBP():
         if normalize_edge_weights:
             self._normalize_edge_weights(omega=omega)
 
-        set_omega = omega if not normalize_edge_weights else np.min([omega,1.0])
+        omega_set = omega if not normalize_edge_weights else 1.0
 
-        #logging.debug("Creating c++ modbp object")
         if self._bpmod is None or normalize_edge_weights:
-            #print("Creating c++ modbp object")
-            #print(list(self._cpp_intra_weights))
             self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
                                         intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
                                       _n=self.n, _nt= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=set_omega,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
@@ -237,17 +234,7 @@ class ModularityBP():
                                                                                                  centrop,cami))
                     # if centrop<.6:
 
-                #         citers=self._bpmod.run(iters_per_run)
-                #         logging.debug("run: {:d}".format(citers))
-                #
-                #         self._perform_permuation_sweep_multiplex(self.nruns)
-                #         self._switch_beliefs_bp(self.nruns)
-                #         logging.debug("cur modularity={:.5f}, cur AMI : {:.3f}, cur entropy: {:.2e}".format(self._get_retrieval_modularity(0),
-                #                                                                        self.graph.get_AMI_layer_avg_with_communities(cpartition),
-                #                                                                         _get_avg_entropy(cmargs)))
-                        # break
-
-                    logging.debug("Update scheme at omega={:.5f},beta={:.4f}.  iters = {:d}".format(omega,cur_beta, citers))
+                logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
 
 
                 # iters+=citers
