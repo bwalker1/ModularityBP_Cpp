@@ -200,13 +200,14 @@ class ModularityBP():
             converged=False
             iters=0
             cnt=0
-            itersper_dr=niter//len(dumping_rates)
+            itersper_dr=iters_per_run//len(dumping_rates)
             while (not converged) and iters<niter:
                 dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
                 self._bpmod.setDumpingRate(dr)
                 citers=self._bpmod.run(itersper_dr)
                 if citers<itersper_dr:
                     converged=True
+                    logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
                 iters+=citers
                 cnt+=1
                 cmargs = np.array(self._bpmod.return_marginals())
@@ -214,7 +215,10 @@ class ModularityBP():
                 centrop = _get_avg_entropy(cmargs)
                 self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
                 cpartition = self._get_partition(self.nruns, use_effective=False)
-                cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+                try:
+                    cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+                except ValueError:
+                    cami = np.nan
                 self.partitions[self.nruns] = cpartition
                 _,cnts=np.unique(cpartition,return_counts=True)
                 logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
@@ -264,7 +268,7 @@ class ModularityBP():
         self.marginals[self.nruns]=cmargs
         #Calculate effective group size and get partitions
         # logging.debug('Combining marginals')
-        self._get_community_distances(self.nruns) #sets values in method
+        self._get_community_distances(self.nruns,use_effective=self.use_effective) #sets values in method
         cpartition = self._get_partition(self.nruns, self.use_effective)
         self.partitions[self.nruns] = cpartition
 
@@ -330,7 +334,7 @@ class ModularityBP():
                 cmargs = np.array(self._bpmod.return_marginals())
                 self.marginals[self.nruns] = cmargs
                 # Calculate effective group size and get partitions
-                self._get_community_distances(self.nruns)  # sets values in method
+                self._get_community_distances(self.nruns,self.use_effective)  # sets values in method
                 cpartition = self._get_partition(self.nruns, self.use_effective)
                 self.partitions[self.nruns] = cpartition
                 if self.use_effective:
@@ -349,10 +353,11 @@ class ModularityBP():
 
                 logging.debug('aligning partitions and combing time: {:.4f}'.format(time() - t))
                 logging.debug('nsweeps to permute: {:d}'.format(nsweeps))
-
+                if converged and cnt>10: #only allow so many loops here
+                    break #marginals are locked in at this point
         # Perform the merger on the BP side before getting final marginals
         if iters>=niter:
-            #logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
+            logging.debug("Modularity BP did not converge after {:d} iterations.".format(iters))
             pass
 
 
@@ -662,7 +667,7 @@ class ModularityBP():
         else:
             return len(set([ frozenset(s) for s in groupmap.values() if len(s) >= self.min_community_size ]))
 
-    def _is_trivial(self,ind,thresh=np.power(10.0,-3)):
+    def _is_trivial(self,ind,thresh=None):
         """
         We use the same metric to define marginals that represent the same partitions\
         used in _get_community_distances.
@@ -670,7 +675,22 @@ class ModularityBP():
         :param ind: index of marginal to examine
         :return: true if partition is close enough to trival, false if it is sufficiently differet
         """
+
         cmarginal=self.marginals[ind]
+        q=cmarginal.shape[1]
+        # mean distances were fit using numpy.polyfit based on number of marginals
+        #for large network.
+        if thresh == None:
+            coefs = [0.01451001, -0.58031171, 0.46811701]
+
+            def polycurve(x, coefs):
+                tot = 0
+                coefs = np.flip(coefs)
+                for i, c in enumerate(coefs):
+                    tot += c * np.power(x, i)
+                return tot
+
+            thresh = .1 * np.power(10.0, polycurve(q, coefs))
         trival=np.ones(cmarginal.shape)/cmarginal.shape[1]
         if np.mean(np.power(cmarginal-trival,2.0))<thresh:
             return True

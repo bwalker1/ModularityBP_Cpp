@@ -102,7 +102,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     outfile="{:}/sandboxing_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
     qmax=12
-    max_iters=1000
+    max_iters=100
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
 
@@ -121,7 +121,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=False,
                                   normalize_edge_weights=False,
-                                  align_communities_across_layers_multiplex=False,
+                                  align_communities_across_layers_multiplex=True,
                                   align_communities_across_layers_temporal=False,
                                   comm_vec=graph.comm_vec)
 
@@ -143,7 +143,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
 
 
             #create and reset bp object
-            mlbp.run_modbp(beta=beta, niter=1000, reset=True,dumping_rate=0.0,
+            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,dumping_rate=0.0,
                            normalize_edge_weights=False,
                            q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
 
