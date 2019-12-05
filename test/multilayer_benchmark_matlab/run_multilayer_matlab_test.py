@@ -107,7 +107,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
         t=time()
         graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
-                                      n_layers=nlayers, maxcoms=ncoms)
+                                      n_layers=nlayers, ncoms=ncoms)
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
 
