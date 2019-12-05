@@ -93,7 +93,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
 def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockmultiplex=False):
     ncoms=10
 
-    finoutdir = os.path.join(matlabbench_dir, 'multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'anneal_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
@@ -101,7 +101,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
     qmax=12
-    max_iters=400
+    max_iters=1000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
 
@@ -111,25 +111,20 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
 
-        #with gzip.open("working_graph.gz",'rb') as fh:
-        #   graph=pickle.load(fh)
+
 
         print('time creating graph: {:.3f}'.format(time()-t))
-        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
-                                  align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
-        # bstars = np.linspace(1,4,10)
-
-        # bstars = [mlbp.get_bstar(qmax) ]
-
-        #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
+        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=False,
+                                  align_communities_across_layers_multiplex=True,comm_vec=graph.comm_vec)
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(2, qmax+2,2)]
         betas=bstars
-        # betas=[.84]
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
-                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=False)
+                           normalize_edge_weights=False,
+                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
+
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
             if mlbp_rm.iloc[-1,:]['converged'] == False: #keep track of how many converges we have
@@ -190,19 +185,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                 output.iloc[-1:, :].to_csv(fh, header=False)
 
         print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
-        # if trial == 0:
-        #     with open(outfile, 'w') as fh:
-        #         output.to_csv(fh, header=True)
-        # else:
-        #     with open(outfile, 'a') as fh:  # writeout as we go
-        #         output.iloc[[-1], :].to_csv(fh, header=False)
-    plt.close()
-    f,a=plt.subplots(1,1,figsize=(5,5))
-    a.scatter(output['beta'].values,output['niters'].values)
-    a2=a.twinx()
-    a2.scatter(output['beta'].values,output['AMI_layer_avg'].values)
 
-    plt.show()
     return 0
 
 
@@ -215,7 +198,6 @@ def main():
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    # run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
 
     return 0
 

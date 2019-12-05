@@ -26,13 +26,13 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
+	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
 
     // run BP to convergence
     long run(unsigned long maxIters=100);
 
     // run one pass of the belief propagation update
-    void step();
+    bool step();
 
     void compute_marginals();
     double compute_bethe_free_energy();
@@ -51,6 +51,11 @@ public:
     //accessors for omega
     double getOmega() const { return omega; };
     void setOmega(double in, bool reset=true);
+
+    //accessors for dumping rate
+    double getDumpingRate() const {return dumping_rate;};
+    void setDumpingRate(double in);
+
 
     index_t getq() const { return q; };
     void setq(double new_q);
@@ -115,6 +120,7 @@ private:
     double beta;
     double resgamma;
     double omega;
+    double dumping_rate;
 
     bool transform;
 
