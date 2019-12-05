@@ -312,7 +312,7 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
     }
 }
 
-void BP_Modularity::step()
+bool BP_Modularity::step()
 {
     changed = false;
     change = 0;
@@ -575,6 +575,7 @@ void BP_Modularity::step()
             changed = false;
         }
     }
+    return changed;
 }
 
 void BP_Modularity::normalize(vector<double> & beliefs, index_t i)

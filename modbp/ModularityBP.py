@@ -192,55 +192,68 @@ class ModularityBP():
             iters=self._bpmod.run(iters_per_run)
         else:
             # omega_update_scheme=np.linspace(0,omega,50)
-            omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
-            bstar=self.get_bstar(q=10,omega=omega)
-            print('bstar',bstar)
-            beta_update_scheme=np.logspace(-1,np.log10(bstar),100)
-
-            # omega_update_scheme=np.flip(omega_update_scheme)
-            runs=[10,10,10,5,5,5,2,2,2,1,1]
+            # omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
+            # bstar=self.get_bstar(q=10,omega=omega)
+            # print('bstar',bstar)
+            # beta_update_scheme=np.logspace(-1,np.log10(bstar),100)
+            dumping_rates=[.01,.02,.05,.1,.2,.5,1]
+            converged=False
             iters=0
-            initq=self._get_qval(beta,omega) #for adjusting beta as we go for differnt omegas
-            print('initq',initq)
-            num_iters=50
-            cur_beta=.1
-            step=.05
+            cnt=0
+            itersper_dr=niter//len(dumping_rates)
+            while (not converged) and iters<niter:
+                dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
+                self._bpmod.setDumpingRate(dr)
+                citers=self._bpmod.run(itersper_dr)
+                if citers<itersper_dr:
+                    converged=True
+                iters+=citers
+                cnt+=1
+                cmargs = np.array(self._bpmod.return_marginals())
+                self.marginals[self.nruns] = cmargs
+                centrop = _get_avg_entropy(cmargs)
+                self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
+                cpartition = self._get_partition(self.nruns, use_effective=False)
+                cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+                self.partitions[self.nruns] = cpartition
+                _,cnts=np.unique(cpartition,return_counts=True)
+                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
+
             # for i,cur_omega in enumerate(omega_update_scheme):
             # for i,cur_beta in enumerate(beta_update_scheme):
-            ent_targets=[.7,.4,.2,.1]
-            for target_ent in ent_targets:
-                curiters=0
-                while curiters<num_iters:
-                    # self._bpmod.setOmega(cur_omega,reset=False)
-                    # cbeta=self.get_bstar(q=initq,omega=cur_omega)
-                    self._bpmod.setBeta(cur_beta,reset=False)
-                    self._bpmod.step()
-                    citers=1
-                    # citers=self._bpmod.run(1)
-                    iters+=citers
-
-                    cmargs = np.array(self._bpmod.return_marginals())
-                    centrop=_get_avg_entropy(cmargs)
-                    if np.abs(centrop-target_ent)<np.power(10.0,-1.0): #once close enough start counting
-                        curiters+=1
-                    cur_step=np.min([(centrop - target_ent)/(target_ent),1])
-                    cur_beta=np.min([(centrop - target_ent)/(target_ent),1])*step+cur_beta
-                    self.marginals[self.nruns] = cmargs
-                    self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
-                    cpartition = self._get_partition(self.nruns, use_effective=False)
-                    cami=self.graph.get_AMI_layer_avg_with_communities(cpartition)
-                    self.partitions[self.nruns]=cpartition
-                    print('curstep:{:.4f},curiters: {:d}, entropy: {:.2e} , AMI : {:.3f}'.format(cur_step,curiters,
-                                                                                                 centrop,cami))
+            # ent_targets=[.7,.4,.2,.1]
+            # for target_ent in ent_targets:
+            #     curiters=0
+            #     while curiters<num_iters:
+            #         # self._bpmod.setOmega(cur_omega,reset=False)
+            #         # cbeta=self.get_bstar(q=initq,omega=cur_omega)
+            #         self._bpmod.setBeta(cur_beta,reset=False)
+            #         self._bpmod.step()
+            #         citers=1
+            #         # citers=self._bpmod.run(1)
+            #         iters+=citers
+            #
+            #         cmargs = np.array(self._bpmod.return_marginals())
+            #         centrop=_get_avg_entropy(cmargs)
+            #         if np.abs(centrop-target_ent)<np.power(10.0,-1.0): #once close enough start counting
+            #             curiters+=1
+            #         cur_step=np.min([(centrop - target_ent)/(target_ent),1])
+            #         cur_beta=np.min([(centrop - target_ent)/(target_ent),1])*step+cur_beta
+            #         self.marginals[self.nruns] = cmargs
+            #         self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
+            #         cpartition = self._get_partition(self.nruns, use_effective=False)
+            #         cami=self.graph.get_AMI_layer_avg_with_communities(cpartition)
+            #         self.partitions[self.nruns]=cpartition
+            #         print('curstep:{:.4f},curiters: {:d}, entropy: {:.2e} , AMI : {:.3f}'.format(cur_step,curiters,
+            #                                                                                      centrop,cami))
                     # if centrop<.6:
 
-                logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
-
-
+                # logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
                 # iters+=citers
-                iters+=1
-            citers=self._bpmod.run(iters_per_run)
-            iters+=citers
+                # iters+=1
+
+            # citers=self._bpmod.run(iters_per_run)
+            # iters+=citers
 
         cmargs=np.array(self._bpmod.return_marginals())
         logging.debug('modbp run time: {:.4f}, {:d} iterations '.format(time() - t, iters))
@@ -523,7 +536,7 @@ class ModularityBP():
         return calc_modularity(self.graph,partition=cpartition,resgamma=resgamma,omega=omega)
         
 
-    def _get_community_distances(self,ind,thresh=np.power(10.0,-3),use_effective=True):
+    def _get_community_distances(self,ind,thresh=None,use_effective=True):
         """
         Here we calculate the average distance between the mariginals of each of the \
         communities as defined by:
@@ -541,8 +554,25 @@ class ModularityBP():
         except KeyError:
             raise KeyError("Cannot find partition with index {}".format(ind))
 
+
+
         #get direcly from the mariginals
         q=cmarginal.shape[1]
+
+        # average values get closer as the number of marginals increases
+        # fitted 2nd degree polynomial up to q=20 for large graph and
+        # take 1/10 of average distances (from initialized values)
+        if thresh == None:
+            coefs = [0.01451001, -0.58031171, 0.46811701]
+
+            def polycurve(x, coefs):
+                tot = 0
+                coefs = np.flip(coefs)
+                for i, c in enumerate(coefs):
+                    tot += c * np.power(x, i)
+                return tot
+
+            thresh = .1 * np.power(10.0, polycurve(q, coefs))
 
         distmat=np.zeros((q,q))
 
@@ -1256,7 +1286,7 @@ class ModularityBP():
         return ax
 
 def _get_avg_entropy(marginal):
-    """caculate normalized entropies from marginals"""
+    """caculate normalized entropies from marginals.  Ranges from 0 to 1"""
     entropies=[]
     for i in range(marginal.shape[0]):
         entropies.append(stats.entropy(marginal[i])/np.log(marginal.shape[1]))

@@ -32,7 +32,7 @@ public:
     long run(unsigned long maxIters=100);
 
     // run one pass of the belief propagation update
-    void step();
+    bool step();
 
     void compute_marginals();
     double compute_bethe_free_energy();

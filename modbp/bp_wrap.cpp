@@ -3355,6 +3355,13 @@ SWIG_AsVal_bool (PyObject *obj, bool *val)
   #define SWIG_From_long   PyInt_FromLong 
 
 
+SWIGINTERNINLINE PyObject*
+  SWIG_From_bool  (bool value)
+{
+  return PyBool_FromLong(value ? 1 : 0);
+}
+
+
   #define SWIG_From_double   PyFloat_FromDouble 
 
 
@@ -3363,13 +3370,6 @@ SWIG_From_unsigned_SS_long  (unsigned long value)
 {
   return (value > LONG_MAX) ?
     PyLong_FromUnsignedLong(value) : PyInt_FromLong(static_cast< long >(value));
-}
-
-
-SWIGINTERNINLINE PyObject*
-  SWIG_From_bool  (bool value)
-{
-  return PyBool_FromLong(value ? 1 : 0);
 }
 
 
@@ -6985,6 +6985,7 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_step(PyObject *SWIGUNUSEDPARM(self), Py
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
+  bool result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_step",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
@@ -6992,8 +6993,8 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_step(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_step" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
   arg1 = reinterpret_cast< BP_Modularity * >(argp1);
-  (arg1)->step();
-  resultobj = SWIG_Py_Void();
+  result = (bool)(arg1)->step();
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
   return resultobj;
 fail:
   return NULL;

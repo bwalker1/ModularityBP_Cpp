@@ -112,8 +112,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
 
         print('time creating graph: {:.3f}'.format(time()-t))
-        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
-                                  align_communities_across_layers_multiplex=True, comm_vec=graph.comm_vec)
+        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=False,
+                                  align_communities_across_layers_multiplex=True,comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
         betas=bstars
         notconverged = 0
@@ -121,7 +121,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
                            normalize_edge_weights=False,
-                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=False)
+                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
 
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
@@ -196,7 +196,6 @@ def main():
     gamma = float(sys.argv[6])
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,ntrials=ntrials)
-    # run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=2,gamma=1.0,ntrials=1)
 
     return 0
 

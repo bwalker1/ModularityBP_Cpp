@@ -101,7 +101,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     output = pd.DataFrame()
     outfile="{:}/sandboxing_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
-    qmax=10
+    qmax=12
     max_iters=1000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
@@ -119,20 +119,21 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
               graph=pickle.load(fh)
 
         print('time creating graph: {:.3f}'.format(time()-t))
-        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
+        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=False,
                                   normalize_edge_weights=False,
                                   align_communities_across_layers_multiplex=False,
                                   align_communities_across_layers_temporal=False,
                                   comm_vec=graph.comm_vec)
 
-        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(3, qmax+2,1)]
+        print('bstars',bstars)
         # bstars = np.linspace(1,4,10)
 
         # bstars = [mlbp.get_bstar(qmax) ]
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
-        betas=[.59]
+        betas=[1.25]
         # betas=[ mlbp.get_bstar(q=qmax,omega=omega)]
 
         notconverged = 0
@@ -142,33 +143,53 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
 
 
             #create and reset bp object
-            mlbp.run_modbp(beta=beta, niter=0, reset=True,dumping_rate=0.0,
+            mlbp.run_modbp(beta=beta, niter=1000, reset=True,dumping_rate=0.0,
                            normalize_edge_weights=False,
-                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=False)
-            mlbp._bpmod.setBeta(beta)# resets
-            print('q',mlbp._bpmod.getq())
+                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
+
+            # mlbp._bpmod.setBeta(beta)# resets
+            # mlbp._bpmod.setq(qmax)
+            # print('q',mlbp._bpmod.getq())
 
             # pid = PID(1, 0.1, 0.05,sample_time=0,output_limits=[-.02,-.001], setpoint=.2)
 
             # assume we have a system we want to control in controlled_system
 
-            dr=.001
-
-            for k in range(max_iters):
-                # dr=np.min([.1,k/max_iters])
-                dr=.59
-                cmargs = np.array(mlbp._bpmod.return_marginals())
-                centrop = modbp._get_avg_entropy(cmargs)
-                mlbp.marginals[0]=cmargs
-                cpart=mlbp._get_partition(0)
-                mlbp.partitions[0]=cpart
-                cami=graph.get_AMI_layer_avg_with_communities(cpart)
-                cmod=modbp.calc_modularity(graph,cpart,resgamma=gamma,omega=omega)
-                print('iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}'.format(k,dr,centrop,cami))
-                # dr = -1*pid(centrop)
-                mlbp._bpmod.setDumpingRate(dr)
-                mlbp._bpmod.step()
-
+            # dr=.001
+            #
+            # drs=[.02,.05,.1,.2,.4,1]
+            # # drs=[1]
+            # interval=100
+            #
+            # for k in range(max_iters):
+            #     # dr=np.min([.1,k/max_iters])
+            #
+            #     dr=drs[np.min([k//interval,len(drs)-1])]
+            #     if k%5==0:
+            #         cmargs = np.array(mlbp._bpmod.return_marginals())
+            #         centrop = modbp._get_avg_entropy(cmargs)
+            #         mlbp.marginals[0]=cmargs
+            #         cpart=mlbp._get_partition(0,use_effective=True)
+            #         mlbp.partitions[0]=cpart
+            #         cami=graph.get_AMI_layer_avg_with_communities(cpart)
+            #         cmod=modbp.calc_modularity(graph,cpart,resgamma=gamma,omega=omega)
+            #         # print('q',mlbp._bpmod.getq())
+            #         _,cnts=np.unique(cpart,return_counts=True)
+            #         print('iters: {:d}, dr: {:.3f}, entropy : {:.3f}, ncoms:{:d}, AMI: {:.4f}, mod: {:.3f}, cnts:{:}'.format(k,dr,centrop,len(np.unique(cpart)),cami,cmod,str(cnts)))
+            #         if k>0 and k%interval==0: #perform alignment across layers
+            #             # mlbp._get_community_distances(0 ,use_effective=True)
+            #             cpart = mlbp._get_partition(0, use_effective=False)
+            #             mlbp.partitions[0] = cpart
+            #             # mlbp._merge_communities_bp(0)
+            #             nsweeps=mlbp._perform_permuation_sweep_multiplex(0)
+            #             mlbp._switch_beliefs_bp(0)
+            #
+            #     # dr = -1*pid(centrop)
+            #     mlbp._bpmod.setDumpingRate(dr)
+            #     changed=mlbp._bpmod.step()
+            #     if changed==False:
+            #         print('no change')
+            #         break
             #
             # # print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             # mlbp_rm = mlbp.retrieval_modularities
@@ -247,7 +268,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
 
 
 def main():
-    run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=3,gamma=1.0,ntrials=1)
+    run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=.3,gamma=1.0,ntrials=1)
 
     return 0
 
