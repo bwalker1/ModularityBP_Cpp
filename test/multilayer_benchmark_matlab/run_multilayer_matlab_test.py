@@ -101,7 +101,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
     outfile="{:}/multiplex_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
     qmax=12
-    max_iters=400
+    max_iters=1000
     print('running {:d} trials at gamma={:.4f}, omega={:.3f}, p={:.4f}, and mu={:.4f}'.format(ntrials,gamma,omega,p_eta,mu))
     for trial in range(ntrials):
 
@@ -114,7 +114,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=False,
                                   align_communities_across_layers_multiplex=True,comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(4, qmax+2,2)]
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(2, qmax+2,2)]
         betas=bstars
         notconverged = 0
         for j,beta in enumerate(betas):
