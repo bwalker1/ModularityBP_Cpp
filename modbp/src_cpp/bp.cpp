@@ -966,6 +966,23 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
     }
 }
 
+void BP_Modularity::setBeliefs(vector<double> new_beliefs )
+{
+    //
+    // go through each layer and apply the permutation described to it
+    if (new_beliefs.size() != beliefs.size())
+    {
+        fprintf(stderr,("New beliefs must be same size as old %d != %d \n"),beliefs.size(),new_beliefs.size());
+        return;
+    }
+    vector<double> vals(q); //storage for current beliefs
+    size_t c_layer_ind;
+    for (index_t i = 0; i < beliefs.size(); ++i) //iterate through all nodes (n)
+    {
+        beliefs[i] = new_beliefs[i];
+    }
+}
+
 double s(double beta, double omega, double q, double c)
 {
     double eb = exp(beta);
