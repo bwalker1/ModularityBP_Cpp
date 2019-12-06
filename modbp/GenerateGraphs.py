@@ -668,6 +668,86 @@ class MultilayerGraph(object):
                 return False
         return True
 
+
+class MergedMultilayerGraph(MultilayerGraph):
+
+    def __init__(self, intralayer_edges, layer_vec, interlayer_edges=None,
+                 comm_vec=None, bipartite_classes=None,
+                 directed=False,level=0):
+        self.level=level
+
+        super(MergedMultilayerGraph, self).__init__(intralayer_edges, layer_vec, interlayer_edges=interlayer_edges,
+                 comm_vec=comm_vec, bipartite_classes=bipartite_classes,
+                 directed=directed)
+
+    def _get_layervec_from_intraedges(self,intralayer_vec,coms):
+        """We use interlayer edges between collaped communities to create a single layer vec """
+
+        layer_vec=np.arange(len(coms)) #start everyone in their own layer
+
+        #anything with an intralayer edge between is by definition in the same layer
+        for e in intralayer_vec:
+            if e[0]<e[1]:
+                layer_vec[e[1]]=layer_vec[e[0]]
+            else:
+                layer_vec[e[0]]=layer_vec[e[1]]
+
+        return layer_vec
+
+    def createCollapsedGraph(self,partition):
+        """Creates collapsed graph where ecah node in a given community is \
+        is collapsed into a single node (with self loops) and multiedges between
+        different communities.  Return a MergedMultilayerGraph object"""
+        coms,counts=np.unique(partition,return_counts=True)
+        #store as dict for creating then collapse
+        intra_elist_dict={}
+        inter_elist_dict={}
+        #add in inter and intralyer edges
+        for i,e in enumerate(self.intralayer_edges):
+            w=self.intralayer_weights[i]
+            com1=partition[e[0]]
+            com2=partition[e[1]]
+            if com1>com2:
+                i1=com1
+                i2=com2
+            else:
+                i2=com1
+                i1=com2
+            intra_elist_dict[i1]=intra_elist_dict.get(i1,{})
+            intra_elist_dict[i1][i2]=intra_elist_dict[i1].get(i2,0)+w
+        for i,e in enumerate(self.interlayer_edges):
+            w=self.interlayer_weights[i]
+            com1=partition[e[0]]
+            com2=partition[e[1]]
+            if com1>com2:
+                i1=com1
+                i2=com2
+            else:
+                i2=com1
+                i1=com2
+            inter_elist_dict[i1]=inter_elist_dict.get(i1,{})
+            inter_elist_dict[i1][i2]=inter_elist_dict[i1].get(i2,0)+w
+
+        #flatten out to vector
+        intralayer_edges=[ (i,j,w) for i,jdict in intra_elist_dict.items() for j,w in jdict.items()]
+        interlayer_edges=[ (i,j,w) for i,jdict in inter_elist_dict.items() for j,w in jdict.items()]
+
+        layer_vec=self._get_layervec_from_intraedges(intralayer_edges,coms)
+
+        return MergedMultilayerGraph(intralayer_edges=intralayer_edges,interlayer_edges=interlayer_edges,layer_vec=layer_vec,level=self.level+1)
+
+def convertMultilayertoMergedMultilayer(multilayer):
+
+    #zip these back together
+    interlayer_edges=[ (e[0],e[1],multilayer.interlayer_weights[i]) for i,e in enumerate(multilayer.interlayer_edges)]
+    intralayer_edges=[ (e[0],e[1],multilayer.intralayer_weights[i]) for i,e in enumerate(multilayer.intralayer_edges)]
+
+    return MergedMultilayerGraph(interlayer_edges=interlayer_edges,
+                                 intralayer_edges=intralayer_edges,
+                                 layer_vec=multilayer.layer_vec,
+                                 comm_vec=multilayer.comm_vec,bipartite_classes=multilayer.bipartite_classes,
+                                 directed=multilayer.is_directed)
+
 class MultilayerSBM(MultilayerGraph):
     """
     Subclass of MultilayerGraph to create the dynamic stochastic block model from Ghasemian et al. 2016.
