@@ -7088,6 +7088,28 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_BP_Modularity_getBeliefs(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  vector< double > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_getBeliefs",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_getBeliefs" "', argument " "1"" of type '" "BP_Modularity *""'"); 
+  }
+  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
+  result = (arg1)->getBeliefs();
+  resultobj = SWIG_NewPointerObj((new vector< double >(static_cast< const vector< double >& >(result))), SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_BP_Modularity_getBeta(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   BP_Modularity *arg1 = (BP_Modularity *) 0 ;
@@ -18542,6 +18564,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BP_Modularity_compute_bethe_free_energy", _wrap_BP_Modularity_compute_bethe_free_energy, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_compute_factorized_free_energy", _wrap_BP_Modularity_compute_factorized_free_energy, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_return_marginals", _wrap_BP_Modularity_return_marginals, METH_VARARGS, NULL},
+	 { (char *)"BP_Modularity_getBeliefs", _wrap_BP_Modularity_getBeliefs, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_getBeta", _wrap_BP_Modularity_getBeta, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_setBeta", _wrap_BP_Modularity_setBeta, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_getResgamma", _wrap_BP_Modularity_getResgamma, METH_VARARGS, NULL},

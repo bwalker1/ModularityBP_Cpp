@@ -661,6 +661,14 @@ vector<vector<double>> BP_Modularity::return_marginals() {
     return ret;
 }
 
+vector <double> BP_Modularity::getBeliefs(){
+    vector<double> outbeliefs(beliefs.size());
+    for (index_t i =0 ;i<beliefs.size(); ++i ){
+        outbeliefs[i]=beliefs[i];
+    }
+    return outbeliefs;
+}
+
 void BP_Modularity::setBeta(double in, bool reset) {
     beta = in;
     reinit(reset,reset);
@@ -966,6 +974,8 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
     }
 }
 
+
+
 void BP_Modularity::setBeliefs(vector<double> new_beliefs )
 {
     //
@@ -981,6 +991,7 @@ void BP_Modularity::setBeliefs(vector<double> new_beliefs )
     {
         beliefs[i] = new_beliefs[i];
     }
+    initializeTheta();
 }
 
 double s(double beta, double omega, double q, double c)

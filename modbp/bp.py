@@ -131,6 +131,9 @@ class BP_Modularity(_object):
     def return_marginals(self):
         return _bp.BP_Modularity_return_marginals(self)
 
+    def getBeliefs(self):
+        return _bp.BP_Modularity_getBeliefs(self)
+
     def getBeta(self):
         return _bp.BP_Modularity_getBeta(self)
 

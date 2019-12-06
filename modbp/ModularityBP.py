@@ -1252,7 +1252,7 @@ class ModularityBP():
             cinds = node2beliefinds[i]
             #fill in new incoming beliefs for node i with copies of the marginal
             num2fill=len(cinds)//q
-            newbeliefs[cinds]=np.array([marginals[i] for j in range(num2fill)]).flatten()
+            newbeliefs[cinds]=np.array([ marginals[i,s] for s in range(q) for j in range(num2fill) ]).flatten()
         assert -1.0 not in newbeliefs, "one of new belief has not been created.  Check index dictionary"
         return newbeliefs
 
