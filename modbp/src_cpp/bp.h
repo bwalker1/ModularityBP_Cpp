@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
+	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false, bool _serial_update=true, bool _shuffle=true);
 
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -71,7 +71,7 @@ private:
 
 //    void shuffleBeliefs(vector<vector<double>> in_beliefs);
     void initializeBeliefs();
-    void initializeTheta();
+    void initializeTheta(bool use_current_marginals=false);
     void initializeTheta_bipartite();
 
     void normalize(vector<double> & beliefs, index_t i);
@@ -88,7 +88,8 @@ private:
 
     // private variables
     vector<double> beliefs;
-    vector<double> beliefs_old;     // for out-of-place updates
+    vector<double> beliefs_old;     
+    vector<double> beliefs_parallel;
     vector<size_t> beliefs_offsets;
 
     vector<index_t> neighbors;
@@ -122,6 +123,9 @@ private:
 
     double bfe;
     bool compute_bfe;
+    
+    bool shuffle;
+    bool serial_update;
 
     // vector containing total number of edges in each layer
     vector<double> num_edges;

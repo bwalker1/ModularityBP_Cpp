@@ -51,7 +51,7 @@ public:
     edge_data(index_t _target, bool _type, double _weight) : target(_target), type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt),theta_bipartite(_num_biparte_classes), num_edges(_nt), n(_n), nt(_nt), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nt,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _resgamma, bool _verbose, bool _transform, bool _serial_update, bool _shuffle) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nt),theta_bipartite(_num_biparte_classes), num_edges(_nt), n(_n), nt(_nt), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL)), serial_update(_serial_update), shuffle(_shuffle)
 {
     if (intra_edgeweight.size() > 0)
     {
@@ -63,6 +63,7 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     }
     bool is_bipartite = false;
     //fprintf(stdout,"is bipartite is not\n");
+    
 
     if (num_biparte_classes>1 and ! bipartite_class.empty())
     {
@@ -121,7 +122,11 @@ BP_Modularity::BP_Modularity(const vector<index_t>& _layer_membership, const vec
     }
     
     beliefs.resize(q*total_edges);
-    beliefs_old.resize(q*total_edges);
+    if (!serial_update)
+    {
+        beliefs_parallel.resize(q*total_edges);
+    }
+    //beliefs_old.resize(q*total_edges);
     beliefs_offsets.resize(n+1);
     
     neighbors.resize(total_edges);
@@ -324,15 +329,35 @@ void BP_Modularity::step()
         bfe = 0.0;
     }
     
-    // shuffle order
-    std::shuffle(order.begin(),order.end(),rng);
+    if (shuffle)
+    {
+        // shuffle update order of nodes
+        std::shuffle(order.begin(),order.end(),rng);
+    }
+    
+    if (!serial_update)
+    {
+        // BLW: I'm not totally familiar with the bipartite modularity but the same idea should work
+        if (is_bipartite)
+        {
+            printf("Serial update on bipartite not implemented.\n");
+            exit(1);
+        }
+        
+        // in parallel updates, theta should be recomputed for all nodes at once
+        compute_marginals();
+        // setting argument to true means it uses the marginals we just computed instead of starting over from scratch
+        // specifically this allows us to use last iteration's theta when computing these marginals that we need to get this iteration's theta.
+        initializeTheta(true);
+    }
+    
     // go through each node and update beliefs
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
         index_t i;
-        //We update nodes in a random order every other step.
 
-        if (iter%2 == 0)
+        // note: shuffling has no effect when doing updates in parallel
+        if (serial_update && shuffle)
         {
             i = order[node_idx];
         }
@@ -354,39 +379,40 @@ void BP_Modularity::step()
             local_change += fabs(beliefs[idx] - beliefs_old[idx]);
         }
         local_change /= q*nn;
-        if (fast_convergence)
+        /*if (fast_convergence)
         {
             if (local_change < eps)
             {
                 // not enough change in incoming beliefs to warrant an update
                 continue;
             }
-        }
+        }*/
         // if we changed any nodes, set this to true so we know we haven't converged
         //changed = true;
         change += local_change;
         
-        // we should update the nodes contribution to theta
-        compute_marginal(i);
-        for (index_t s = 0; s < q; ++s)
+        if (!serial_update)
         {
-            if (is_bipartite)
+            // we should update the nodes contribution to theta
+            compute_marginal(i);
+            for (index_t s = 0; s < q; ++s)
             {
-                index_t bpclass = bipartite_class[i];
-                for(index_t c = 0; c<num_biparte_classes; ++c){
-                    if (c!=bpclass) //each node only contributes to null models outside of it's class
-                    {
-                        theta_bipartite[c][s] += -beta*resgamma/(total_strength)* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
+                if (is_bipartite)
+                {
+                    index_t bpclass = bipartite_class[i];
+                    for(index_t c = 0; c<num_biparte_classes; ++c){
+                        if (c!=bpclass) //each node only contributes to null models outside of it's class
+                        {
+                            theta_bipartite[c][s] += -beta*resgamma/(total_strength)* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
+                        }
+                        
                     }
-
+                }
+                else
+                {
+                    theta[t][s] += -beta*resgamma/(2*num_edges[t])* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
                 }
             }
-            else
-            {
-                theta[t][s] += -beta*resgamma/(2*num_edges[t])* c_strength * (marginals[q*i + s] - marginals_old[q*i + s]);
-            }
-
-
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -486,9 +512,23 @@ void BP_Modularity::step()
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
                 assert(!::isnan(scratch[nn*s+idx]));
-                beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
+                if (serial_update)
+                {
+                    beliefs[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
+                }
+                else
+                {
+                    beliefs_parallel[beliefs_offsets[k]+nnk*s+idx_out] = scratch[nn*s+idx];
+                }
             }
         }
+        
+    }
+    
+    if (!serial_update)
+    {
+        // copy over all the new beliefs into the actual beliefs array
+        copy(beliefs_parallel.begin(), beliefs_parallel.end(), beliefs.begin());
     }
 
     if (compute_bfe)
@@ -848,22 +888,25 @@ void BP_Modularity::initializeTheta_bipartite() {
 
 }
 
-void BP_Modularity::initializeTheta() { 
-    // initialize values of theta for each layer
-    theta.resize(nt);
-    for (index_t t = 0; t < nt; ++t)
+void BP_Modularity::initializeTheta(bool use_current_marginals) {
+    if (!use_current_marginals)
     {
-        // make sure the size is correct
-        theta[t].resize(q);
-        for (index_t s = 0; s<q;++s)
+        // initialize values of theta for each layer
+        theta.resize(nt);
+        for (index_t t = 0; t < nt; ++t)
         {
-            theta[t][s] = beta*resgamma/(q);
-            //theta[t][s] = 0;
-
+            // make sure the size is correct
+            theta[t].resize(q);
+            for (index_t s = 0; s<q;++s)
+            {
+                theta[t][s] = beta*resgamma/(q);
+                //theta[t][s] = 0;
+                
+            }
         }
+        compute_marginals();
     }
     
-    compute_marginals();
     for (index_t t = 0; t < nt; ++t)
     {
         for (index_t s=0;s<q;++s)
