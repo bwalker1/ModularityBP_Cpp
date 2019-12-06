@@ -541,7 +541,7 @@ class ModularityBP():
         return calc_modularity(self.graph,partition=cpartition,resgamma=resgamma,omega=omega)
         
 
-    def _get_community_distances(self,ind,thresh=None,use_effective=True):
+    def _get_community_distances(self,ind,use_effective=True,thresh=None):
         """
         Here we calculate the average distance between the mariginals of each of the \
         communities as defined by:

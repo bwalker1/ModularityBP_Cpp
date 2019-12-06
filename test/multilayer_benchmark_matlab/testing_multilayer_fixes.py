@@ -16,7 +16,7 @@ import itertools
 #generative multilayer benchmark models (now in python)
 import multilayerGM as gm
 from time import time
-from simple_pid import PID
+#from simple_pid import PID
 
 from create_multiplex_functions import create_multiplex_graph
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
@@ -108,7 +108,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
 
         t=time()
 
-        load =True
+        load = False
         if not load:
             graph=create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                           n_layers=nlayers, ncoms=ncoms)
@@ -119,7 +119,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
               graph=pickle.load(fh)
 
         print('time creating graph: {:.3f}'.format(time()-t))
-        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=False,
+        mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   normalize_edge_weights=False,
                                   align_communities_across_layers_multiplex=True,
                                   align_communities_across_layers_temporal=False,
@@ -133,7 +133,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
 
         #betas = np.linspace(bstars[0], bstars[-1], len(bstars) * 8)
         betas=bstars
-        betas=[1.25]
+        betas=[1.2]
         # betas=[ mlbp.get_bstar(q=qmax,omega=omega)]
 
         notconverged = 0
@@ -146,6 +146,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,dumping_rate=0.0,
                            normalize_edge_weights=False,
                            q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
+            mlbp_rm = mlbp.retrieval_modularities
+            print(mlbp_rm.loc[mlbp_rm.shape[0]-1,['beta','niters','AMI','AMI_layer_avg']])
 
             # mlbp._bpmod.setBeta(beta)# resets
             # mlbp._bpmod.setq(qmax)
@@ -268,7 +270,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
 
 
 def main():
-    run_louvain_multiplex_test(n=1000,nlayers=15,mu=.9,p_eta=1.0,omega=.3,gamma=1.0,ntrials=1)
+    run_louvain_multiplex_test(n=500,nlayers=10,mu=0,p_eta=.5,omega=0,gamma=1.0,ntrials=1)
 
     return 0
 

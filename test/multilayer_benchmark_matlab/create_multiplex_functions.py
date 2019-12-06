@@ -6,7 +6,9 @@ import os
 import shutil
 import scipy.io as scio
 from subprocess import Popen,PIPE
-clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
+# clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
+clusterdir=os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
 call_matlab_createbenchmark_file = os.path.join(matlabbench_dir, "call_matlab_multilayer.sh")
@@ -103,7 +105,7 @@ def convert_nxmg_to_mbp_multigraph(nxmg,multiplex=True):
 #     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet)
 #     return mbpmulltinet
 
-def create_temporal_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=150,k_min=3):
+def create_temporal_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=5, k_max=30,k_min=3):
     theta = 1
     dt = gm.dependency_tensors.Temporal(n_nodes, n_layers, p)
     null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=ncoms)

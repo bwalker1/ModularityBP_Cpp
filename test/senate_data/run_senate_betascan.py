@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import gzip
 import pickle
 
+clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 
 def create_knn_from_adj(adj_mat, k, weight_func=None):
     # assume that final adj is undirected
@@ -25,7 +26,7 @@ def create_knn_from_adj(adj_mat, k, weight_func=None):
             out_adj[i, closest_inds] = 1
             out_adj[closest_inds, i] = 1
         else:
-            vals = np.array(list(map(lambda (x): weight_func(x), adj_mat[i, closest_inds].data)))
+            vals = np.array(list(map(lambda x: weight_func(x), adj_mat[i, closest_inds].data)))
             for j,ind in enumerate(closest_inds):
                 out_adj[i, ind] = vals[j]
                 out_adj[ind, i] = vals[j]
@@ -48,13 +49,9 @@ def adjacency_to_edges(A,directed=False):
         nnzvals = nnzvals[0]  # handle scipy sparse types
     return list(zip(nnz_inds[0], nnz_inds[1], nnzvals))
 
-def run_senate(gamma,omega,beta):
+def run_senate(gamma,omega,beta,ntrials):
 
-    #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
-    #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
-
-    #senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
-    senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    senate_out_dir=os.path.join(clusterdir,'test/senate_data')
 
     if not os.path.exists(senate_out_dir):
         os.makedirs(senate_out_dir)
@@ -83,7 +80,7 @@ def run_senate(gamma,omega,beta):
         inter_edges = adjacency_to_edges(C)
 
     else:
-        A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
+        A_knn = create_knn_from_adj(A, k ,weight_func=lambda x: x)
         intra_edges = adjacency_to_edges(A_knn)
         inter_edges = adjacency_to_edges(C)
         with gzip.open(intra_edge_file,'wb') as fh:
@@ -99,21 +96,29 @@ def run_senate(gamma,omega,beta):
 
     modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, align_communities_across_layers_temporal=True,accuracy_off=True, comm_vec=parties)
 
-    rm_df_out = os.path.join(senate_out_dir, "senate_ret_mod_dfs_knn10")
+    rm_df_out = os.path.join(senate_out_dir, "senate_beta_scan_knn10")
 
     if not os.path.exists(rm_df_out):
         os.makedirs(rm_df_out)
 
     dataframe_outfile = os.path.join(rm_df_out, "senate_ret_mod_df_{:.4f}_{:.4f}_{:.5f}.csv".format(gamma, omega,beta))
 
+    for i in range(ntrials):
 
-    modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=3000,
-                        omega=omega,resgamma=gamma,reset=True)
+        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=4000,
+                            omega=omega,resgamma=gamma,reset=True)
 
-    with open(dataframe_outfile, 'w') as fh:
-        modbp_obj.retrieval_modularities.to_csv(fh, header=True)
+        rm_df=modbp_obj.retrieval_modularities
 
+        rm_df.loc[rm_df.shape[0]-1,'trial']=i
 
+        if i==0:
+
+            with open(dataframe_outfile, 'w') as fh:
+                rm_df.to_csv(fh, header=True)
+        else:
+            with open(dataframe_outfile, 'a') as fh:
+                rm_df.iloc[[-1], :].to_csv(fh, header=False)
 
 
 def main():
