@@ -69,7 +69,6 @@ public:
     double compute_bstar(double omega_in, int q_in);
 
     void permute_beliefs(vector<vector<index_t> > permutation);
-    void setBeliefs(vector<double> new_beliefs );
     void merge_communities(vector<index_t> merges);
 
 private:

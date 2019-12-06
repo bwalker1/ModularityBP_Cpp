@@ -112,7 +112,6 @@ class ModularityBP():
         self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
-        self._node2beliefsinds_dict=None
 
         if self.nlayers>1 and self.graph.is_bipartite:
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
@@ -1212,53 +1211,6 @@ class ModularityBP():
         # merge_vec=IntArray(self._groupmap_to_permutation_vector(ind).astype(int))
         self._bpmod.merge_communities(merge_vec)
         return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
-
-
-    def _create_node_2_beliefs_dict(self,recreate=False):
-        """For each node, get the indices of the incoming beliefs \
-        so that we can pass a new belief into the _bpobj"""
-        if self._node2beliefsinds_dict is None or recreate:
-            node2beliefsinds_dict={}
-            ecounts=np.array([ 0 for _ in range(self.graph.N)])
-            #in the cpp beliefs are arrange in order of node indices
-            #with all incoming beliefs contiguous ( and in blocks of q)
-            for e in itertools.chain(self.graph.intralayer_edges, self.graph.interlayer_edges):
-                ecounts[e[0]]+=1
-                ecounts[e[1]]+=1
-            ecounts=ecounts*self._bpmod.getq() #factor in q
-            cumsum_ecnt=np.cumsum(ecounts)
-            for i,cnt in enumerate(cumsum_ecnt):
-                if i==0:
-                    node2beliefsinds_dict[i]=range(0,cnt)
-                else:
-                    node2beliefsinds_dict[i]=range(cumsum_ecnt[i-1],cnt)
-            self._node2beliefsinds_dict=node2beliefsinds_dict
-
-        return self._node2beliefsinds_dict
-
-    def _get_belief_size(self):
-        """calc size of belief vector"""
-        node2beliefs=self._create_node_2_beliefs_dict()
-        return np.sum([len(v) for v in node2beliefs.values()])
-
-    def _create_beliefs_from_marginals(self,marginals):
-        """We set all incoming beliefs to be the current marginal for the node"""
-        belief_size=self._get_belief_size()
-        newbeliefs=np.array([-1.0 for _ in range(belief_size)])
-        node2beliefinds=self._create_node_2_beliefs_dict()
-        q=self._bpmod.getq()
-        assert marginals.shape[1]==q ,"Marginals are not the correct shape"
-        for i in range(marginals.shape[0]):
-            cinds = node2beliefinds[i]
-            #fill in new incoming beliefs for node i with copies of the marginal
-            num2fill=len(cinds)//q
-            newbeliefs[cinds]=np.array([marginals[i] for j in range(num2fill)]).flatten()
-        assert -1.0 not in newbeliefs, "one of new belief has not been created.  Check index dictionary"
-        return newbeliefs
-
-    def _set_beliefs(self,beliefs):
-        _da_beliefs=DoubleArray(beliefs)
-        self._bpmod.setBeliefs(_da_beliefs)
 
 
 

@@ -179,9 +179,6 @@ class BP_Modularity(_object):
     def permute_beliefs(self, permutation):
         return _bp.BP_Modularity_permute_beliefs(self, permutation)
 
-    def setBeliefs(self, new_beliefs):
-        return _bp.BP_Modularity_setBeliefs(self, new_beliefs)
-
     def merge_communities(self, merges):
         return _bp.BP_Modularity_merge_communities(self, merges)
     __swig_destroy__ = _bp.delete_BP_Modularity

@@ -7898,44 +7898,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_BP_Modularity_setBeliefs(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  BP_Modularity *arg1 = (BP_Modularity *) 0 ;
-  vector< double > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:BP_Modularity_setBeliefs",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_setBeliefs" "', argument " "1"" of type '" "BP_Modularity *""'"); 
-  }
-  arg1 = reinterpret_cast< BP_Modularity * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "BP_Modularity_setBeliefs" "', argument " "2"" of type '" "vector< double >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "BP_Modularity_setBeliefs" "', argument " "2"" of type '" "vector< double >""'");
-    } else {
-      vector< double > * temp = reinterpret_cast< vector< double > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  (arg1)->setBeliefs(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_BP_Modularity_merge_communities(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   BP_Modularity *arg1 = (BP_Modularity *) 0 ;
@@ -18558,7 +18520,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BP_Modularity_compute_excess_degree", _wrap_BP_Modularity_compute_excess_degree, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_compute_bstar", _wrap_BP_Modularity_compute_bstar, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_permute_beliefs", _wrap_BP_Modularity_permute_beliefs, METH_VARARGS, NULL},
-	 { (char *)"BP_Modularity_setBeliefs", _wrap_BP_Modularity_setBeliefs, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_merge_communities", _wrap_BP_Modularity_merge_communities, METH_VARARGS, NULL},
 	 { (char *)"delete_BP_Modularity", _wrap_delete_BP_Modularity, METH_VARARGS, NULL},
 	 { (char *)"BP_Modularity_swigregister", BP_Modularity_swigregister, METH_VARARGS, NULL},
