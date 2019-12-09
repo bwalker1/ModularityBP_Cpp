@@ -176,6 +176,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         neighbors_offset_count += num_belief_edges;
         neighbor_count[i] = (index_t) num_belief_edges;
         fprintf(stdout,"neighborcount[%d]: %d\n",i,neighbor_count[i]);
+
         beliefs_offsets[i+1] = beliefs_offset_count;
         neighbors_offsets[i+1] = neighbors_offset_count;
 
@@ -184,6 +185,9 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
 
         c_strength=0;
         node_strengths[i].resize(nlayers);
+        for (index_t lay=0;lay<node_strengths[i].size();lay++ ){
+            node_strengths[i][lay]=0;
+        }
 
         for (index_t j=0;j<edges[i].size();++j)
         {
@@ -193,6 +197,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
             if (edges[i][j].type){ //only add in the intralyer strength (including self loops)
                 node_strengths[i][clayer]+=edges[i][j].weight;
                 }
+
             if (edges[i][j].target!=i){
                 //we only pass beliefs if it's not a self loop
                 if (edges[i][j].type)
