@@ -302,20 +302,20 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
             marginals[q*i+s] += add;
         }
         // evaluate the rest of the update equation
-        double field;
+        double field=0;
         if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
             {
             index_t bpclass=bipartite_class[i];
             for (index_t lay=0;lay<nlayers;lay++)
                 {
-                field = c_strength[lay]*theta_bipartite[bpclass][s];
+                field += c_strength[lay]*theta_bipartite[bpclass][s];
                 }
             }
          else
             {
             for (index_t lay=0;lay<nlayers;lay++)
                 {
-                field=c_strength[lay]*theta[lay][s];
+                field += c_strength[lay]*theta[lay][s];
                 }
             }
 
@@ -496,14 +496,14 @@ bool BP_Modularity::step()
                     {index_t bpclass=bipartite_class[i];
                     for(index_t lay=0;lay<nlayers;lay++)
                         {
-                        field = c_strength[lay]*theta_bipartite[bpclass][s];
+                        field += c_strength[lay]*theta_bipartite[bpclass][s];
                         }
                     }
                  else
                     {
                     for(index_t lay=0;lay<nlayers;lay++)
                         {
-                        field+=c_strength[lay]*theta[lay][s];
+                        field += c_strength[lay]*theta[lay][s];
                         }
                     }
 
@@ -758,9 +758,9 @@ void BP_Modularity::setq(double new_q) {
     q = new_q;
     
     
-    beliefs.resize(q*total_edges);
+    beliefs.resize(q*total_belief_edges);
     beliefs_old.clear();
-    beliefs_old.resize(q*total_edges);
+    beliefs_old.resize(q*total_belief_edges);
     marginals.resize(q*n);
     marginals_old.resize(q*n);
     scratch.resize(q*max_degree);
@@ -787,7 +787,7 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     
 //    if (weighted)
 //    {
-    for (index_t i=0;i<total_edges;++i)
+    for (index_t i=0;i<total_belief_edges;++i)
     {
             //omega has already been baked into edge weights for interlayer
             scaleEdges[i] = exp(beta*edge_weights[i])-1;
@@ -900,7 +900,6 @@ void BP_Modularity::initializeTheta_bipartite() {
         for (index_t s=0;s<q;++s)
         {
             theta_bipartite[t][s]=0;
-
         }
     }
 
