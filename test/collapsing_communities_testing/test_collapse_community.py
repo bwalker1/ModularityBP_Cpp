@@ -53,7 +53,7 @@ def test_collapse():
 
 def test_run_modbp_on_collapse():
     n = 100
-    nlayers = 5
+    nlayers = 2
     ep = .1
     eta = 0
     c = 8
@@ -70,12 +70,18 @@ def test_run_modbp_on_collapse():
     collapse_graph = modbp.convertMultilayertoMergedMultilayer(graph)
     collapse_graph = collapse_graph.createCollapsedGraph(rand_coms)
 
-    bpobj=modbp.ModularityBP(mlgraph=collapse_graph,use_effective=False)
+    collapse_graph.normalize_edge_weights(omega=1.0)
+
+    for i,e in enumerate(collapse_graph.intralayer_edges):
+        if e[0]==0 and e[1] == 0:
+            print("{:d} and {:d} : {:.3f}".format(e[0],e[1],
+                                                  collapse_graph.intralayer_weights[i]))
+
+    bpobj=modbp.ModularityBP(mlgraph=collapse_graph,use_effective=False,align_communities_across_layers_temporal=False,align_communities_across_layers_multiplex=False)
     beta=bpobj.get_bstar(q=3,omega=1.0)
-
-    bpobj.run_modbp(beta=beta,niter=100,q=3,
+    print("beta = {:.3f} ".format(beta))
+    bpobj.run_modbp(beta=beta,niter=0,q=3,
                     resgamma=1.0,omega=1.0,anneal_omega=False)
-
 
 
 

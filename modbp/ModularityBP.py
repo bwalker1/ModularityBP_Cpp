@@ -207,6 +207,7 @@ class ModularityBP():
 
         if not anneal_omega:
             iters=self._bpmod.run(iters_per_run)
+            print("finished initial run")
         else:
             # omega_update_scheme=np.linspace(0,omega,50)
             # omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
@@ -533,7 +534,15 @@ class ModularityBP():
             exp_b_w = np.exp(bstar * weights)
             return np.mean(np.power((exp_b_w - 1) / (exp_b_w + q - 1), 2.0)) * c - 1
 
+
+
         deg_excess=self._get_excess_degree()
+        # print("deg_excess = {:.3f}".format(deg_excess))
+        # plt.close()
+        # bs = np.linspace(-.1, 2, 100)
+        # plt.plot(bs, np.array(list(map(lambda x: avg_weights(x, weights=weights, q=q, c=deg_excess), bs))))
+        # plt.show()
+
         bstar = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))[0]
         return bstar
 

@@ -36,9 +36,9 @@ void print_array(double *arr, index_t n)
 {
     for (index_t i=0;i<n;++i)
     {
-        printf("%f ",arr[i]);
+        fprintf(stdout,"%f ",arr[i]);
     }
-    printf("\n");
+    fprintf(stdout,"\n");
 }
 
 struct edge_data
@@ -94,7 +94,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         index_t l;
 //        if (weighted)
 //        {
-            //l gives the layer that the edge represents
+            //l gives the layer that the intralayer edge originally came from
         l = (index_t) intra_edgeweight[k].first;//typecast to index
         w = intra_edgeweight[k].second;
 
@@ -104,8 +104,8 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
 //        }
         index_t i = p.first;
         index_t j = p.second;
-        edges[i].push_back(edge_data(j,true,l,w));
-        edges[j].push_back(edge_data(i,true,l,w));
+        edges[i].push_back(edge_data(j,l,true,w));
+        edges[j].push_back(edge_data(i,l,true,w));
         
         num_edges[l] += w;
 //        num_strength[layer_membership[i]] += w;
@@ -127,15 +127,15 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         index_t j = p.second;
         //We don't store layer information on the interlayer edges
         //We do store weight however
-        edges[i].push_back(edge_data(j,false,-1,w));
-        edges[j].push_back(edge_data(i,false,-1,w));
+        edges[i].push_back(edge_data(j,-1,false,w));
+        edges[j].push_back(edge_data(i,-1,false,w));
         neighbor_count_interlayer[i]+=1;
         neighbor_count_interlayer[j]+=1;
         total_edges += 2;
         if (i!=j) { total_belief_edges+=2;}
     }
 
-
+    fprintf(stdout,"total_belief_edges: %d\n",total_belief_edges);
     beliefs.resize(q*total_belief_edges);
     beliefs_old.resize(q*total_belief_edges);
     beliefs_offsets.resize(n+1);
@@ -175,11 +175,13 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         beliefs_offset_count += q*(num_belief_edges);
         neighbors_offset_count += num_belief_edges;
         neighbor_count[i] = (index_t) num_belief_edges;
-
+        fprintf(stdout,"neighborcount[%d]: %d\n",i,neighbor_count[i]);
         beliefs_offsets[i+1] = beliefs_offset_count;
         neighbors_offsets[i+1] = neighbors_offset_count;
 
-        max_degree = max(max_degree,(index_t) edges[i].size());
+//        max_degree = max(max_degree,(index_t) edges[i].size());
+        max_degree = max(max_degree,(index_t) num_belief_edges);
+
         c_strength=0;
         node_strengths[i].resize(nlayers);
 
@@ -202,8 +204,11 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
                 neighbors[neighbor_c++] = edges[i][j].target;
                 neighbor_offset_map[i][edges[i][j].target] = j;
             }
+            else{ fprintf(stdout,"found self loop %d to %d type %d : %3f \n",i,edges[i][j].target,edges[i][j].type,edges[i][j].weight);}
 
         }
+
+
         //all intralayer edges contribute to strength
 
     }
@@ -219,7 +224,9 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
             }
         }
     }
-    //fprintf(stderr,"Finished primary initialization\n");
+
+
+    fprintf(stdout,"Finished primary initialization\n");
     reinit();
     
     compute_bfe = false;
@@ -784,9 +791,11 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     
     //scaleOmega = exp(beta*omega)-1;
 
-
+    fprintf(stdout,"in reinit after creating scaled edges\n");
     if (init_beliefs)
         initializeBeliefs();
+    fprintf(stdout,"in reinit after initializing beliefs\n");
+
     if (init_theta)
     {
         //fprintf(stdout,"is_bipartite2:%s\n", is_bipartite ? "true" : "false");
@@ -797,8 +806,11 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
         else
                 {initializeTheta();}
     }
+    fprintf(stdout,"in reinit after initializing Thetea\n");
 
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
+    fprintf(stdout,"in reinit after copying marginals\n");
+
 }
 
 
@@ -847,7 +859,7 @@ void BP_Modularity::initializeBeliefs() {
     }
     
     // zero out old beliefs
-    for (size_t i=0;i<q*total_edges;++i)
+    for (size_t i=0;i<beliefs_old.size();++i)
     {
         beliefs_old[i] = 0;
     }
@@ -934,8 +946,10 @@ void BP_Modularity::initializeTheta() {
 
         }
     }
-    
+
     compute_marginals();
+    fprintf(stdout,"in initTheta after computing mariginals\n ");
+
     for (index_t lay = 0; lay <nlayers; ++lay)
     {
         for (index_t s=0;s<q;++s)
@@ -946,7 +960,6 @@ void BP_Modularity::initializeTheta() {
     }
     for (index_t i=0;i<n;++i)
     {
-        vector<index_t> t = layer_membership[i];
         vector<double> cur_strength = node_strengths[i];
 //        index_t nn = neighbor_count[i];
 

@@ -174,7 +174,8 @@ class MultilayerGraph(object):
 
     def __init__(self,intralayer_edges,layer_vec,interlayer_edges=None,
                  comm_vec=None,bipartite_classes=None,allow_multiedges=False,
-                 directed=False,create_igraph_layers=True):
+                 directed=False,
+                 create_igraph_layers=True):
         """
 
         :param intralayer_edges: list of intralayer edges between the nodes. If intralayer_edges.shape[1] > 2\
@@ -235,8 +236,8 @@ class MultilayerGraph(object):
 
 
         # by default these are weighted and OUT degrees
-        self.intradegrees=self.get_intralayer_degrees()
-        self.interdegrees=self.get_interlayer_degrees()
+        self.intradegrees=self.get_intralayer_degrees(weighted=True)
+        self.interdegrees=self.get_interlayer_degrees(weighted=True)
 
         self.intra_edge_counts=self.get_layer_edgecounts()
         #get total edge weight
@@ -274,6 +275,19 @@ class MultilayerGraph(object):
         if self.layers is not None:
             self.layers=self._create_layer_graphs()
 
+    def normalize_edge_weights(self,omega=1.0):
+        """
+        Normalzie weights such that average weight is one across
+        :param omega:
+        :return:
+        """
+        allweights=np.append(np.array(self.intralayer_weights),
+                             omega*np.array(self.interlayer_weights))
+        scale=len(allweights)/np.sum(allweights)
+        self.intralayer_weights= list(np.array(self.intralayer_weights)*scale)
+        self.interlayer_weights= list(np.array(self.interlayer_weights)*scale)
+        self.intradegrees=self.get_intralayer_degrees(weighted=True,reset=True)
+        self.interdegrees=self.get_interlayer_degrees(weighted=True,reset=True)
 
     def _prune_intra_edges_for_undirected(self):
         eset={}
@@ -386,7 +400,7 @@ class MultilayerGraph(object):
 
         return np.array(ecounts)
 
-    def get_intralayer_degrees(self,i=None,weighted=True,mode='OUT'):
+    def get_intralayer_degrees(self,i=None,weighted=True,mode='OUT',reset=False):
         """
 
         :param i: if i is given, the layer to get degree vector for.  else single \
@@ -409,11 +423,15 @@ class MultilayerGraph(object):
                     total_degrees.extend(list(self.layers[i].degree(mode=mode)))
         return np.array(total_degrees)
 
-    def get_interlayer_degrees(self):
+    def get_interlayer_degrees(self,weighted=True):
         degrees=np.zeros(self.N)
         for i,e in enumerate(self.interlayer_edges):
             ei,ej=e[0],e[1]
-            toadd=1 if self.interlayer_weights is None else self.interlayer_weights[i]
+            if not weighted or  self.interlayer_weights is None:
+                toadd=1.0
+            else:
+                toadd=self.interlayer_weights[i]
+
             degrees[ei]=degrees[ei]+toadd
             degrees[ej]=degrees[ej]+toadd
         return degrees
@@ -773,7 +791,7 @@ class MergedMultilayerGraph(MultilayerGraph):
 
         return MergedMultilayerGraph(intralayer_edges=intralayer_edges,collapse_map=new_collapse_map,interlayer_edges=interlayer_edges,layer_vec=self.layer_vec,level=self.level+1,merged_layer_vec=new_merged_layer_vec,comm_vec=self.comm_vec)
 
-    def get_intralayer_degrees(self,i=None,weighted=True,mode="OUT"):
+    def get_intralayer_degrees(self,i=None,weighted=True,mode="OUT",reset=False):
         """
 
         :param i:  The layer to get the intradegrees for.  if i is not given it is just Nxnlayers degrees
@@ -782,7 +800,7 @@ class MergedMultilayerGraph(MultilayerGraph):
         :param mode: #TODO allow for in vs out degree.
         :return:
         """
-        if self._intra_layer_degs is None or self._intra_layer_strengths is None:
+        if reset or self._intra_layer_degs is None or self._intra_layer_strengths is None:
 
             self._intra_layer_degs=np.zeros((self.N,self.merged_layer.shape[1]))
             self._intra_layer_strengths=np.zeros((self.N,self.merged_layer.shape[1])) #degree in each
@@ -807,7 +825,7 @@ class MergedMultilayerGraph(MultilayerGraph):
 
 
 
-    def get_interlayer_degrees(self, weighted=True, mode="OUT"):
+    def get_interlayer_degrees(self, weighted=True, mode="OUT",reset=False):
             """We only keep track of total number of interlayer edges coming in and
             out of each node since the degrees aren't needed to compute null model
             for modularity
@@ -816,7 +834,7 @@ class MergedMultilayerGraph(MultilayerGraph):
             :param mode: #TODO allow for in vs out degree.
             :return:  np.array with shape N with total interlayer edges coming in
             """
-            if self._inter_layer_degs is None or self._inter_layer_strengths is None:
+            if reset or self._inter_layer_degs is None or self._inter_layer_strengths is None:
                 self._inter_layer_degs = np.zeros(self.N)
                 self._inter_layer_strengths = np.zeros(self.N)  # degree in each
                 for j,e in enumerate(self.interlayer_edges):
