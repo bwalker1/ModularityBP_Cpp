@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
+	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double,double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
 
     // run BP to convergence
     long run(unsigned long maxIters=100);
@@ -66,8 +66,9 @@ public:
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
 
-    double compute_excess_degree(bool use_strength = false);
-    double compute_bstar(double omega_in, int q_in);
+// handle on python side
+//    double compute_excess_degree(bool use_strength = false);
+//    double compute_bstar(double omega_in, int q_in);
 
     void permute_beliefs(vector<vector<index_t> > permutation);
 
@@ -92,7 +93,7 @@ private:
     vector<index_t> neighbor_count;
     vector<index_t> neighbor_count_interlayer;
 
-    vector<double> node_strengths;
+    vector<vector<double>> node_strengths;
     vector<double> edge_weights;
 
     // private variables
@@ -115,10 +116,10 @@ private:
     vector< vector<double> > theta;
     vector< vector<double> > theta_bipartite;
 
-    vector<index_t> layer_membership;
+    vector<vector<index_t>> layer_membership;
     vector<index_t> bipartite_class;
 
-    index_t n, nt ,num_biparte_classes;
+    index_t n, nlayers ,num_biparte_classes;
 
     int q;
     double beta;
@@ -139,6 +140,7 @@ private:
     // sum of num_edges
 
     unsigned long total_edges;
+    unsigned long total_belief_edges; //number of edges with beliefs = total_edges - # self_loops
     double total_strength;
 
     double change;

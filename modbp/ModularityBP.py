@@ -5,7 +5,8 @@ from future.utils import iteritems,iterkeys
 from collections import Hashable
 from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
-from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray
+import sklearn.preprocessing as skp
+from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray,DoublePairArray
 import itertools
 import pandas as pd
 import scipy.optimize as sciopt
@@ -84,8 +85,19 @@ class ModularityBP():
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
         self._cpp_intra_weights=self._get_cpp_intra_weights()
+        self._cpp_inter_weights=self._get_cpp_inter_weights()
+
+        if not hasattr(self.graph,"merged_layer"):
+            self.graph.layer_vec=self.graph.merged_layer
+        else:
+            ohe=skp.OneHotEncoder(categories='auto')
+            self.layer_vec=np.array(ohe.fit_transform(self.graph.layer_vec.reshape(-1,1)).toarray())
+
+        #
+        self.layer_vec = [[int(i) for i in row] for row in self.layer_vec]
+        self._layer_vec_ia=IntMatrix(self.layer_vec)
         self.layer_vec=np.array(self.graph.layer_vec)
-        self._layer_vec_ia=IntArray([int(i) for i in self.layer_vec])#must be integers!
+
         self.layers_unique=np.unique(self.layer_vec)
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
         self._align_communities_across_layers_temporal=align_communities_across_layers_temporal
@@ -109,6 +121,7 @@ class ModularityBP():
 
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
+
         self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
@@ -158,13 +171,16 @@ class ModularityBP():
         omega_set = omega if not normalize_edge_weights else 1.0
 
         if self._bpmod is None or normalize_edge_weights:
-            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
-                                        intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
+            self._bpmod=BP_Modularity(_n=self.n,
+                                      layer_membership=self._layer_vec_ia,
+                                      intra_edgelist=self._intraedgelistpv,
+                                      intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
-                                      _n=self.n, _nt= self.nlayers , q=q, beta=beta,
+                                      inter_edgeweight=self._cpp_inter_weights,
+                                      _nlayers= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=True)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
@@ -400,12 +416,35 @@ class ModularityBP():
             raise AssertionError( "cannot calculate the bethe free energy without running first.  Please call run_mobp.")
         return self._bpmod.compute_bethe_free_energy()
 
+
+
     def _get_cpp_intra_weights(self):
-        if self.graph.unweighted:
-            return DoubleArray([])
+        #supply weights if none
+        if self.graph.intralayer_weights is None:
+            weights=[1.0 for i in range(len(self.graph.intralayer_edges)) ]
         else:
-            assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
-            return DoubleArray(self.graph.intralayer_weights)
+            weights=self.graph.intralayer_weights
+        assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
+        layers=[]
+        if hasattr(self.graph,'intralayer_layers') :
+            #we are using the MergedMultilayerGraph with edges (i,j, layer , weight)
+            layers=self.graph.intralayer_layers
+        else:
+            for e in self.graph.intralayer_edges:
+                clayer=self.graph.layer_vec[i]
+                layers.append(float(clayer))
+
+        layer_weights=np.array(list(zip(layers,weights)))
+        return DoublePairArray(layer_weights)
+
+    def _get_cpp_inter_weights(self):
+        if self.graph.interlayer_weights is None:
+            weights=[1.0 for i in range(len(self.graph.interlayer_edges)) ]
+        else:
+            weights=self.graph.interlayer_weights
+
+        return DoubleArray(weights)
+
 
     def _get_edgelistpv(self,inter=False):
         ''' Return PairVector swig wrapper version of edgelist'''
@@ -462,7 +501,12 @@ class ModularityBP():
 
     def _get_excess_degree(self):
         """get excess degree.  Note that this is unweighted degree """
-        degrees = self.graph.get_intralayer_degrees(weighted=False)+ self.graph.get_interlayer_degrees()
+        intradegrees=self.graph.get_intralayer_degrees(weighted=False)
+        if len(intradegrees.shape)>1:
+            intradegrees=np.sum(intradegrees,axis=1)
+
+        degrees = intradegrees + self.graph.get_interlayer_degrees()
+
         # degrees = self.graph.intradegrees + self.graph.interdegrees
         d_avg = np.mean(degrees)
         d2=np.mean(np.power(degrees,2.0))
