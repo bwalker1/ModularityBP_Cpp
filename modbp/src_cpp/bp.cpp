@@ -115,7 +115,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         if (i!=j) { total_belief_edges+=2;}
     }
     
-    for (index_t k=0;k<inter_edgelist.size();++k)
+    for (index_t k=0;k<inter_edgelist.size();k++)
     {
 
         auto p = inter_edgelist[k];
@@ -191,7 +191,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
 
         for (index_t j=0;j<edges[i].size();++j)
         {
-
+//            fprintf(stdout,"(%d,%d):%f\n",i,edges[i][j].target,edges[i][j].weight);
             //assert(neighbor_c < num_edges);
             index_t clayer = edges[i][j].layer;
             if (edges[i][j].type){ //only add in the intralyer strength (including self loops)
@@ -206,17 +206,22 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
                 {edge_weights[neighbor_c] = omega*edges[i][j].weight;}
 
                 neighbors_type[neighbor_c] = edges[i][j].type;
-                neighbors[neighbor_c++] = edges[i][j].target;
+                neighbors[neighbor_c] = edges[i][j].target;
                 neighbor_offset_map[i][edges[i][j].target] = j;
+                neighbor_c++;
             }
 //            else{ //fprintf(stdout,"found self loop %d to %d type %d : %3f \n",i,edges[i][j].target,edges[i][j].type,edges[i][j].weight);}
 //
         }
-
-
-        //all intralayer edges contribute to strength
-
     }
+//    fprintf(stdout,"node_strength\n");
+//    for (index_t i=0; i<n ;i++){
+//        for (index_t lay=0;lay<node_strengths[i].size();lay++){
+//
+//            fprintf(stdout,"%f ",node_strengths[i][lay]);
+//        }
+//        fprintf(stdout,"\n");
+//    }
     scratch.resize(max_degree*q);
     neighbor_c = 0;
     for (int i=0;i<n;++i)
@@ -247,7 +252,6 @@ long BP_Modularity::run(unsigned long maxIters)
     for (iter = 0; iter < maxIters; ++iter)
     {
         step();
-        
         // monitor changes
         if (verbose)
             printf("Iteration %lu: change %f\n",iter+1,change);
@@ -466,7 +470,7 @@ bool BP_Modularity::step()
                 scratch[nn*s+idx] = 0;
                 for (index_t idx2 = 0;idx2<nn;++idx2)
                 {
-
+                    if (idx2 == idx) continue; //don't include outgoing in update
                     bool type = neighbors_type[neighbors_offsets[i]+idx2];
                     double add;
 //                    if (type==true)
@@ -783,30 +787,36 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     {
         beta=eps; //must be non-zero.  make very small
     }
-    scale = exp(beta)-1;
-    
-//    if (weighted)
-//    {
+
+
     for (index_t i=0;i<total_belief_edges;++i)
     {
             //omega has already been baked into edge weights for interlayer
             scaleEdges[i] = exp(beta*edge_weights[i])-1;
     }
-//    }
+
     
-    //scaleOmega = exp(beta*omega)-1;
 
     if (init_beliefs)
         initializeBeliefs();
 
     if (init_theta)
     {
-        //fprintf(stdout,"is_bipartite2:%s\n", is_bipartite ? "true" : "false");
         if (is_bipartite)
                 {
                 initializeTheta_bipartite();}
         else
-                {initializeTheta();}
+                {
+
+                initializeTheta();
+//                fprintf(stdout,"after init theta: \n");
+//                for (index_t s=0; s<q; s++){
+//                    for (index_t lay=0;lay<nlayers;lay++){
+//                            fprintf(stdout,"%f ",theta[lay][s]);
+//                        }
+//                        fprintf(stdout,"\n");
+//                    }
+                }
     }
 
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
@@ -859,7 +869,7 @@ void BP_Modularity::initializeBeliefs() {
     }
     
     // zero out old beliefs
-    for (size_t i=0;i<beliefs_old.size();++i)
+    for (size_t i=0;i<q*total_belief_edges;++i)
     {
         beliefs_old[i] = 0;
     }
@@ -923,7 +933,7 @@ void BP_Modularity::initializeTheta_bipartite() {
                 // fold in prefactor to theta
                 for (index_t s = 0; s<q;++s)
                 {
-                    theta[c][s] *= -(beta*resgamma/(total_strength));
+                    theta_bipartite[c][s] *= -(beta*resgamma/(total_strength));
                 }
             }
 
