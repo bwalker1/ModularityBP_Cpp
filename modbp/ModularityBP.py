@@ -87,8 +87,8 @@ class ModularityBP():
         self._cpp_intra_weights=self._get_cpp_intra_weights()
         self._cpp_inter_weights=self._get_cpp_inter_weights()
 
-        if not hasattr(self.graph,"merged_layer"):
-            self.graph.layer_vec=self.graph.merged_layer
+        if hasattr(self.graph,"merged_layer"):
+            self.layer_vec=self.graph.merged_layer
         else:
             ohe=skp.OneHotEncoder(categories='auto')
             self.layer_vec=np.array(ohe.fit_transform(self.graph.layer_vec.reshape(-1,1)).toarray())
@@ -180,7 +180,7 @@ class ModularityBP():
                                       _nlayers= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=True)
+                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
@@ -207,7 +207,6 @@ class ModularityBP():
 
         if not anneal_omega:
             iters=self._bpmod.run(iters_per_run)
-            print("finished initial run")
         else:
             # omega_update_scheme=np.linspace(0,omega,50)
             # omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
@@ -432,7 +431,7 @@ class ModularityBP():
             layers=self.graph.intralayer_layers
         else:
             for e in self.graph.intralayer_edges:
-                clayer=self.graph.layer_vec[i]
+                clayer=self.graph.layer_vec[e[1]]
                 layers.append(float(clayer))
 
         layer_weights=np.array(list(zip(layers,weights)))

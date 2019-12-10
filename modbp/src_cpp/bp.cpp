@@ -135,7 +135,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         if (i!=j) { total_belief_edges+=2;}
     }
 
-    fprintf(stdout,"total_belief_edges: %d\n",total_belief_edges);
+    //fprintf(stdout,"total_belief_edges: %d\n",total_belief_edges);
     beliefs.resize(q*total_belief_edges);
     beliefs_old.resize(q*total_belief_edges);
     beliefs_offsets.resize(n+1);
@@ -175,7 +175,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         beliefs_offset_count += q*(num_belief_edges);
         neighbors_offset_count += num_belief_edges;
         neighbor_count[i] = (index_t) num_belief_edges;
-        fprintf(stdout,"neighborcount[%d]: %d\n",i,neighbor_count[i]);
+        //fprintf(stdout,"neighborcount[%d]: %d\n",i,neighbor_count[i]);
 
         beliefs_offsets[i+1] = beliefs_offset_count;
         neighbors_offsets[i+1] = neighbors_offset_count;
@@ -209,8 +209,8 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
                 neighbors[neighbor_c++] = edges[i][j].target;
                 neighbor_offset_map[i][edges[i][j].target] = j;
             }
-            else{ fprintf(stdout,"found self loop %d to %d type %d : %3f \n",i,edges[i][j].target,edges[i][j].type,edges[i][j].weight);}
-
+//            else{ //fprintf(stdout,"found self loop %d to %d type %d : %3f \n",i,edges[i][j].target,edges[i][j].type,edges[i][j].weight);}
+//
         }
 
 
@@ -231,7 +231,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
     }
 
 
-    fprintf(stdout,"Finished primary initialization\n");
+    //fprintf(stdout,"Finished primary initialization\n");
     reinit();
     
     compute_bfe = false;
@@ -796,25 +796,20 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     
     //scaleOmega = exp(beta*omega)-1;
 
-    fprintf(stdout,"in reinit after creating scaled edges\n");
     if (init_beliefs)
         initializeBeliefs();
-    fprintf(stdout,"in reinit after initializing beliefs\n");
 
     if (init_theta)
     {
         //fprintf(stdout,"is_bipartite2:%s\n", is_bipartite ? "true" : "false");
         if (is_bipartite)
                 {
-                //fprintf(stdout,"call to initialize bipartite theta\n");
                 initializeTheta_bipartite();}
         else
                 {initializeTheta();}
     }
-    fprintf(stdout,"in reinit after initializing Thetea\n");
 
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
-    fprintf(stdout,"in reinit after copying marginals\n");
 
 }
 
@@ -872,7 +867,6 @@ void BP_Modularity::initializeBeliefs() {
 
 void BP_Modularity::initializeTheta_bipartite() {
 
-    fprintf(stdout,"initializing bipartite theta.\n");
 
     //this is in the case of the bipartite graph where we have a
     //different theta for each class of node
@@ -952,7 +946,6 @@ void BP_Modularity::initializeTheta() {
     }
 
     compute_marginals();
-    fprintf(stdout,"in initTheta after computing mariginals\n ");
 
     for (index_t lay = 0; lay <nlayers; ++lay)
     {
