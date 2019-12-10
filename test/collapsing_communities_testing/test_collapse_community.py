@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.ERROR)
 
 def test_collapse():
     n=100
-    nlayers=5
+    nlayers=1
     ep=.2
     eta=.3
     c=8
@@ -59,12 +59,12 @@ def expand_marginals(MMgraph,marginals):
     return new_marginals
 
 def test_run_modbp_on_collapse():
-    n = 200
-    nlayers = 10
+    n = 100
+    nlayers = 1
     ep = .05
     eta = 0
     c = 8
-    ncoms = 3
+    ncoms = 2
     cmap = sbn.cubehelix_palette(as_cmap=True)
     graph = modbp.generate_planted_partitions_dynamic_sbm(n=n, epsilon=ep, eta=eta, c=c,
                                                           nlayers=nlayers, ncoms=ncoms)
@@ -76,65 +76,73 @@ def test_run_modbp_on_collapse():
     rand_coms=np.array([range(n) for _ in range(nlayers) ]).flatten()
 
     collapse_graph = modbp.convertMultilayertoMergedMultilayer(graph)
-    collapse_graph = collapse_graph.createCollapsedGraph(rand_coms)
+    # collapse_graph = collapse_graph.createCollapsedGraph(rand_coms)
 
     collapse_graph.normalize_edge_weights(omega=1.0)
+    # print(list(zip(collapse_graph.intralayer_edges,collapse_graph.intralayer_weights)))
 
     # visualize collapsed graphs
-    # A, C = graph.to_scipy_csr()
-    # A = np.array(A.toarray())
-    # C = np.array(C.toarray())
+    A, C = graph.to_scipy_csr()
+    A = np.array(A.toarray())
+    C = np.array(C.toarray())
     #
-    # Ac, Cc = collapse_graph.to_scipy_csr()
-    # Ac = np.array(Ac.toarray())
-    # Cc = np.array(Cc.toarray())
-    #
-    # inds1 = np.where(collapse_graph.comm_vec == 0)[0]
-    # inds2 = np.where(collapse_graph.comm_vec == 1)[0]
-    #
-    # c1c2 = np.sum(A[np.ix_(inds1, inds2)])
-    #
-    # plt.close()
-    # f, a = plt.subplots(2, 2, figsize=(8, 8))
-    # a = plt.subplot(2, 2, 1)
-    # plt.pcolormesh(A, cmap=cmap)
-    # a = plt.subplot(2, 2, 2)
-    # plt.pcolormesh(C, cmap=cmap)
-    # a = plt.subplot(2, 2, 3)
-    # plt.pcolormesh(Ac, cmap=cmap)
-    # a = plt.subplot(2, 2, 4)
-    # plt.pcolormesh(Cc, cmap=cmap)
-    # plt.show()
+    Ac, Cc = collapse_graph.to_scipy_csr()
+    Ac = np.array(Ac.toarray())
+    Cc = np.array(Cc.toarray())
 
-    bpobj=modbp.ModularityBP(mlgraph=collapse_graph,use_effective=False,
+    inds1 = np.where(collapse_graph.comm_vec == 0)[0]
+    inds2 = np.where(collapse_graph.comm_vec == 1)[0]
+
+    c1c2 = np.sum(A[np.ix_(inds1, inds2)])
+
+    plt.close()
+    f, a = plt.subplots(2, 2, figsize=(8, 8))
+    a = plt.subplot(2, 2, 1)
+    a.set_title("A uncollapsed")
+    plt.pcolormesh(A, cmap=cmap)
+    a = plt.subplot(2, 2, 2)
+    a.set_title("C uncollapsed")
+    plt.pcolormesh(C, cmap=cmap)
+    a = plt.subplot(2, 2, 3)
+    a.set_title("A collapsed")
+    plt.pcolormesh(Ac, cmap=cmap)
+    a = plt.subplot(2, 2, 4)
+    a.set_title("C collapsed")
+    plt.pcolormesh(Cc, cmap=cmap)
+    plt.show()
+
+    # node_strengths=collapse_graph.get_intralayer_degrees(weighted=True)
+    # print(node_strengths)
+
+    bpobj=modbp.ModularityBP(mlgraph=graph,use_effective=False,
                              align_communities_across_layers_temporal=False,
                              align_communities_across_layers_multiplex=False)
-    # beta=bpobj.get_bstar(q=3,omega=1.0)
+    beta=bpobj.get_bstar(q=2,omega=1.0)
 
-    # for beta in np.linspace(.2,1.5,15):
-    #     print("beta = {:.3f} ".format(beta))
-    #     bpobj.run_modbp(beta=beta,niter=100,q=3,
-    #                     resgamma=1.0,omega=1.0,anneal_omega=False)
+    for beta in np.linspace(.1,3.5,20):
+        print("beta = {:.3f} ".format(beta))
+        bpobj.run_modbp(beta=beta,niter=300,q=2,
+                        resgamma=1.0,omega=1.0,anneal_omega=False)
 
-    # rm_df = bpobj.retrieval_modularities
-    # print(rm_df.loc[:, ['AMI', "AMI_layer_avg"]])
+    rm_df = bpobj.retrieval_modularities
+    print(rm_df.loc[:, ['AMI', "AMI_layer_avg"]])
 
     # new_margs=expand_marginals(collapse_graph,bpobj.marginals[0])
-
-    bpobj2=modbp.ModularityBP(mlgraph=graph,use_effective=False,align_communities_across_layers_multiplex=False,
-                              align_communities_across_layers_temporal=False)
-    beta2=bpobj2.get_bstar(q=3,omega=1.0)
-    print("beta = {:.3f} ".format(beta2))
-
-    for beta in np.linspace(.2, 1.5, 15):
-        print("beta = {:.3f} ".format(beta))
-        bpobj2.run_modbp(beta=beta, niter=200, q=3,
-                        resgamma=1.0, omega=1.0, anneal_omega=False)
+    #
+    # bpobj2=modbp.ModularityBP(mlgraph=graph,use_effective=False,align_communities_across_layers_multiplex=False,
+    #                           align_communities_across_layers_temporal=False)
+    # beta2=bpobj2.get_bstar(q=3,omega=1.0)
+    # print("beta = {:.3f} ".format(beta2))
+    #
+    # # for beta in np.linspace(.2, 1.5, 15):
+    # #     print("beta = {:.3f} ".format(beta))
+    # #     bpobj2.run_modbp(beta=beta, niter=200, q=3,
+    # #                     resgamma=1.0, omega=1.0, anneal_omega=False)
     # bpobj2.run_modbp(beta=beta2,q=3,niter=0,resgamma=1.0,omega=1.0)
     # new_belief=bpobj2._create_beliefs_from_marginals(new_margs)
     # bpobj2._set_beliefs(new_belief)
     # bpobj2.run_modbp(beta=beta2,q=3,niter=1000, resgamma=1.0, omega=1.0,reset=False)
-    rm_df=bpobj2.retrieval_modularities
+    # rm_df=bpobj2.retrieval_modularities
 
 
 

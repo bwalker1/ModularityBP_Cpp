@@ -533,6 +533,8 @@ class MultilayerGraph(object):
         else:
             edgelist=np.array(self.interlayer_edges)
             data=self.interlayer_weights
+            if len(edgelist)==0:
+                return scispa.csr_matrix(np.zeros((self.N,self.N)),dtype=float)
         row_ind=edgelist[:,0]
         col_ind=edgelist[:,1]
         N=self.N
