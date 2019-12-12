@@ -492,13 +492,21 @@ def test_ZM_on_collapsed():
     bstars=[bpobj.get_bstar(q=q,omega=1.0) for q in range(2,7)]
     for beta in np.linspace(bstars[0], bstars[-1], 10):
         print('beta', beta)
-        niters,cmarginals=run_ZMBP_on_graph(ig_col,q=ncoms,beta=beta,niters=1000)
-        bpobj.run_modbp(beta=beta, niter=0, q=ncoms,
-                        starting_marginals=cmarginals,
+        t=time()
+        niters,cmarginals=run_ZMBP_on_graph(ig_col,q=ncoms,beta=beta,niters=2000)
+        t2=time()-t
+        print("time to run {:d} iters: {:.3f}.  iters/s = {:.3f}".format(niters,t2,niters/t2))
+        t=time()
+        bpobj.run_modbp(beta=beta, niter=300, q=ncoms,
+                        # starting_marginals=cmarginals,
                         resgamma=1.0, omega=1.0, anneal_omega=False)
+        t2=time()-t
+        rm_df=bpobj.retrieval_modularities
+        niters = bpobj.retrieval_modularities.loc[rm_df.shape[0] - 1,'niters']
+        print("time to run {:.1f} iters: {:.3f}.  iters/s = {:.3f}".format(niters,t2,niters/t2))
 
-        rm_df = bpobj.retrieval_modularities
-        rm_df.loc[rm_df.shape[0]-1,'niters']=niters
+        # rm_df.loc[rm_df.shape[0] - 1, 'niters'] = niters
+
         print(rm_df.loc[
             rm_df.shape[0] - 1, ['beta', 'niters', 'is_trivial', 'avg_entropy', 'AMI', "AMI_layer_avg", 'converged']])
 

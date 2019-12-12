@@ -257,7 +257,7 @@ def run_ZMBP_on_graph(graph, q, beta,niters=100):
     ]
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
-    print(stdout)
+    # print(stdout)
     print(stderr)
     stdout=str(stdout)
     if process.returncode != 0:
