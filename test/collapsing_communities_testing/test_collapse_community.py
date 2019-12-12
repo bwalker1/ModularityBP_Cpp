@@ -11,6 +11,7 @@ sys.path.append(os.path.abspath("../multilayer_benchmark_matlab"))
 from create_multiplex_functions import create_multiplex_graph
 from create_multiplex_functions import create_multiplex_graph_matlab
 from create_multiplex_functions import call_gen_louvain
+from create_multiplex_functions import run_ZMBP_on_graph
 logging.basicConfig(level=logging.ERROR)
 
 def create_marginals_from_comvec(commvec,q=None,SNR=1000):
@@ -190,21 +191,21 @@ def get_starting_partition(mgraph,gamma=1.0):
     # a[1].hist(x,bins=35)
     # plt.show()
 
-    return mvec
+    return np.array(mvec).flatten()
 
 
 
 def test_on_multiplex_block():
-    n = 1000
-    nlayers = 15
-    mu = .9
+    n = 200
+    nlayers = 20
+    mu = .85
     p_eta = 1.0
-    ncoms = 10
+    ncoms = 2
     omega = 1.0
 
     t = time()
 
-    load = False
+    load = True
     if not load:
         # multipex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
         #                                          nlayers=nlayers, ncoms=ncoms)
@@ -277,23 +278,22 @@ def test_on_multiplex_block():
                              align_communities_across_layers_temporal=False,
                              align_communities_across_layers_multiplex=False)
 
-    betas=[ bpobj.get_bstar(q=q,omega=1.0) for q in range (9,13)]
-    # betas=np.linspace(betas[0],betas[-1],10)
+    bstars=[ bpobj.get_bstar(q=q,omega=1.0) for q in range (2,6)]
+    betas=np.linspace(bstars[0],bstars[-1],10)
     for beta in betas:
         print("beta = {:.3f} ".format(beta))
         #add in marginals aligned with ground truth
-        bpobj.run_modbp(beta=beta, q=qmax, niter=0, resgamma=1.0, omega=1.0,reset=True)
-        start_vec=get_starting_partition(collapse_graph,gamma=1.0)
-        # start_vec=collapse_graph.merged_comm_vec
+        # start_vec=get_starting_partition(collapse_graph,gamma=1.0)
+        start_vec=collapse_graph.merged_comm_vec
         print('AMI start_vec', collapse_graph.get_AMI_with_communities(start_vec))
-        ground_margs=create_marginals_from_comvec(start_vec,SNR=10,
+        ground_margs=create_marginals_from_comvec(start_vec,SNR=100,
                                                     q=qmax)
-        new_belief = bpobj._create_beliefs_from_marginals(ground_margs)
-        bpobj._set_beliefs(new_belief)
-        bpobj.run_modbp(beta=beta, niter=600, q=qmax,reset=False,
+
+        bpobj.run_modbp(beta=beta, niter=400, q=qmax,reset=False,
+                        starting_marginals=ground_margs,
                         resgamma=1.0, omega=1.0, anneal_omega=True)
         rm_df = bpobj.retrieval_modularities
-        print(rm_df.loc[rm_df.shape[0]-1,['beta','niters','is_trivial','avg_entropy','AMI',"AMI_layer_avg",'bethe_free_energy']])
+        print(rm_df.loc[rm_df.shape[0]-1,['beta','niters','converged','is_trivial','avg_entropy','AMI',"AMI_layer_avg",'bethe_free_energy']])
 
     rm_df = bpobj.retrieval_modularities
     rm_df.to_csv("beta_scan_q2.csv")
@@ -323,35 +323,50 @@ def test_on_multiplex_block():
 
     return 0
 
+def collapse_over_interedges_same_community(graph,partition):
+    N=len(partition)
+    #each node starts in it's own community
+    outgroups=dict(zip(range(N),[frozenset([i]) for i in range(N)]))
+    for e in graph.interlayer_edges:
+        if partition[e[0]] == partition[e[1]]:
+            outgroups[e[0]] = outgroups[e[0]] | set([e[1]])
+            outgroups[e[1]] = outgroups[e[1]] | set([e[0]])
+
+    final_groups=list(set(outgroups.values()))
+    group2ind=dict(zip(final_groups,range(len(final_groups))))
+
+    collapse_vec=list(map(lambda x: group2ind[outgroups[x]],range(N)))
+    return collapse_vec
+
 def test_alternating_bpruns():
     n = 200
-    nlayers = 15
-    mu = .8
+    nlayers = 20
+    mu = .85
     p_eta = 1.0
     ncoms = 2
     omega = 1.0
 
     t = time()
 
-    load = False
+    load = True
     if not load:
-        # multipex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
+        # multiplex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
         #                                          nlayers=nlayers, ncoms=ncoms)
-        multipex = create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+        multiplex = create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
                                           n_layers=nlayers, ncoms=ncoms)
         with gzip.open("working_graph.gz", 'wb') as fh:
-            pickle.dump(multipex, fh)
+            pickle.dump(multiplex, fh)
     else:
         with gzip.open("working_graph.gz", 'rb') as fh:
-            multipex = pickle.load(fh)
+            multiplex = pickle.load(fh)
 
-    multipex.reorder_nodes()
-    print(np.unique(multipex.comm_vec, return_counts=True))
+    multiplex.reorder_nodes()
+    print(np.unique(multiplex.comm_vec, return_counts=True))
 
     rand_coms = np.array([range(n) for _ in range(nlayers)]).flatten()
     # rand_coms = np.array(range(n*nlayers))
 
-    collapse_graph = modbp.convertMultilayertoMergedMultilayer(multipex)
+    collapse_graph = modbp.convertMultilayertoMergedMultilayer(multiplex)
     collapse_graph = collapse_graph.createCollapsedGraph(rand_coms, maintain_sparsity=False)
 
     ig_col = collapse_graph._export_to_igraph()
@@ -365,28 +380,135 @@ def test_alternating_bpruns():
     bpobj = modbp.ModularityBP(mlgraph=collapse_graph, use_effective=False,
                                align_communities_across_layers_temporal=False,
                                align_communities_across_layers_multiplex=False)
-    bpobj2 = modbp.ModularityBP(mlgraph=multipex, use_effective=False,
+    bpobj2 = modbp.ModularityBP(mlgraph=multiplex, use_effective=False,
                                align_communities_across_layers_temporal=False,
                                align_communities_across_layers_multiplex=False)
 
 
-    for q in range(4,5):
-        beta1=bpobj.get_bstar(q=q,omega=1.0)
-        beta2=bpobj.get_bstar(q=q,omega=1.0)
-        start_vec=get_starting_partition(collapse_graph,gamma=1.0)
+    # for q in range(4,5):
+    bstars=[bpobj.get_bstar(q=q, omega=1.0) for q in range(2, 6)]
+    not_converged=0
+    for beta in np.linspace(bstars[0],bstars[-1],10):
+        qcur=bpobj2._get_qval(beta,omega=1.0)
+    # for beta in [bpobj2.get_bstar(q=q,omega=1.0) for q in range(2,7) ]:
+        # beta1=bpobj.get_bstar(q=q,omega=1.0)
+        # beta2=bpobj.get_bstar(q=q,omega=1.0)
+        beta2=beta
+        print('beta',beta2,'qcur',qcur)
+        beta1=bpobj.get_bstar(q=qcur,omega=1.0)
+        # print("beta1",beta1,"beta2",beta2)
+
+
+
         # start_vec=collapse_graph.merged_comm_vec
-        print('AMI start_vec', collapse_graph.get_AMI_with_communities(start_vec))
-        ground_margs=create_marginals_from_comvec(start_vec,SNR=10,
+        start_vec=get_starting_partition(collapse_graph,gamma=1.0)
+        ground_margs = create_marginals_from_comvec(start_vec, SNR=100,
                                                     q=qmax)
-        new_belief = bpobj._create_beliefs_from_marginals(ground_margs)
-        bpobj._set_beliefs(new_belief)
-        bpobj.run_modbp(beta=beta1, niter=600, q=qmax,reset=False,
+        print('AMI start_vec', collapse_graph.get_AMI_with_communities(start_vec))
+        bpobj.run_modbp(beta=beta1, niter=300, q=qmax,
+                        starting_marginals=ground_margs,
+                        dumping_rate=1.0,
                         resgamma=1.0, omega=1.0, anneal_omega=True)
+        # new_margs = expand_marginals(collapse_graph, bpobj.marginals[bpobj.nruns-1])
+        # start_vec = get_starting_partition(collapse_graph, gamma=1.0)
+        # ground_margs = create_marginals_from_comvec(start_vec, SNR=100,
+        #                                             q=qmax)
+        # new_margs = expand_marginals(collapse_graph, ground_margs)
+        # print('AMI start_vec', collapse_graph.get_AMI_with_communities(start_vec))
+        # print('running on full graph')
+        # bpobj2.run_modbp(beta=beta2, niter=400, q=qmax,reset=True,
+        #                  starting_marginals=new_margs,
+        #                  # starting_partition=start_vec,
+        #                  dumping_rate=1.0,
+        #                 resgamma=1.0, omega=1.0, anneal_omega=True)
 
+        rm_df = bpobj.retrieval_modularities
+        print(rm_df.loc[rm_df.shape[0] - 1, ['beta', 'niters','is_trivial', 'avg_entropy', 'AMI', "AMI_layer_avg",'converged']])
+        if rm_df.loc[rm_df.shape[0]-1,'converged']==False:
+            not_converged+=1
+        if not_converged>1:
+            break
+    #     # total_iters=50
+    #     # while total_iters<500:
+    #     #     new_part = bpobj2.partitions[0]
+    #     #
+    #     #     collapse_vec = collapse_over_interedges_same_community(multiplex, new_part)
+    #     #     collapse_graph = modbp.convertMultilayertoMergedMultilayer(multiplex)
+    #     #     collapse_graph = collapse_graph.createCollapsedGraph(rand_coms, maintain_sparsity=False)
+    #     #     bpobj = modbp.ModularityBP(mlgraph=collapse_graph, use_effective=False,
+    #     #                                align_communities_across_layers_temporal=False,
+    #     #                                align_communities_across_layers_multiplex=False)
+    #     #     cbeta=bpobj.get_bstar(q=q,omega=1.0)
+    #     #     bpobj.run_modbp(beta=beta1, niter=100, q=qmax,
+    #     #                     resgamma=1.0, omega=1.0, anneal_omega=True)
+    #     #     start_vec2 = bpobj.partitions[0]
+    #     #     new_margs = expand_marginals(collapse_graph,bpobj.marginals[0])
+    #     #     print('running on full graph')
+    #     #     bpobj2.run_modbp(beta=beta2, niter=300, q=qmax, starting_marginals=new_margs,
+    #     #                      resgamma=1.0, omega=1.0, anneal_omega=True)
+    #     #
+    #     #     rm_df = bpobj2.retrieval_modularities
+    #     #     print(rm_df.loc[rm_df.shape[0] - 1, ['beta', 'niters','is_trivial', 'avg_entropy', 'AMI', "AMI_layer_avg",'converged']])
+    #     #     total_iters+=50
+    #     #     if rm_df.loc[rm_df.shape[0]-1,'converged']==True:
+    #     #         break
 
+    S = call_gen_louvain(multiplex, gamma=1.0, omega=3)
+    print(S)
+    print("AMI_layer_matlab = {:.3f} , AMI = {:.3f} ".format(multiplex.get_AMI_layer_avg_with_communities(S),
+                                                             multiplex.get_AMI_with_communities(S)))
 
+def test_ZM_on_collapsed():
+    n = 200
+    nlayers = 15
+    mu = .85
+    p_eta = 1.0
+    ncoms = 2
+    omega = 1.0
 
+    t = time()
+
+    load = False
+    if not load:
+        # multiplex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
+        #                                          nlayers=nlayers, ncoms=ncoms)
+        multiplex = create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+                                           n_layers=nlayers, ncoms=ncoms)
+        with gzip.open("working_graph.gz", 'wb') as fh:
+            pickle.dump(multiplex, fh)
+    else:
+        with gzip.open("working_graph.gz", 'rb') as fh:
+            multiplex = pickle.load(fh)
+
+    multiplex.reorder_nodes()
+    print(np.unique(multiplex.comm_vec, return_counts=True))
+    rand_coms = np.array([range(n) for _ in range(nlayers)]).flatten()
+    collapse_graph = modbp.convertMultilayertoMergedMultilayer(multiplex)
+    collapse_graph = collapse_graph.createCollapsedGraph(rand_coms, maintain_sparsity=False)
+    ig_col = collapse_graph._export_to_igraph()
+    bpobj = modbp.ModularityBP(mlgraph=collapse_graph, use_effective=False,
+                               align_communities_across_layers_temporal=False,
+                               align_communities_across_layers_multiplex=False)
+    bstars=[bpobj.get_bstar(q=q,omega=1.0) for q in range(2,7)]
+    for beta in np.linspace(bstars[0], bstars[-1], 10):
+        print('beta', beta)
+        niters,cmarginals=run_ZMBP_on_graph(ig_col,q=ncoms,beta=beta,niters=1000)
+        bpobj.run_modbp(beta=beta, niter=0, q=ncoms,
+                        starting_marginals=cmarginals,
+                        resgamma=1.0, omega=1.0, anneal_omega=False)
+
+        rm_df = bpobj.retrieval_modularities
+        rm_df.loc[rm_df.shape[0]-1,'niters']=niters
+        print(rm_df.loc[
+            rm_df.shape[0] - 1, ['beta', 'niters', 'is_trivial', 'avg_entropy', 'AMI', "AMI_layer_avg", 'converged']])
+
+    S = call_gen_louvain(multiplex, gamma=1.0, omega=3)
+    print(S)
+    print("AMI_layer_matlab = {:.3f} , AMI = {:.3f} ".format(multiplex.get_AMI_layer_avg_with_communities(S),
+                                                             multiplex.get_AMI_with_communities(S)))
 
 if __name__=="__main__":
     # test_run_modbp_on_collapse()
-    test_on_multiplex_block()
+    # test_on_multiplex_block()
+    # test_alternating_bpruns()
+    test_ZM_on_collapsed()

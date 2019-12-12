@@ -129,8 +129,12 @@ class ModularityBP():
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,dumping_rate=1.0,
-                  reset=False,iterate_alignment=True,anneal_omega=False,
-                  starting_partition=None,starting_SNR=10):
+                  reset=True,
+                  iterate_alignment=True,
+                  anneal_omega=False,
+                  starting_partition=None,
+                  starting_marginals=None,
+                  starting_SNR=10):
         """
 
         :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
@@ -172,7 +176,7 @@ class ModularityBP():
                                       _nlayers= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega,transform=False,verbose=True)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
@@ -187,11 +191,16 @@ class ModularityBP():
             if self._bpmod.getDumpingRate() != dumping_rate:
                 self._bpmod.setDumpingRate(dumping_rate)
 
-        if not starting_partition is None:
-            start_margs=self.create_marginals_from_partition(starting_partition,
-                                                             SNR=starting_SNR)
-            start_beliefs=self._create_beliefs_from_marginals(start_margs)
+        assert (starting_marginals is None or starting_partition is None),'Cannot input both starting marginal and starting partition'
 
+        if not starting_partition is None:
+            start_margs=self.create_marginals_from_partition(starting_partition,SNR=starting_SNR)
+            start_beliefs=self._create_beliefs_from_marginals(start_margs)
+            self._set_beliefs(start_beliefs)
+
+        if not starting_marginals is None:
+            start_beliefs=self._create_beliefs_from_marginals(starting_marginals)
+            self._set_beliefs(start_beliefs)
 
         if self._align_communities_across_layers_temporal or self._align_communities_across_layers_multiplex:
             iters_per_run=niter//2 #somewhat arbitrary divisor
@@ -203,7 +212,8 @@ class ModularityBP():
         converged=False
 
         if not anneal_omega:
-            iters=self._bpmod.run(iters_per_run)
+            changes=np.array(self._bpmod.run(iters_per_run))
+            iters=len(changes)
         else:
             # omega_update_scheme=np.linspace(0,omega,50)
             # omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
@@ -216,18 +226,17 @@ class ModularityBP():
             iters=0
             cnt=0
             itersper_dr=iters_per_run//len(dumping_rates)
-            itersper_dr=40
+            itersper_dr=30
             centrop=1.0
             while (not converged) and iters<niter:
                 # dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
-                dr=.1
+                dr=dumping_rate
                 # if centrop<.1:
-                    # dr=1.0
+                #     dr=.2
                 self._bpmod.setDumpingRate(dr)
-                citers=self._bpmod.run(itersper_dr)
-                if citers<itersper_dr:
-                    converged=True
-                    logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
+                changes=np.array(self._bpmod.run(itersper_dr))
+                print(changes)
+                citers=len(changes)
                 iters+=citers
                 cnt+=1
                 cmargs = np.array(self._bpmod.return_marginals())
@@ -235,20 +244,23 @@ class ModularityBP():
                 centrop = _get_avg_entropy(cmargs)
                 self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
                 cpartition = self._get_partition(self.nruns, use_effective=False)
-                # if centrop < .9 and centrop>.1: #don't want to freeze if converging already
-                #     cSNR=(.9-centrop+.1)*50
+                cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+                self.partitions[self.nruns] = cpartition
+                _, cnts = np.unique(cpartition, return_counts=True)
+                # if centrop < .9 and centrop>.2: #don't want to freeze if converging already
+                #     cSNR=(.9-centrop+.1)*30
                 #     print('current SNR',cSNR)
-                #     new_margs = self.create_marginals_from_comvec(cpartition, q = cmargs.shape[1], SNR = cSNR)
+                #     new_margs = self.create_marginals_from_partition(cpartition, q = cmargs.shape[1], SNR = cSNR)
                 #     new_beliefs= self._create_beliefs_from_marginals(new_margs)
                 #     self._set_beliefs(new_beliefs)
-                try:
-                    cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
-                except ValueError:
-                    cami = np.nan
-                self.partitions[self.nruns] = cpartition
-                _,cnts=np.unique(cpartition,return_counts=True)
-                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
-
+                # try:
+                #     cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+                # except ValueError:
+                #     cami = np.nan
+                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:},last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
+                if citers<itersper_dr:
+                    converged=True
+                    logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}, last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
 
 
         cmargs=np.array(self._bpmod.return_marginals())
@@ -307,8 +319,8 @@ class ModularityBP():
 
                 self._switch_beliefs_bp(self.nruns)
                 #can't go more than the alloted number of runs
-                citers = self._bpmod.run(iters_per_run)
-
+                changes = self._bpmod.run(iters_per_run)
+                citers=len(changes)
                 # plt.close()
                 # f, a = plt.subplots(1, 1, figsize=(6, 6))
                 # self.plot_communities(self.nruns, ax=a)
@@ -355,7 +367,10 @@ class ModularityBP():
 
 
         self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
-        self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
+        if len(changes)>0:
+            self.retrieval_modularities.loc[self.nruns, 'converged'] = changes[-1]<np.power(10.0,-8) #last change was small enough
+        else:
+            self.retrieval_modularities.loc[self.nruns, 'converged']=False
         retmod=self._get_retrieval_modularity(self.nruns)
         #logging.debug('calculating bethe_free energy')
         bethe_energy=self._get_bethe_free_energy()
@@ -1242,9 +1257,12 @@ class ModularityBP():
         return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
 
-    def _create_node_2_beliefs_dict(self,recreate=False):
+    def _create_node_2_beliefs_dict(self,recreate=False,q=None):
         """For each node, get the indices of the incoming beliefs \
         so that we can pass a new belief into the _bpobj"""
+        if q is None:
+            assert not self._bpmod is None, "Must either specify q, or create the _bpmod obj"
+            q=self._bpmod.getq()
         if self._node2beliefsinds_dict is None or recreate:
             node2beliefsinds_dict={}
             ecounts=np.array([ 0 for _ in range(self.graph.N)])
@@ -1255,7 +1273,7 @@ class ModularityBP():
                     continue
                 ecounts[e[0]]+=1
                 ecounts[e[1]]+=1
-            ecounts=ecounts*self._bpmod.getq() #factor in q
+            ecounts=ecounts*q #factor in q
             cumsum_ecnt=np.cumsum(ecounts)
             for i,cnt in enumerate(cumsum_ecnt):
                 if i==0:
@@ -1266,17 +1284,20 @@ class ModularityBP():
 
         return self._node2beliefsinds_dict
 
-    def _get_belief_size(self):
+    def _get_belief_size(self,q=None):
         """calc size of belief vector"""
-        node2beliefs=self._create_node_2_beliefs_dict()
+        node2beliefs=self._create_node_2_beliefs_dict(q=q)
         return np.sum([len(v) for v in node2beliefs.values()])
 
     def _create_beliefs_from_marginals(self,marginals):
         """We set all incoming beliefs to be the current marginal for the node"""
-        belief_size=self._get_belief_size()
+        q=marginals.shape[1]
+        if not self._bpmod is None:
+            assert self._bpmod.getq() == q , "Size of input marginals does not equal current beliefs"
+        belief_size=self._get_belief_size(q=q)
         newbeliefs=np.array([-1.0 for _ in range(belief_size)])
-        node2beliefinds=self._create_node_2_beliefs_dict()
-        q=self._bpmod.getq()
+        node2beliefinds=self._create_node_2_beliefs_dict(q=q)
+
         assert marginals.shape[1]==q ,"Marginals are not the correct shape"
         for i in range(marginals.shape[0]):
             cinds = node2beliefinds[i]

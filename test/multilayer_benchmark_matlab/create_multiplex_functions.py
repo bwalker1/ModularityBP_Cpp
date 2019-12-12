@@ -232,3 +232,59 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
         pass
 
     return S
+
+
+def run_ZMBP_on_graph(graph, q, beta,niters=100):
+
+    sbmbpfile = os.path.join(clusterdir,'test/compare_with_ZM/modbp/mod')
+    outdir = os.path.join(clusterdir,'test/compare_with_ZM/zm_outdir')
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    tmp_grph_file = os.path.join(outdir, 'temporary_graph_file.gml')
+    graph.save(tmp_grph_file)
+
+    parameters = [
+        sbmbpfile, 'infer',
+        "-l", tmp_grph_file,  # graph file
+        "-v", "{:d}".format(5),
+        '-t', "{:d}".format(niters),
+        '-q', '{:d}'.format(q),
+        '-b', '{:.6f}'.format(beta),
+        '--confi', '{:}_q{:d}_marginals.txt'.format(tmp_grph_file, q),  # outfile
+        '-M', '{:}_q{:d}_marginals.txt'.format(tmp_grph_file, q),  # outfile
+        '-d', '1',  # use degree corrected
+        '-i', '1'  # initialize randomly
+    ]
+    process = Popen(parameters, stderr=PIPE, stdout=PIPE)
+    stdout, stderr = process.communicate()
+    print(stdout)
+    print(stderr)
+    stdout=str(stdout)
+    if process.returncode != 0:
+        raise RuntimeError("running ZM_BP failed : {:}".format(stderr))
+
+    srch = re.search("(?<=iter_time=)\d+", stdout)
+    if srch:
+        niters = int(srch.group())
+    else:
+        raise AssertionError("number iterations not found")
+    # this is the file where the marginals are stored ( i.e what community is most
+    # likely for each node)
+    marginal_file = '{:}_q{:d}_marginals.txt'.format(tmp_grph_file, q)
+    marginals = []
+
+    with open(marginal_file, 'r') as f:
+        inmargs = False
+
+        for i, line in enumerate(f.readlines()):
+            if re.search("^marginals:", line):
+                inmargs = True
+                continue
+            if inmargs:
+                if not re.search("\d+", line):
+                    inmargs = False
+                else:
+                    marginals.append(list(map(lambda x: float(x),line.split())))
+
+    marginals = np.array(marginals, dtype=float)
+    return niters, marginals

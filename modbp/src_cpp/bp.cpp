@@ -245,10 +245,11 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
     compute_bfe = false;
 }
 
-long BP_Modularity::run(unsigned long maxIters)
+vector<double> BP_Modularity::run(unsigned long maxIters)
 {
     
     change = 1;
+    vector<double> changes(0);
     //unsigned long maxIters = 100;
     bool converged = false;
     iter = 0;
@@ -266,19 +267,23 @@ long BP_Modularity::run(unsigned long maxIters)
         // monitor changes
         if (verbose)
             printf("Iteration %lu: change %f\n",iter+1,change);
+
+        changes.push_back(change);
         
         if (!changed)
         {
             converged = true;
             if (verbose)
                 printf("Converged after %lu iterations.\n",iter+1);
-            return iter;
+//            return iter;
+              return changes;
+
         }
     }
     if (verbose)
         printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
-    return maxIters+1;
-    
+//    return maxIters+1;
+      return changes;
     
 }
 

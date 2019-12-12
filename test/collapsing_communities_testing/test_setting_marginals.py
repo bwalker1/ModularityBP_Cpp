@@ -12,7 +12,7 @@ from create_multiplex_functions import create_multiplex_graph
 from create_multiplex_functions import create_multiplex_graph_matlab
 
 
-def create_marginals_from_comvec(commvec,q=None,SNR=3):
+def create_marginals_from_comvec(commvec,q=None,SNR=1):
     if q is None:
         q=len(np.unique(commvec))
 

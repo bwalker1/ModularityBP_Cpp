@@ -3355,9 +3355,6 @@ SWIG_AsVal_bool (PyObject *obj, bool *val)
 }
 
 
-  #define SWIG_From_long   PyInt_FromLong 
-
-
 SWIGINTERNINLINE PyObject*
   SWIG_From_bool  (bool value)
 {
@@ -3366,6 +3363,9 @@ SWIGINTERNINLINE PyObject*
 
 
   #define SWIG_From_double   PyFloat_FromDouble 
+
+
+  #define SWIG_From_long   PyInt_FromLong 
 
 
 SWIGINTERNINLINE PyObject* 
@@ -7098,7 +7098,7 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_run__SWIG_0(PyObject *SWIGUNUSEDPARM(se
   int ecode2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
-  long result;
+  vector< double > result;
   
   if (!PyArg_ParseTuple(args,(char *)"OO:BP_Modularity_run",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
@@ -7111,8 +7111,8 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_run__SWIG_0(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "BP_Modularity_run" "', argument " "2"" of type '" "unsigned long""'");
   } 
   arg2 = static_cast< unsigned long >(val2);
-  result = (long)(arg1)->run(arg2);
-  resultobj = SWIG_From_long(static_cast< long >(result));
+  result = (arg1)->run(arg2);
+  resultobj = SWIG_NewPointerObj((new vector< double >(static_cast< const vector< double >& >(result))), SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -7125,7 +7125,7 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_run__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  long result;
+  vector< double > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:BP_Modularity_run",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_BP_Modularity, 0 |  0 );
@@ -7133,8 +7133,8 @@ SWIGINTERN PyObject *_wrap_BP_Modularity_run__SWIG_1(PyObject *SWIGUNUSEDPARM(se
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "BP_Modularity_run" "', argument " "1"" of type '" "BP_Modularity *""'"); 
   }
   arg1 = reinterpret_cast< BP_Modularity * >(argp1);
-  result = (long)(arg1)->run();
-  resultobj = SWIG_From_long(static_cast< long >(result));
+  result = (arg1)->run();
+  resultobj = SWIG_NewPointerObj((new vector< double >(static_cast< const vector< double >& >(result))), SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;

@@ -29,7 +29,8 @@ public:
 	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double,double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
 
     // run BP to convergence
-    long run(unsigned long maxIters=100);
+//    long run(unsigned long maxIters=100);
+    vector<double> run(unsigned long maxIters=100);
 
     // run one pass of the belief propagation update
     bool step();
