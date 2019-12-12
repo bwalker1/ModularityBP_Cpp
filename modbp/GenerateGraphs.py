@@ -202,6 +202,7 @@ class MultilayerGraph(object):
         self.unweighted=True
 
 
+
         #create an vector length zero
         if interlayer_edges is None: #Assume that it is single layer
             self.interlayer_edges=np.zeros((0,2),dtype='int')
@@ -253,6 +254,10 @@ class MultilayerGraph(object):
                 self._label_layers(self.comm_vec)
         self.interedgesbylayers=self._create_interlayeredges_by_layers()
 
+        self.self_loops_intra=np.array([e[0]==e[1] for e in self.intralayer_edges])
+        self.self_loops_inter=np.array([e[0]==e[1] for e in self.interlayer_edges])
+
+
         if bipartite_classes is None:
             self.is_bipartite = False
             self.bipartite_classes = None
@@ -281,8 +286,12 @@ class MultilayerGraph(object):
         :param omega:
         :return:
         """
-        allweights=np.append(np.array(self.intralayer_weights),
-                             omega*np.array(self.interlayer_weights))
+        non_self_loop_inds=np.where(np.logical_not(self.self_loops_intra))[0]
+        non_self_loop_inds_inter=np.where(np.logical_not(self.self_loops_inter))[0]
+
+        allweights=np.append(np.array(self.intralayer_weights)[non_self_loop_inds],
+                  omega * np.array(self.interlayer_weights)[non_self_loop_inds_inter])
+
         scale=len(allweights)/np.sum(allweights)
         self.intralayer_weights= list(np.array(self.intralayer_weights)*scale)
         self.interlayer_weights= list(np.array(self.interlayer_weights)*scale)
@@ -462,12 +471,13 @@ class MultilayerGraph(object):
 
         la_amis=[]
         lay_vals=np.unique(self.layer_vec)
+        N=len(self.layer_vec)
         for lay_val in lay_vals:
             cinds=np.where(self.layer_vec==lay_val)[0]
             if useNMI:
-                la_amis.append(len(cinds) / (1.0 * self.N) * skm.normalized_mutual_info_score(labels_true=labels[cinds], labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
+                la_amis.append(len(cinds) / (1.0 * N) * skm.normalized_mutual_info_score(labels_true=labels[cinds], labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
             else:
-                la_amis.append(len(cinds)/(1.0*self.N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
+                la_amis.append(len(cinds)/(1.0*N)*skm.adjusted_mutual_info_score(labels_true=labels[cinds],labels_pred=self.comm_vec[cinds],average_method='arithmetic'))
 
         return np.sum(la_amis) #take the average weighted by number of nodes in each layer
         
@@ -579,13 +589,18 @@ class MultilayerGraph(object):
             offset+=len(cinds)
 
 
+        #flip arround inter and intralayer edges
         new_intra_elist=[(total_perm_vec[e[0]],total_perm_vec[e[1]],self.intralayer_weights[i])\
                          for i,e in enumerate(self.intralayer_edges)]
         new_inter_elist = [(total_perm_vec[e[0]], total_perm_vec[e[1]], self.interlayer_weights[i]) \
                            for i,e in enumerate(self.interlayer_edges)]
 
+
+
         #reset with new permuted edges
-        self.__init__(intralayer_edges=new_intra_elist,layer_vec=self.layer_vec,interlayer_edges=new_inter_elist,
+        self.__init__(intralayer_edges=new_intra_elist,
+                      layer_vec=self.layer_vec,
+                      interlayer_edges=new_inter_elist,
                       comm_vec=new_com_vec)
 
 
@@ -621,6 +636,15 @@ class MultilayerGraph(object):
         P=scispa.csr_matrix(P)
         return P
 
+    def _get_current_avg_sparsity(self):
+        """Keep track of the density of edges"""
+        coms,cnt=np.unique(self.layer_vec,return_counts=True)
+        degs=self.get_intralayer_degrees(weighted=True)
+        sparsities=[]
+        for com in coms:
+            cinds=np.where(self.layer_vec==com)[0]
+            sparsities.append(np.sum(degs[cinds])/(len(cinds)*(len(cinds)-1)))
+        return np.mean(sparsities)
     def plot_communities(self, comvec=None, layers=None, ax=None, cmap=None):
         """
         Plot communities as an nlayers by nodes/layer heatmap.  Note this only works
@@ -710,6 +734,9 @@ class MergedMultilayerGraph(MultilayerGraph):
         else:
             self.merged_layer=merged_layer_vec
 
+
+
+
         self.intralayer_layers=[] #what layer does each belong to.
         intralayer_edges_minus_layer=[]
         for e in intralayer_edges:
@@ -728,18 +755,32 @@ class MergedMultilayerGraph(MultilayerGraph):
             directed=directed,create_igraph_layers=False)
 
         self.N = self.merged_layer.shape[0]
+        self.sparsity=self._get_current_avg_sparsity()
+
+        self.rev_collapse_map={}
+        for k,val in self.collapse_map.items():
+            self.rev_collapse_map[val]=self.rev_collapse_map.get(val,set([])) | set([val]) #union of set
+
+        if self.comm_vec is not None:
+            self.merged_comm_vec=np.array([-1 for _ in range(self.merged_layer.shape[0])])
+            for k,vals in self.rev_collapse_map.items():
+                vals=list(vals)
+                ccoms=self.comm_vec[vals]
+                unique_coms,counts=np.unique(ccoms,return_counts=True)
+                consensus=unique_coms[np.argmax(counts)]
+                self.merged_comm_vec[k]=consensus
+            assert -1 not in self.merged_comm_vec, "error in computing merged communities"
 
 
-
-
-
-    def createCollapsedGraph(self,partition):
+    def createCollapsedGraph(self,partition,maintain_sparsity=False):
         """Creates collapsed graph where ecah node in a given community is \
         is collapsed into a single node (with self loops) and multiedges between
         different communities.  Return a MergedMultilayerGraph object"""
 
+
         new_collapse_map={}
         coms,counts=np.unique(partition,return_counts=True)
+
         for i,val in self.collapse_map.items():
             new_collapse_map[i]=partition[val]
 
@@ -759,6 +800,7 @@ class MergedMultilayerGraph(MultilayerGraph):
             clayer=self.intralayer_layers[i]
             com1=partition[e[0]]
             com2=partition[e[1]]
+
             if com1<com2:
                 i1=com1
                 i2=com2
@@ -783,17 +825,29 @@ class MergedMultilayerGraph(MultilayerGraph):
             inter_elist_dict[i1]=inter_elist_dict.get(i1,{})
             inter_elist_dict[i1][i2]=inter_elist_dict[i1].get(i2,0)+w
 
+
+
         #flatten out to vector
-        intralayer_edges=[ (i,j,l,w) for i,jdict in intra_elist_dict.items() for j,ldict in jdict.items() for l,w in ldict.items()]
+        intralayer_edges=[ (i,j,l,w) for i,jdict in intra_elist_dict.items() \
+                           for j,ldict in jdict.items() for l,w in ldict.items() if w]
         #we don't store layer information on the interlayer edges.
         interlayer_edges=[ (i,j,w) for i,jdict in inter_elist_dict.items() for j,w in jdict.items()]
 
 
+        if maintain_sparsity:
+            #we weight the chance of choosing an edge by the weight of the edge (i.e. put it in the pot multiple times
+            possible_inds=np.array([ int(e[3])*[i] for i,e in enumerate(intralayer_edges) ]).flatten()
+            num_edges2keep=int(self.sparsity*(len(coms)*(len(coms)-1))/2)
 
+            ind2keeps=np.random.choice(possible_inds,replace=False,
+                                       size=num_edges2keep)
+
+            intralayer_edges=[ intralayer_edges[ind] for ind in ind2keeps]
 
         return MergedMultilayerGraph(intralayer_edges=intralayer_edges,collapse_map=new_collapse_map,interlayer_edges=interlayer_edges,layer_vec=self.layer_vec,level=self.level+1,merged_layer_vec=new_merged_layer_vec,comm_vec=self.comm_vec)
 
-    def get_intralayer_degrees(self,i=None,weighted=True,mode="OUT",reset=False):
+    def get_intralayer_degrees(self,i=None,weighted=True,mode="OUT",
+                               reset=False):
         """
 
         :param i:  The layer to get the intradegrees for.  if i is not given it is just Nxnlayers degrees
@@ -804,8 +858,9 @@ class MergedMultilayerGraph(MultilayerGraph):
         """
         if reset or self._intra_layer_degs is None or self._intra_layer_strengths is None:
 
-            self._intra_layer_degs=np.zeros((self.N,self.merged_layer.shape[1]))
-            self._intra_layer_strengths=np.zeros((self.N,self.merged_layer.shape[1])) #degree in each
+            self._intra_layer_degs=np.zeros(self.merged_layer.shape)
+            self._intra_layer_strengths=np.zeros(self.merged_layer.shape) #degree in each
+
             for j,e in enumerate(self.intralayer_edges):
                 clayer=self.intralayer_layers[j]
                 cweight=self.intralayer_weights[j]
@@ -865,16 +920,48 @@ class MergedMultilayerGraph(MultilayerGraph):
         new_labels=np.array(new_labels)
         return super(MergedMultilayerGraph, self).get_AMI_layer_avg_with_communities(labels=new_labels,useNMI=useNMI)
 
+    def _export_to_igraph(self,interlayers=False):
+        """Create Igraph representation"""
+        edge_list=list(self.intralayer_edges)
+        weights=list(self.intralayer_weights)
+        if interlayers:
+            edge_list+=list(self.interlayer_edges)
+            weights+=list(self.interlayer_weights)
+        graph = ig.Graph(self.N, list(edge_list))
+        graph.es['weight'] = weights
+
+        return graph
+
+    def create_null_adj(self):
+
+        intra_degs=np.array(self.get_intralayer_degrees(weighted=True))
+        for i in range(intra_degs.shape[1]):
+            m2=np.sum(intra_degs[:,i])
+            if i==0:
+                P=np.outer(intra_degs[:,i],intra_degs[:,i])/m2
+            else:
+                P+=np.outer(intra_degs[:,i],intra_degs[:,i])/m2
+
+        # P/=intra_degs.shape[1]
+        return P
+    def _get_current_avg_sparsity(self):
+        sparsities=[]
+        intra_degs=self.get_intralayer_degrees(weighted=True)
+        for i in range(self.merged_layer.shape[1]):
+            cdegs=intra_degs[:,i]
+            sparsities.append(np.sum(cdegs)/(len(cdegs)*(len(cdegs)-1)))
+        return np.mean(sparsities)
+
 #static method to created collapsable graph that keeps track of
 #what layers each of the combined nodes came from
 def convertMultilayertoMergedMultilayer(multilayer):
 
     #zip these back together
     interlayer_edges=[ (e[0],e[1],multilayer.interlayer_weights[i]) for i,e in enumerate(multilayer.interlayer_edges)]
-
     intralayer_edges=[ (e[0],e[1],multilayer.layer_vec[e[0]],multilayer.intralayer_weights[i]) for i,e in enumerate(multilayer.intralayer_edges)]
     #every node gets mapped to self initially
     collapse_map=dict(zip( range(multilayer.N),range(multilayer.N)))
+
     return MergedMultilayerGraph(interlayer_edges=interlayer_edges,
                                  collapse_map=collapse_map,
                                  intralayer_edges=intralayer_edges,

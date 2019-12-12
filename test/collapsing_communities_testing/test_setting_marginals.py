@@ -5,6 +5,7 @@ import numpy as np
 import sklearn.metrics as skm
 from time import time
 import os,sys
+import gzip,pickle
 sys.path.append(os.path.abspath("../multilayer_benchmark_matlab"))
 from create_multiplex_functions import create_multiplex_graph
 from create_multiplex_functions import create_multiplex_graph_matlab

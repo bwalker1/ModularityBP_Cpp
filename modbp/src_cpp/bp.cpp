@@ -106,7 +106,7 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         index_t j = p.second;
         edges[i].push_back(edge_data(j,l,true,w));
         edges[j].push_back(edge_data(i,l,true,w));
-        
+
         num_edges[l] += w;
 //        num_strength[layer_membership[i]] += w;
 
@@ -131,7 +131,10 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         edges[j].push_back(edge_data(i,-1,false,w));
         neighbor_count_interlayer[i]+=1;
         neighbor_count_interlayer[j]+=1;
+
         total_edges += 2;
+        total_strength += w;
+
         if (i!=j) { total_belief_edges+=2;}
     }
 
@@ -252,6 +255,14 @@ long BP_Modularity::run(unsigned long maxIters)
     for (iter = 0; iter < maxIters; ++iter)
     {
         step();
+//        fprintf(stdout,"after step theta: \n");
+//        for (index_t lay=0;lay<nlayers;lay++){
+//            for (index_t s=0; s<q; s++){
+//                 fprintf(stdout,"%f ",theta[lay][s]);
+//            }
+//            fprintf(stdout,"\n");
+//        }
+
         // monitor changes
         if (verbose)
             printf("Iteration %lu: change %f\n",iter+1,change);
@@ -489,7 +500,7 @@ bool BP_Modularity::step()
 //                        // interlayer contribution
 //                        add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
 //                    }
-//                    scratch[nn*s+idx] += add;
+                    scratch[nn*s+idx] += add;
                 }
                 // evaluate the rest of the update equation
 //                printf("cscratch: %.3f , c_strength: %.3f, theta[t][s]: %.3f\n",scratch[nn*s+idx],c_strength,theta[t][s]);
@@ -809,13 +820,6 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
                 {
 
                 initializeTheta();
-//                fprintf(stdout,"after init theta: \n");
-//                for (index_t s=0; s<q; s++){
-//                    for (index_t lay=0;lay<nlayers;lay++){
-//                            fprintf(stdout,"%f ",theta[lay][s]);
-//                        }
-//                        fprintf(stdout,"\n");
-//                    }
                 }
     }
 

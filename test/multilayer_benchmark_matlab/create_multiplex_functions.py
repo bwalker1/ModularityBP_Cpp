@@ -2,15 +2,31 @@ import numpy as np
 import itertools
 import modbp
 import multilayerGM as gm
-import os
+import os,re,sys
 import shutil
 import scipy.io as scio
 from subprocess import Popen,PIPE
 # clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 clusterdir=os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
 
+
+
+#main file for alling matlab
+
+#shell scripts for calling matlab functions from command line
+call_genlouvain_file = os.path.join(clusterdir,"test/genlouvain_mlsbm/call_matlab_genlouvain.sh")
+
+#set architecture flag for compiled files
+oncluster=False
+if re.search("/nas/longleaf",clusterdir):
+    oncluster=True
+arch = "elf64" if oncluster else "x86_64" #for different compiled code to run
+
+
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
+if not os.path.exists(matlaboutdir):
+    os.makedirs(matlaboutdir)
 call_matlab_createbenchmark_file = os.path.join(matlabbench_dir, "call_matlab_multilayer.sh")
 
 
@@ -127,7 +143,7 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_ma
     # with use the degree corrected SBM to mirror paper
     multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
     #     return multinet
-    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet)
+    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet,multiplex=True)
     return mbpmulltinet
 
 
@@ -168,3 +184,51 @@ def create_multiplex_graph_matlab(n_nodes=1000, nlayers=15, mu=.99,nblocks=3,p_i
         shutil.rmtree("{:}".format(rprefix_dir))
 
     return mlgraph
+
+def call_gen_louvain(mgraph, gamma, omega, S=None):
+    A, C = mgraph.to_scipy_csr()
+    P = mgraph.create_null_adj()
+    # print(A.shape,C.shape,P.shape)
+
+    rprefix = np.random.randint(100000)
+    scio_outfile = os.path.join(matlaboutdir, "{:d}_temp_matlab_input_file.mat".format(rprefix))
+    matlaboutput = os.path.join(matlaboutdir, "{:d}_temp_matlab_output_file.mat".format(rprefix))
+    T=mgraph.nlayers
+
+    if S is None:
+        scio.savemat(scio_outfile, {"A": A, "C": C, "P": P,"T":T})
+    else:
+
+        scio.savemat(scio_outfile, {"A": A, "C": C, "P": P,"T":T,
+                                    "S0": np.reshape(S, (-1, mgraph.nlayers)).astype(float)})  # add in starting vector
+    parameters = [call_genlouvain_file,
+                  scio_outfile,
+                  matlaboutput,
+                  "{:.4f}".format(gamma),
+                  "{:.4f}".format(omega)
+                  ]
+    process = Popen(parameters, stderr=PIPE, stdout=PIPE)
+    stdout, stderr = process.communicate()
+    process.wait()
+
+    if process.returncode != 0:
+        print("matlab call failed")
+    print(stderr)
+
+    try:
+        S = scio.loadmat(matlaboutput)['S'][:, 0]
+    except:
+        print(stderr)
+        os.remove(scio_outfile)
+        raise (AssertionError,"matlab failed to run. can't find output file") #this should still in intercepted below
+
+    try:
+        os.remove(scio_outfile)
+    except:
+        pass
+    try:
+        os.remove(matlaboutput)
+    except:
+        pass
+
+    return S
