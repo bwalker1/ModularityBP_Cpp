@@ -5,7 +5,8 @@ from future.utils import iteritems,iterkeys
 from collections import Hashable
 from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
-from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray
+import sklearn.preprocessing as skp
+from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray,DoublePairArray
 import itertools
 import pandas as pd
 import scipy.optimize as sciopt
@@ -34,7 +35,6 @@ class ModularityBP():
                  accuracy_off=True, use_effective=False, comm_vec=None,
                  align_communities_across_layers_temporal=False,
                  align_communities_across_layers_multiplex=False,
-                 normalize_edge_weights=False,
                  min_com_size=5, is_bipartite=False):
 
         """
@@ -84,13 +84,23 @@ class ModularityBP():
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
         self._cpp_intra_weights=self._get_cpp_intra_weights()
+        self._cpp_inter_weights=self._get_cpp_inter_weights()
+
+        if hasattr(self.graph,"merged_layer"):
+            self.layer_vec=self.graph.merged_layer
+        else:
+            ohe=skp.OneHotEncoder(categories='auto')
+            self.layer_vec=np.array(ohe.fit_transform(self.graph.layer_vec.reshape(-1,1)).toarray())
+
+        #
+        self.layer_vec = [[int(i) for i in row] for row in self.layer_vec]
+        self._layer_vec_ia=IntMatrix(self.layer_vec)
         self.layer_vec=np.array(self.graph.layer_vec)
-        self._layer_vec_ia=IntArray([int(i) for i in self.layer_vec])#must be integers!
+
         self.layers_unique=np.unique(self.layer_vec)
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
         self._align_communities_across_layers_temporal=align_communities_across_layers_temporal
         self._align_communities_across_layers_multiplex=align_communities_across_layers_multiplex
-        self.normalize_edge_weights = normalize_edge_weights
 
         self.marginals={}
         self.partitions={} # max of marginals
@@ -109,6 +119,7 @@ class ModularityBP():
 
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
+
         self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
@@ -119,7 +130,7 @@ class ModularityBP():
 
     def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,dumping_rate=1.0,
                   reset=False,iterate_alignment=True,anneal_omega=False,
-                  normalize_edge_weights=None):
+                  starting_partition=None,starting_SNR=10):
         """
 
         :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
@@ -149,26 +160,24 @@ class ModularityBP():
         t=time()
 
         #if not supplied use the default when modbp object was created
-        if normalize_edge_weights is None:
-            normalize_edge_weights=self.normalize_edge_weights
 
-        if normalize_edge_weights:
-            self._normalize_edge_weights(omega=omega)
 
-        omega_set = omega if not normalize_edge_weights else 1.0
-
-        if self._bpmod is None or normalize_edge_weights:
-            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
-                                        intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
+        if self._bpmod is None:
+            self._bpmod=BP_Modularity(_n=self.n,
+                                      layer_membership=self._layer_vec_ia,
+                                      intra_edgelist=self._intraedgelistpv,
+                                      intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
-                                      _n=self.n, _nt= self.nlayers , q=q, beta=beta,
+                                      inter_edgeweight=self._cpp_inter_weights,
+                                      _nlayers= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=True)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
-                self._bpmod.setBeta(beta)
+                self._bpmod.setBeta(beta,reset=reset)
+
             if self._bpmod.getq() != q:
                 self._bpmod.setq(q)
             if self._bpmod.getResgamma() != resgamma:
@@ -177,7 +186,11 @@ class ModularityBP():
                 self._bpmod.setOmega(omega)
             if self._bpmod.getDumpingRate() != dumping_rate:
                 self._bpmod.setDumpingRate(dumping_rate)
-                
+
+        if not starting_partition is None:
+            start_margs=self.create_marginals_from_partition(starting_partition,
+                                                             SNR=starting_SNR)
+            start_beliefs=self._create_beliefs_from_marginals(start_margs)
 
 
         if self._align_communities_across_layers_temporal or self._align_communities_across_layers_multiplex:
@@ -197,13 +210,19 @@ class ModularityBP():
             # bstar=self.get_bstar(q=10,omega=omega)
             # print('bstar',bstar)
             # beta_update_scheme=np.logspace(-1,np.log10(bstar),100)
-            dumping_rates=[.01,.02,.05,.1,.2,.5,1]
+            dumping_rates=[.01,.02,.05,.1,.2,.5]
+
             converged=False
             iters=0
             cnt=0
             itersper_dr=iters_per_run//len(dumping_rates)
+            itersper_dr=40
+            centrop=1.0
             while (not converged) and iters<niter:
-                dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
+                # dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
+                dr=.1
+                # if centrop<.1:
+                    # dr=1.0
                 self._bpmod.setDumpingRate(dr)
                 citers=self._bpmod.run(itersper_dr)
                 if citers<itersper_dr:
@@ -216,49 +235,21 @@ class ModularityBP():
                 centrop = _get_avg_entropy(cmargs)
                 self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
                 cpartition = self._get_partition(self.nruns, use_effective=False)
+                # if centrop < .9 and centrop>.1: #don't want to freeze if converging already
+                #     cSNR=(.9-centrop+.1)*50
+                #     print('current SNR',cSNR)
+                #     new_margs = self.create_marginals_from_comvec(cpartition, q = cmargs.shape[1], SNR = cSNR)
+                #     new_beliefs= self._create_beliefs_from_marginals(new_margs)
+                #     self._set_beliefs(new_beliefs)
                 try:
                     cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
                 except ValueError:
                     cami = np.nan
                 self.partitions[self.nruns] = cpartition
                 _,cnts=np.unique(cpartition,return_counts=True)
-                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
+                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
 
-            # for i,cur_omega in enumerate(omega_update_scheme):
-            # for i,cur_beta in enumerate(beta_update_scheme):
-            # ent_targets=[.7,.4,.2,.1]
-            # for target_ent in ent_targets:
-            #     curiters=0
-            #     while curiters<num_iters:
-            #         # self._bpmod.setOmega(cur_omega,reset=False)
-            #         # cbeta=self.get_bstar(q=initq,omega=cur_omega)
-            #         self._bpmod.setBeta(cur_beta,reset=False)
-            #         self._bpmod.step()
-            #         citers=1
-            #         # citers=self._bpmod.run(1)
-            #         iters+=citers
-            #
-            #         cmargs = np.array(self._bpmod.return_marginals())
-            #         centrop=_get_avg_entropy(cmargs)
-            #         if np.abs(centrop-target_ent)<np.power(10.0,-1.0): #once close enough start counting
-            #             curiters+=1
-            #         cur_step=np.min([(centrop - target_ent)/(target_ent),1])
-            #         cur_beta=np.min([(centrop - target_ent)/(target_ent),1])*step+cur_beta
-            #         self.marginals[self.nruns] = cmargs
-            #         self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
-            #         cpartition = self._get_partition(self.nruns, use_effective=False)
-            #         cami=self.graph.get_AMI_layer_avg_with_communities(cpartition)
-            #         self.partitions[self.nruns]=cpartition
-            #         print('curstep:{:.4f},curiters: {:d}, entropy: {:.2e} , AMI : {:.3f}'.format(cur_step,curiters,
-            #                                                                                      centrop,cami))
-                    # if centrop<.6:
 
-                # logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
-                # iters+=citers
-                # iters+=1
-
-            # citers=self._bpmod.run(iters_per_run)
-            # iters+=citers
 
         cmargs=np.array(self._bpmod.return_marginals())
         logging.debug('modbp run time: {:.4f}, {:d} iterations '.format(time() - t, iters))
@@ -400,12 +391,35 @@ class ModularityBP():
             raise AssertionError( "cannot calculate the bethe free energy without running first.  Please call run_mobp.")
         return self._bpmod.compute_bethe_free_energy()
 
+
+
     def _get_cpp_intra_weights(self):
-        if self.graph.unweighted:
-            return DoubleArray([])
+        #supply weights if none
+        if self.graph.intralayer_weights is None:
+            weights=[1.0 for i in range(len(self.graph.intralayer_edges)) ]
         else:
-            assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
-            return DoubleArray(self.graph.intralayer_weights)
+            weights=self.graph.intralayer_weights
+        assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
+        layers=[]
+        if hasattr(self.graph,'intralayer_layers') :
+            #we are using the MergedMultilayerGraph with edges (i,j, layer , weight)
+            layers=self.graph.intralayer_layers
+        else:
+            for e in self.graph.intralayer_edges:
+                clayer=self.graph.layer_vec[e[1]]
+                layers.append(float(clayer))
+
+        layer_weights=np.array(list(zip(layers,weights)))
+        return DoublePairArray(layer_weights)
+
+    def _get_cpp_inter_weights(self):
+        if self.graph.interlayer_weights is None:
+            weights=[1.0 for i in range(len(self.graph.interlayer_edges)) ]
+        else:
+            weights=self.graph.interlayer_weights
+
+        return DoubleArray(weights)
+
 
     def _get_edgelistpv(self,inter=False):
         ''' Return PairVector swig wrapper version of edgelist'''
@@ -462,7 +476,12 @@ class ModularityBP():
 
     def _get_excess_degree(self):
         """get excess degree.  Note that this is unweighted degree """
-        degrees = self.graph.get_intralayer_degrees(weighted=False)+ self.graph.get_interlayer_degrees()
+        intradegrees=self.graph.get_intralayer_degrees(weighted=False)
+        if len(intradegrees.shape)>1:
+            intradegrees=np.sum(intradegrees,axis=1)
+
+        degrees = np.append(intradegrees,self.graph.get_interlayer_degrees())
+
         # degrees = self.graph.intradegrees + self.graph.interdegrees
         d_avg = np.mean(degrees)
         d2=np.mean(np.power(degrees,2.0))
@@ -472,34 +491,43 @@ class ModularityBP():
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
 
-        if self.normalize_edge_weights:
-            self._normalize_edge_weights(omega=omega)
-            set_omega=np.min([omega,1.0]) # we don't flip the weights if omega < 1
-        else:
-            set_omega=omega
 
-        if self.graph.nlayers==1:
-            weights=self.graph.intralayer_weights
-        else:
-            weights=np.append(self.graph.intralayer_weights,
-                              set_omega*np.array(self.graph.interlayer_weights))
+        ind2keep=np.where(np.logical_not(self.graph.self_loops_intra))[0]
+        weights=np.array(self.graph.intralayer_weights)[ind2keep]
+        if self.graph.nlayers > 1:
+            ind2keep_inter=np.where(np.logical_not(self.graph.self_loops_inter))[0]
+
+            weights=np.append(weights,omega * np.array(self.graph.interlayer_weights)[ind2keep_inter])
 
         def avg_weights(bstar, weights, q, c):
             # bstar should be scalar
             exp_b_w = np.exp(bstar * weights)
             return np.mean(np.power((exp_b_w - 1) / (exp_b_w + q - 1), 2.0)) * c - 1
 
+
+
         deg_excess=self._get_excess_degree()
-        bstar = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))[0]
-        return bstar
+        # print("deg_excess = {:.3f}".format(deg_excess))
+        # plt.close()
+        # bs = np.linspace(-.1, 2, 200)
+        # plt.plot(bs, np.array(list(map(lambda x: avg_weights(x, weights=weights, q=q, c=deg_excess), bs))))
+        # plt.show()
+        # sols = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))
+        sols,r = sciopt.bisect(avg_weights, a=0,b=100, args=(weights, q, deg_excess ),full_output=True)
+
+        if not r.converged:
+            warnings.warn("Unable to compute bstar for inputs. Check weights of graph")
+        return sols
 
     def _get_qval(self, bstar, omega):
         "given a choice of bstar and omega, what value of q was given intially"
-        if self.graph.nlayers == 1:
-            weights = self.graph.intralayer_weights
-        else:
-            weights = np.append(self.graph.intralayer_weights,
-                                omega * np.array(self.graph.interlayer_weights))
+        ind2keep = np.where(np.logical_not(self.graph.self_loops_intra))[0]
+        weights = np.array(self.graph.intralayer_weights)[ind2keep]
+        if self.graph.nlayers > 1:
+            ind2keep_inter = np.where(np.logical_not(self.graph.self_loops_inter))[0]
+
+            weights = np.append(weights, omega * np.array(self.graph.interlayer_weights)[ind2keep_inter])
+
 
         def avg_weights(q, weights, bstar, c):
             # bstar should be scalar
@@ -1223,6 +1251,8 @@ class ModularityBP():
             #in the cpp beliefs are arrange in order of node indices
             #with all incoming beliefs contiguous ( and in blocks of q)
             for e in itertools.chain(self.graph.intralayer_edges, self.graph.interlayer_edges):
+                if e[0]==e[1]:
+                    continue
                 ecounts[e[0]]+=1
                 ecounts[e[1]]+=1
             ecounts=ecounts*self._bpmod.getq() #factor in q
@@ -1256,6 +1286,21 @@ class ModularityBP():
         assert -1.0 not in newbeliefs, "one of new belief has not been created.  Check index dictionary"
         return newbeliefs
 
+    def create_marginals_from_partition(self, partition, q=None, SNR=1000):
+
+        if q is None:
+            assert not self._bpmod is None, "Must either specify q, or create the _bpmod obj"
+            q=self._bpmod.getq()
+
+
+        outmargs = np.zeros((len(partition), q))
+        for i in range(len(partition)):
+            currow = np.array([1 for _ in range(q)])
+            currow[int(partition[i])] = SNR
+            currow = 1 / np.sum(currow) * currow
+            outmargs[i, :] = currow
+        return outmargs
+
     def _set_beliefs(self,beliefs):
         _da_beliefs=DoubleArray(beliefs)
         self._bpmod.setBeliefs(_da_beliefs)
@@ -1274,21 +1319,7 @@ class ModularityBP():
 
         self._bpmod.permute_beliefs(perm_vec_c)
 
-    def _normalize_edge_weights(self,omega=1.0):
-        """
-        We scale the intralayer edges by 1/omega while fixing the interlayer edges to be one
-        :param omega:
-        :return:
-        """
 
-        factor = np.min([1/omega,1.0])
-        new_intralayer_weights = factor*np.array(self.graph.intralayer_weights)
-        #these variables have to also be updated
-        self.graph.intralayer_weights = new_intralayer_weights
-
-        self.totaledgeweight = self.graph.totaledgeweight
-        self.intralayer_edges = self.graph.intralayer_edges
-        self._cpp_intra_weights = self._get_cpp_intra_weights()
 
 
 

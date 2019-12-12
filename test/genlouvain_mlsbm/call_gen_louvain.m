@@ -12,7 +12,7 @@ function call_gen_louvain(input_file,output_file,gamma,coupling)
 
     B=A-gamma*P+coupling*C;
     rng('shuffle');
-    tic;[S,Q,n_it]=iterated_genlouvain(B,20000,0,1,'moverandw',[],PP); toc; %use post processing for genlouvain
+    tic;[S,Q,n_it]=iterated_genlouvain(B,20000,0,1,'moverandw',[]); toc; %use post processing for genlouvain
 
 
     save(output_file,'S','Q','n_it');
