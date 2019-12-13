@@ -677,7 +677,7 @@ void BP_Modularity::normalize(vector<double> & beliefs, index_t i)
         }
         for (size_t s = 0; s < q;++s)
         {
-            assert(sum==1);
+            //assert(sum==1);  // TODO: why was this  here?
             if (sum > 0)
             {
                 beliefs[beliefs_offsets[i]+nn*s+idx2] /= sum;
