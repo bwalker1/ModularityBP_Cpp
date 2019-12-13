@@ -192,7 +192,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                 break
 
             #we have found 2 non-trivial structures in a row
-            if np.sum(np.logical_and(np.logical_not(mlbp_rm['is_trival']),
+            if np.sum(np.logical_and(np.logical_not(mlbp_rm['is_trivial']),
                                   mlbp_rm['converged']))>2:
                 break
 
