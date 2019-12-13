@@ -124,7 +124,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
 def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockmultiplex=False):
     ncoms=10
 
-    finoutdir = os.path.join(matlabbench_dir, 'anneal_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'initialized_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
@@ -150,7 +150,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
-                                  align_communities_across_layers_multiplex=True,comm_vec=graph.comm_vec)
+                                  align_communities_across_layers_multiplex=True,
+                                  comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
         betas=bstars
         notconverged = 0
