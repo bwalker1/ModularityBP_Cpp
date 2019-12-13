@@ -11,6 +11,8 @@ import os
 import shutil
 import gzip,pickle
 import scipy.io as scio
+import scipy.sparse.linalg as slinagl
+from sklearn.cluster import KMeans
 import sklearn.metrics as skm
 import itertools
 #generative multilayer benchmark models (now in python)
@@ -36,6 +38,35 @@ if re.search("/nas/longleaf",clusterdir):
     oncluster=True
 arch = "elf64" if oncluster else "x86_64" #for different compiled code to run
 
+def create_marginals_from_comvec(commvec,q=None,SNR=1000):
+    if q is None:
+        q=len(np.unique(commvec))
+
+    outmargs=np.zeros((len(commvec),q))
+    for i in range(len(commvec)):
+        currow=np.array([1 for _ in range(q)])
+        currow[int(commvec[i])]=SNR
+        currow=1/np.sum(currow)*currow
+        outmargs[i,:]=currow
+    return outmargs
+
+def get_starting_partition(mgraph,gamma=1.0,omega=1.0,q=2):
+    """Spectral clustering on B matrix to initialize"""
+    A, C = mgraph.to_scipy_csr()
+    A+=A.T
+    C+=C.T
+    P = mgraph.create_null_adj()
+    B=A - gamma*P  + omega*C
+    evals, evecs = slinagl.eigs(B,k=q-1,which='LR')
+    evecs=np.array(evecs)
+    evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
+
+    if q==2:
+        mvec=(evecs2plot[:,0]>0).astype(int)
+        return np.array(mvec).flatten()
+    else:
+        kmeans = KMeans(n_clusters=q, random_state=0).fit(evecs2plot)
+        return kmeans.labels_
 
 
 
@@ -111,19 +142,26 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
 
-
+        start_vec = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
+        print('time creating starting vec:{:.3f}'.format(time() - t))
+        print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
+        ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+                                                    q=qmax)
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_multiplex=True,comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(2, qmax+2,2)]
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
         betas=bstars
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
-            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
-                           normalize_edge_weights=False,
-                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
+
+            mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, reset=True,
+                            starting_marginals=ground_margs,
+                            dumping_rate=1.0,
+                            resgamma=gamma, omega=omega)
+
 
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
@@ -150,8 +188,15 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                 with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
                     output.iloc[-1:, :].to_csv(fh, header=False)
 
-            # if notconverged>1: #hasn't converged twice now.
-            #     break
+            if notconverged>2: #hasn't converged three now.
+                break
+
+            #we have found 2 non-trivial structures in a row
+            if np.sum(np.logical_and(np.logical_not(mlbp_rm['is_trival']),
+                                  mlbp_rm['converged']))>2:
+                break
+
+
         #we now only call this once each trial with iterated version
         t=time()
         try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.

@@ -18,7 +18,7 @@ import warnings
 import os,pickle,gzip
 import logging
 logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
+# logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
 
 class ModularityBP():
 
@@ -128,10 +128,10 @@ class ModularityBP():
         if self.nlayers>1 and self.graph.is_bipartite:
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
-    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,dumping_rate=1.0,
+    def run_modbp(self, beta, q, niter=100, resgamma=1.0, omega=1.0, dumping_rate=1.0,
                   reset=True,
                   iterate_alignment=True,
-                  anneal_omega=False,
+                  niters_per_update=None,
                   starting_partition=None,
                   starting_marginals=None,
                   starting_SNR=10):
@@ -165,7 +165,7 @@ class ModularityBP():
 
         #if not supplied use the default when modbp object was created
 
-
+        changes=[]
         if self._bpmod is None:
             self._bpmod=BP_Modularity(_n=self.n,
                                       layer_membership=self._layer_vec_ia,
@@ -211,56 +211,32 @@ class ModularityBP():
         #logging.debug('Running modbp at beta={:.3f}'.format(beta))
         converged=False
 
-        if not anneal_omega:
-            changes=np.array(self._bpmod.run(iters_per_run))
-            iters=len(changes)
-        else:
-            # omega_update_scheme=np.linspace(0,omega,50)
-            # omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
-            # bstar=self.get_bstar(q=10,omega=omega)
-            # print('bstar',bstar)
-            # beta_update_scheme=np.logspace(-1,np.log10(bstar),100)
-            dumping_rates=[.01,.02,.05,.1,.2,.5]
+        if niters_per_update is None:
+            niters_per_update=niter
 
-            converged=False
-            iters=0
-            cnt=0
-            itersper_dr=iters_per_run//len(dumping_rates)
-            itersper_dr=30
-            centrop=1.0
-            while (not converged) and iters<niter:
-                # dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
-                dr=dumping_rate
-                # if centrop<.1:
-                #     dr=.2
-                self._bpmod.setDumpingRate(dr)
-                changes=np.array(self._bpmod.run(itersper_dr))
-                print(changes)
-                citers=len(changes)
-                iters+=citers
-                cnt+=1
-                cmargs = np.array(self._bpmod.return_marginals())
-                self.marginals[self.nruns] = cmargs
-                centrop = _get_avg_entropy(cmargs)
-                self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
-                cpartition = self._get_partition(self.nruns, use_effective=False)
-                cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
-                self.partitions[self.nruns] = cpartition
-                _, cnts = np.unique(cpartition, return_counts=True)
-                # if centrop < .9 and centrop>.2: #don't want to freeze if converging already
-                #     cSNR=(.9-centrop+.1)*30
-                #     print('current SNR',cSNR)
-                #     new_margs = self.create_marginals_from_partition(cpartition, q = cmargs.shape[1], SNR = cSNR)
-                #     new_beliefs= self._create_beliefs_from_marginals(new_margs)
-                #     self._set_beliefs(new_beliefs)
-                # try:
-                #     cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
-                # except ValueError:
-                #     cami = np.nan
-                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:},last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
-                if citers<itersper_dr:
-                    converged=True
-                    logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}, last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
+        converged=False
+        iters=0
+        cnt=0
+        itersper_dr=niters_per_update
+        centrop=1.0
+        while (not converged) and iters<niter:
+            dr=dumping_rate
+            changes=np.array(self._bpmod.run(itersper_dr))
+            citers=len(changes)
+            iters+=citers
+            cnt+=1
+            cmargs = np.array(self._bpmod.return_marginals())
+            self.marginals[self.nruns] = cmargs
+            centrop = _get_avg_entropy(cmargs)
+            self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
+            cpartition = self._get_partition(self.nruns, use_effective=False)
+            cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+            self.partitions[self.nruns] = cpartition
+            _, cnts = np.unique(cpartition, return_counts=True)
+            logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:},last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
+            if citers<itersper_dr:
+                converged=True
+                logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}, last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
 
 
         cmargs=np.array(self._bpmod.return_marginals())
