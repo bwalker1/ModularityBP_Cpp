@@ -471,16 +471,22 @@ bool BP_Modularity::step()
         for (int s = 0; s < q;++s)
         {
             // incoming beliefs are already stored locally
+            
+            // precompute the belief stuff so that we aren't wasting so much time (hopefully)
+            double total_factor = 1.0;
+            for (index_t idx=0; idx<nn; ++idx)
+            {
+                total_factor *= (1+scaleEdges[neighbors_offsets[i]+idx]*(beliefs[beliefs_offsets[i]+nn*s+idx]));
+            }
+            
             // figure out the sum of logs part of the update equation that uses the incoming beliefs
             for (index_t idx=0; idx<nn; ++idx)
             {
-                double mul = 1.0;
+                /*register double mul = 1.0;
                 for (index_t idx2 = 0;idx2<nn;++idx2)
                 {
                     if (idx2 == idx) continue; //don't include outgoing in update
                     bool type = neighbors_type[neighbors_offsets[i]+idx2];
-                    double mul;
-                    
 #ifdef INDEX_VIOL_CHECK
                     if (neighbors_offsets[i]+idx2 >= scaleEdges.size())
                     {
@@ -488,10 +494,12 @@ bool BP_Modularity::step()
                     }
 #endif
                     //omega already folded into scaleEdges
-                    mul *= (1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
                     
-                }
-                scratch[nn*s+idx] = mul;
+                    mul *= (1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                }*/
+                
+                // put in the total factor minus the one we aren't factoring in
+                scratch[nn*s+idx] = total_factor/(1+scaleEdges[neighbors_offsets[i]+idx]*(beliefs[beliefs_offsets[i]+nn*s+idx]));
                 // evaluate the rest of the update equation
                 
                 double field=0;
