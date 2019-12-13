@@ -48,7 +48,7 @@ public:
     index_t layer;
     bool type;
     double weight;
-
+    
     edge_data(index_t _target, index_t _layer, bool _type, double _weight) : target(_target), layer(_layer),  type(_type), weight(_weight) {};
 };
 
@@ -65,13 +65,13 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
     }
     bool is_bipartite = false;
     //fprintf(stdout,"is bipartite is not\n");
-
+    
     if (num_biparte_classes>1 and ! bipartite_class.empty())
     {
         is_bipartite = true;
         fprintf(stdout,"setting is_bipartite\n");
     }
-
+    
     //fprintf(stdout,"is_bipartite:%s\n", is_bipartite ? "true" : "false");
     //fprintf(stderr,"Constructing %s graph: length %d weights\n",weighted?"weighted":"unweighted",intra_edgeweight.size());
     eps = 1e-8;
@@ -86,30 +86,30 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
     total_strength=0;
     // TODO: go through all input edges and put them into the data structure along with categorization of their edge type
     
-
+    
     for (index_t k=0;k<intra_edgelist.size();++k)
     {
         auto p = intra_edgelist[k];
         double w;
         index_t l;
-//        if (weighted)
-//        {
-            //l gives the layer that the intralayer edge originally came from
+        //        if (weighted)
+        //        {
+        //l gives the layer that the intralayer edge originally came from
         l = (index_t) intra_edgeweight[k].first;//typecast to index
         w = intra_edgeweight[k].second;
-
-//        else
-//        {
-//            w = 1;
-//        }
+        
+        //        else
+        //        {
+        //            w = 1;
+        //        }
         index_t i = p.first;
         index_t j = p.second;
         edges[i].push_back(edge_data(j,l,true,w));
         edges[j].push_back(edge_data(i,l,true,w));
-
+        
         num_edges[l] += w;
-//        num_strength[layer_membership[i]] += w;
-
+        //        num_strength[layer_membership[i]] += w;
+        
         total_strength += w;
         total_edges += 2;
         if (i!=j) { total_belief_edges+=2;}
@@ -117,12 +117,12 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
     
     for (index_t k=0;k<inter_edgelist.size();k++)
     {
-
+        
         auto p = inter_edgelist[k];
         double w;
-
+        
         w = inter_edgeweight[k];
-
+        
         index_t i = p.first;
         index_t j = p.second;
         //We don't store layer information on the interlayer edges
@@ -131,13 +131,13 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         edges[j].push_back(edge_data(i,-1,false,w));
         neighbor_count_interlayer[i]+=1;
         neighbor_count_interlayer[j]+=1;
-
+        
         total_edges += 2;
         total_strength += w;
-
+        
         if (i!=j) { total_belief_edges+=2;}
     }
-
+    
     //fprintf(stdout,"total_belief_edges: %d\n",total_belief_edges);
     beliefs.resize(q*total_belief_edges);
     beliefs_old.resize(q*total_belief_edges);
@@ -179,52 +179,52 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
         neighbors_offset_count += num_belief_edges;
         neighbor_count[i] = (index_t) num_belief_edges;
         //fprintf(stdout,"neighborcount[%d]: %d\n",i,neighbor_count[i]);
-
+        
         beliefs_offsets[i+1] = beliefs_offset_count;
         neighbors_offsets[i+1] = neighbors_offset_count;
-
-//        max_degree = max(max_degree,(index_t) edges[i].size());
+        
+        //        max_degree = max(max_degree,(index_t) edges[i].size());
         max_degree = max(max_degree,(index_t) num_belief_edges);
-
+        
         c_strength=0;
         node_strengths[i].resize(nlayers);
         for (index_t lay=0;lay<node_strengths[i].size();lay++ ){
             node_strengths[i][lay]=0;
         }
-
+        
         for (index_t j=0;j<edges[i].size();++j)
         {
-//            fprintf(stdout,"(%d,%d):%f\n",i,edges[i][j].target,edges[i][j].weight);
+            //            fprintf(stdout,"(%d,%d):%f\n",i,edges[i][j].target,edges[i][j].weight);
             //assert(neighbor_c < num_edges);
             index_t clayer = edges[i][j].layer;
             if (edges[i][j].type){ //only add in the intralyer strength (including self loops)
                 node_strengths[i][clayer]+=edges[i][j].weight;
-                }
-
+            }
+            
             if (edges[i][j].target!=i){
                 //we only pass beliefs if it's not a self loop
                 if (edges[i][j].type)
                 {edge_weights[neighbor_c] = edges[i][j].weight;}
                 else //interlayer edges are multiplied by omega
                 {edge_weights[neighbor_c] = omega*edges[i][j].weight;}
-
+                
                 neighbors_type[neighbor_c] = edges[i][j].type;
                 neighbors[neighbor_c] = edges[i][j].target;
                 neighbor_offset_map[i][edges[i][j].target] = j;
                 neighbor_c++;
             }
-//            else{ //fprintf(stdout,"found self loop %d to %d type %d : %3f \n",i,edges[i][j].target,edges[i][j].type,edges[i][j].weight);}
-//
+            //            else{ //fprintf(stdout,"found self loop %d to %d type %d : %3f \n",i,edges[i][j].target,edges[i][j].type,edges[i][j].weight);}
+            //
         }
     }
-//    fprintf(stdout,"node_strength\n");
-//    for (index_t i=0; i<n ;i++){
-//        for (index_t lay=0;lay<node_strengths[i].size();lay++){
-//
-//            fprintf(stdout,"%f ",node_strengths[i][lay]);
-//        }
-//        fprintf(stdout,"\n");
-//    }
+    //    fprintf(stdout,"node_strength\n");
+    //    for (index_t i=0; i<n ;i++){
+    //        for (index_t lay=0;lay<node_strengths[i].size();lay++){
+    //
+    //            fprintf(stdout,"%f ",node_strengths[i][lay]);
+    //        }
+    //        fprintf(stdout,"\n");
+    //    }
     scratch.resize(max_degree*q);
     neighbor_c = 0;
     for (int i=0;i<n;++i)
@@ -237,8 +237,8 @@ BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, c
             }
         }
     }
-
-
+    
+    
     //fprintf(stdout,"Finished primary initialization\n");
     reinit();
     
@@ -256,18 +256,18 @@ vector<double> BP_Modularity::run(unsigned long maxIters)
     for (iter = 0; iter < maxIters; ++iter)
     {
         step();
-//        fprintf(stdout,"after step theta: \n");
-//        for (index_t lay=0;lay<nlayers;lay++){
-//            for (index_t s=0; s<q; s++){
-//                 fprintf(stdout,"%f ",theta[lay][s]);
-//            }
-//            fprintf(stdout,"\n");
-//        }
-
+        //        fprintf(stdout,"after step theta: \n");
+        //        for (index_t lay=0;lay<nlayers;lay++){
+        //            for (index_t s=0; s<q; s++){
+        //                 fprintf(stdout,"%f ",theta[lay][s]);
+        //            }
+        //            fprintf(stdout,"\n");
+        //        }
+        
         // monitor changes
         if (verbose)
             printf("Iteration %lu: change %f\n",iter+1,change);
-
+        
         changes.push_back(change);
         
         if (!changed)
@@ -275,15 +275,15 @@ vector<double> BP_Modularity::run(unsigned long maxIters)
             converged = true;
             if (verbose)
                 printf("Converged after %lu iterations.\n",iter+1);
-//            return iter;
-              return changes;
-
+            //            return iter;
+            return changes;
+            
         }
     }
     if (verbose)
         printf("Algorithm failed to converge after %lu iterations.\n",maxIters);
-//    return maxIters+1;
-      return changes;
+    //    return maxIters+1;
+    return changes;
     
 }
 
@@ -291,56 +291,47 @@ void BP_Modularity::compute_marginal(index_t i, bool do_bfe_contribution)
 {
     const index_t nn = neighbor_count[i];
     vector<double> c_strength = node_strengths[i];
-
+    
     vector<index_t> cur_layers = layer_membership[i];
     // iterate over all states
     double Z = 0;
     for (index_t s = 0; s < q; ++s)
     {
-        marginals[q*i+s] = 0;
+        //marginals[q*i+s] = 0;
+        double mul = 1.0;
+        
         for (index_t idx2 = 0; idx2<nn; ++idx2)
         {
             bool type = neighbors_type[neighbors_offsets[i]+idx2];
             double add;
-//            if (type==true)
-//            {
-                // intralayer contribution
-//                if (weighted)
 
-            add = log(1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-
-//                else
-//                {
-//                    add = log(1+scale*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-//                }
-//            }
-//            else
-//            {
-//                // interlayer contribution
-//                add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-//            }
-            marginals[q*i+s] += add;
+//            add = log(1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+//
+//            marginals[q*i+s] += add;
+            mul *= (1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
         }
         // evaluate the rest of the update equation
         double field=0;
         if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
-            {
+        {
             index_t bpclass=bipartite_class[i];
             for (index_t lay=0;lay<nlayers;lay++)
-                {
-                field += c_strength[lay]*theta_bipartite[bpclass][s];
-                }
-            }
-         else
             {
-            for (index_t lay=0;lay<nlayers;lay++)
-                {
-                field += c_strength[lay]*theta[lay][s];
-                }
+                field += c_strength[lay]*theta_bipartite[bpclass][s];
             }
-
-        double temp_inside = field + marginals[q*i+s];
-        marginals[q*i+s] = exp(temp_inside);
+        }
+        else
+        {
+            for (index_t lay=0;lay<nlayers;lay++)
+            {
+                field += c_strength[lay]*theta[lay][s];
+            }
+        }
+        
+        //double temp_inside = field + marginals[q*i+s];
+        //marginals[q*i+s] = exp(temp_inside);
+        mul *= exp(field);
+        marginals[q*i+s] = mul;
         
         Z += marginals[q*i + s];
         
@@ -411,15 +402,15 @@ bool BP_Modularity::step()
     {
         index_t i;
         //We update nodes in a random order every other step.
-
-
+        
+        
         i = order[node_idx];
-
+        
         
         vector<index_t> cur_layer = layer_membership[i];
         const index_t nn = neighbor_count[i];
         vector<double> c_strength = node_strengths[i];
-
+        
         if (nn==0) continue;
         
         // first, see how much change we had to incoming beliefs so we know if we need to update
@@ -451,24 +442,24 @@ bool BP_Modularity::step()
                 for(index_t c = 0; c<num_biparte_classes; ++c){
                     for (index_t lay=0;lay<nlayers;lay++)
                     {
-                    if (c!=bpclass) //each node only contributes to null models outside of it's class
+                        if (c!=bpclass) //each node only contributes to null models outside of it's class
                         {
-                        theta_bipartite[c][s] += -beta*resgamma/(total_strength)* c_strength[lay] * (marginals[q*i + s] - marginals_old[q*i + s]);
+                            theta_bipartite[c][s] += -beta*resgamma/(total_strength)* c_strength[lay] * (marginals[q*i + s] - marginals_old[q*i + s]);
                         }
                     }
-
+                    
                 }
             }
             else
             {
-               for(index_t lay=0;lay<nlayers;lay++)
-                    {
-                 //each node contributes to each layer's theta according to edges it has in that layer
-                theta[lay][s] += -beta*resgamma/(2*num_edges[lay])* c_strength[lay] * (marginals[q*i + s] - marginals_old[q*i + s]);
-                    }
+                for(index_t lay=0;lay<nlayers;lay++)
+                {
+                    //each node contributes to each layer's theta according to edges it has in that layer
+                    theta[lay][s] += -beta*resgamma/(2*num_edges[lay])* c_strength[lay] * (marginals[q*i + s] - marginals_old[q*i + s]);
+                }
             }
-
-
+            
+            
         }
         
         // update our record of what our incoming beliefs were for future comparison
@@ -483,52 +474,46 @@ bool BP_Modularity::step()
             // figure out the sum of logs part of the update equation that uses the incoming beliefs
             for (index_t idx=0; idx<nn; ++idx)
             {
-                scratch[nn*s+idx] = 0;
+                double mul = 1.0;
                 for (index_t idx2 = 0;idx2<nn;++idx2)
                 {
                     if (idx2 == idx) continue; //don't include outgoing in update
                     bool type = neighbors_type[neighbors_offsets[i]+idx2];
-                    double add;
-//                    if (type==true)
-
-                        // intralayer contribution
-
+                    double mul;
+                    
+#ifdef INDEX_VIOL_CHECK
                     if (neighbors_offsets[i]+idx2 >= scaleEdges.size())
-                        {
-                          fprintf(stderr,"index violation: %d %d\n",neighbors_offsets[i]+idx2, scaleEdges.size());
-                        }
-                    //omega already folded into scaleEdges
-                    add = log(1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-
-//                    else
-//                    {
-//                        // interlayer contribution
-//                        add = log(1+scaleOmega*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
-//                    }
-                    scratch[nn*s+idx] += add;
-                }
-                // evaluate the rest of the update equation
-//                printf("cscratch: %.3f , c_strength: %.3f, theta[t][s]: %.3f\n",scratch[nn*s+idx],c_strength,theta[t][s]);
-
-                double field=0;
-
-                if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
-                    {index_t bpclass=bipartite_class[i];
-                    for(index_t lay=0;lay<nlayers;lay++)
-                        {
-                        field += c_strength[lay]*theta_bipartite[bpclass][s];
-                        }
-                    }
-                 else
                     {
-                    for(index_t lay=0;lay<nlayers;lay++)
-                        {
-                        field += c_strength[lay]*theta[lay][s];
-                        }
+                        fprintf(stderr,"index violation: %d %d\n",neighbors_offsets[i]+idx2, scaleEdges.size());
                     }
-
-                double temp = exp(field + scratch[nn*s+idx]);
-                scratch[nn*s+idx] = temp;
+#endif
+                    //omega already folded into scaleEdges
+                    mul *= (1+scaleEdges[neighbors_offsets[i]+idx2]*(beliefs[beliefs_offsets[i]+nn*s+idx2]));
+                    
+                }
+                scratch[nn*s+idx] = mul;
+                // evaluate the rest of the update equation
+                
+                double field=0;
+                
+                if (is_bipartite) // bipartite case for single layer (each class has it's own theta)
+                {index_t bpclass=bipartite_class[i];
+                    for(index_t lay=0;lay<nlayers;lay++)
+                    {
+                        field += c_strength[lay]*theta_bipartite[bpclass][s];
+                    }
+                }
+                else
+                {
+                    for(index_t lay=0;lay<nlayers;lay++)
+                    {
+                        field += c_strength[lay]*theta[lay][s];
+                    }
+                }
+                
+                //double temp = exp(field + scratch[nn*s+idx]);
+                //scratch[nn*s+idx] = temp;
+                scratch[nn*s+idx] *= exp(field);
             }
         }
         
@@ -543,7 +528,7 @@ bool BP_Modularity::step()
             }
             if (compute_bfe)
             {
-//                printf("in loop sum %.3f\n",sum);
+                //                printf("in loop sum %.3f\n",sum);
                 bfe -= log(sum);
             }
             if (sum > 0)
@@ -575,7 +560,7 @@ bool BP_Modularity::step()
             }
         }
     }
-
+    
     if (compute_bfe)
     {
         compute_marginals(true);
@@ -593,26 +578,26 @@ bool BP_Modularity::step()
                 const index_t nnk = neighbor_count[k];
                 index_t idx_out = neighbors_reversed[neighbors_offsets[i]+idx];
                 double sum = 0;
-
+                
                 // figure out our e^something
                 bool type = neighbors_type[neighbors_offsets[i]+idx];
                 double scaleHere;
-//                if (type)
-
-//                    if (weighted)
-
+                //                if (type)
+                
+                //                    if (weighted)
+                
                 scaleHere = scaleEdges[neighbors_offsets[i]+idx];
-
-//                    else
-//                    {
-//                        scaleHere = scale;
-//                    }
-
-//                else
-//                {
-//                    scaleHere = scaleOmega;
-//                }
-
+                
+                //                    else
+                //                    {
+                //                        scaleHere = scale;
+                //                    }
+                
+                //                else
+                //                {
+                //                    scaleHere = scaleOmega;
+                //                }
+                
                 // iterate over all states of first node
                 for (int s = 0; s < q;++s)
                 {
@@ -624,16 +609,16 @@ bool BP_Modularity::step()
                         // belief from target to source
                         double psi2 = beliefs[beliefs_offsets[k]+nnk*s+idx_out];
                         // ternary operator for delta_st (Kronecker delta function)
-
+                        
                         sum += (s==t?(scaleHere+1):1)*psi1*psi2;
-
+                        
                     }
                 }
                 // add contribution to bfe and divide by 2 to avoid double counting
                 bfe -= log(sum)/2;
             }
         }
-
+        
         //contribution of non-edges (i.e. from the null model)
         for (index_t lay=0;lay<nlayers;++lay)
         {
@@ -647,7 +632,7 @@ bool BP_Modularity::step()
         }
         bfe /= (-1*beta*n); //normalize out by beta a n
     }
-
+    
     
     if (!fast_convergence)
     {
@@ -803,33 +788,33 @@ void BP_Modularity::reinit(bool init_beliefs,bool init_theta)
     {
         beta=eps; //must be non-zero.  make very small
     }
-
-
+    
+    
     for (index_t i=0;i<total_belief_edges;++i)
     {
-            //omega has already been baked into edge weights for interlayer
-            scaleEdges[i] = exp(beta*edge_weights[i])-1;
+        //omega has already been baked into edge weights for interlayer
+        scaleEdges[i] = exp(beta*edge_weights[i])-1;
     }
-
     
-
+    
+    
     if (init_beliefs)
         initializeBeliefs();
-
+    
     if (init_theta)
     {
         if (is_bipartite)
-                {
-                initializeTheta_bipartite();}
+        {
+            initializeTheta_bipartite();}
         else
-                {
-
-                initializeTheta();
-                }
+        {
+            
+            initializeTheta();
+        }
     }
-
+    
     copy(marginals.begin(),marginals.end(), marginals_old.begin());
-
+    
 }
 
 
@@ -844,34 +829,13 @@ void BP_Modularity::initializeBeliefs() {
     // set starting value of beliefs
     // generate values for each state and then normalize
     normal_distribution<double> eps_dist(0,0.1);
-    /*
-    for (index_t idx=0;idx<n;++idx)
-    {
-        const index_t nn = neighbor_count[idx];
-        
-        bool group1 =((idx-(n/nt)*layer_membership[idx])) < (n*1.0/(2.0*nt));
-        
-        for (size_t s = 0; s < q; ++s)
-        {
-            for (index_t idx2 = 0; idx2 < nn; ++ idx2)
-            {
-                index_t k = neighbors[neighbors_offsets[idx]+idx2];
-                const index_t nnk = neighbor_count[k];
-                index_t idx_out = neighbors_reversed[neighbors_offsets[idx]+idx2];
-                beliefs[beliefs_offsets[idx]+nn*s+idx2] = int(group1);
-                //printf("%f\n",beliefs[beliefs_offsets[k]+nnk*s+idx_out]);
-            }
-        }
-    }
-    */
-    //compute_marginals();
-
+    
     
     for (index_t i=0;i<beliefs.size();++i)
     {
         beliefs[i] = truncate(1.0/q + eps_dist(rng),q);
     }
-
+    
     for (index_t i=0;i<n;++i)
     {
         normalize(beliefs,i);
@@ -885,19 +849,19 @@ void BP_Modularity::initializeBeliefs() {
 }
 
 void BP_Modularity::initializeTheta_bipartite() {
-
-
+    
+    
     //this is in the case of the bipartite graph where we have a
     //different theta for each class of node
-
+    
     //TODO: This only works with a bipartite (or multipartite) graph that is single layer
-
-//    for (index_t t = 0; t <nlayers; ++t)  // for right now we only allow single layer bipartite
-//    {
+    
+    //    for (index_t t = 0; t <nlayers; ++t)  // for right now we only allow single layer bipartite
+    //    {
     theta_bipartite.resize(num_biparte_classes);
     for (index_t bpclass = 0; bpclass < num_biparte_classes ; ++ bpclass)
     {
-    // make sure the size is correct
+        // make sure the size is correct
         theta_bipartite[bpclass].resize(q);
         for (index_t s = 0; s<q;++s)
         {
@@ -915,38 +879,38 @@ void BP_Modularity::initializeTheta_bipartite() {
             theta_bipartite[t][s]=0;
         }
     }
-
+    
     for (index_t i=0;i<n;++i)
-        {
-            index_t cur = bipartite_class[i];
-            vector<double> c_strength = node_strengths[i];
-            for (index_t c=0; c<num_biparte_classes; ++c){
-
-                if (c!=cur){
-                    //node i only contributes to the theta of classes other than it's own
-                    for (index_t s = 0; s<q; ++s)
+    {
+        index_t cur = bipartite_class[i];
+        vector<double> c_strength = node_strengths[i];
+        for (index_t c=0; c<num_biparte_classes; ++c){
+            
+            if (c!=cur){
+                //node i only contributes to the theta of classes other than it's own
+                for (index_t s = 0; s<q; ++s)
+                {
+                    for(index_t lay=0;lay<nlayers;lay++)
                     {
-                        for(index_t lay=0;lay<nlayers;lay++)
-                            {
-                            theta_bipartite[c][s] += c_strength[lay] * marginals[q*i + s];
-                            }
+                        theta_bipartite[c][s] += c_strength[lay] * marginals[q*i + s];
                     }
                 }
             }
-
         }
-
-
-        for (index_t c = 0; c < num_biparte_classes; ++c)
-            {
-                // fold in prefactor to theta
-                for (index_t s = 0; s<q;++s)
-                {
-                    theta_bipartite[c][s] *= -(beta*resgamma/(total_strength));
-                }
-            }
-
-
+        
+    }
+    
+    
+    for (index_t c = 0; c < num_biparte_classes; ++c)
+    {
+        // fold in prefactor to theta
+        for (index_t s = 0; s<q;++s)
+        {
+            theta_bipartite[c][s] *= -(beta*resgamma/(total_strength));
+        }
+    }
+    
+    
 }
 
 void BP_Modularity::initializeTheta() { 
@@ -960,12 +924,12 @@ void BP_Modularity::initializeTheta() {
         {
             theta[lay][s] = beta*resgamma/(q);
             //theta[t][s] = 0;
-
+            
         }
     }
-
+    
     compute_marginals();
-
+    
     for (index_t lay = 0; lay <nlayers; ++lay)
     {
         for (index_t s=0;s<q;++s)
@@ -977,17 +941,17 @@ void BP_Modularity::initializeTheta() {
     for (index_t i=0;i<n;++i)
     {
         vector<double> cur_strength = node_strengths[i];
-//        index_t nn = neighbor_count[i];
-
+        //        index_t nn = neighbor_count[i];
+        
         for (index_t s = 0; s<q;++s)
         {
             for (index_t lay=0;lay<nlayers;lay++)
-                {
+            {
                 theta[lay][s] += cur_strength[lay] * marginals[q*i + s];
-                }
-
+            }
+            
         }
-
+        
     }
     for (index_t lay = 0; lay <nlayers; ++lay)
     {
@@ -1024,7 +988,7 @@ void BP_Modularity::merge_communities(vector<index_t> merges)
             {
                 index_t idx_1 = beliefs_offsets[i]+nn*merges[s]+idx2;
                 index_t idx_2 = beliefs_offsets_temp[i]+nn*s+idx2;
-
+                
                 beliefs[idx_1] += beliefs_temp[idx_2];
             }
         }
@@ -1044,28 +1008,28 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
     }
     vector<double> vals(q); //storage for current beliefs
     vector<size_t> c_layer_ind;
-
+    
     for (index_t i = 0; i < n; ++i) //iterate through all nodes (n)
     {
         c_layer_ind=layer_membership[i];
         index_t nonzero;
         bool found= false;
         for (index_t li=0;li<nlayers;li++){
-           if (c_layer_ind[li]!=0){
-
+            if (c_layer_ind[li]!=0){
+                
                 if (found == false)
-                    {
-                        nonzero=li;
-                        found=true;
-                    }
+                {
+                    nonzero=li;
+                    found=true;
+                }
                 else{
                     throw "Permuting beliefs only works when each node is in a single layer.  Found multiple layers for node i";
                 }
-
-                }
-           }
+                
+            }
+        }
         index_t nn = neighbor_count[i];
-
+        
         for (index_t idx2=0; idx2<nn ;++idx2)
         {
             //copy beliefs into temp based on permutation order
@@ -1102,157 +1066,3 @@ void BP_Modularity::setBeliefs(vector<double> new_beliefs )
     }
     initializeTheta();
 }
-
-//double s(double beta, double omega, double q, double c)
-//{
-//    double eb = exp(beta);
-//    double ewb = exp(omega*beta);
-//
-//    double temp1 = ((eb-1)/(eb-1+q));
-//    double temp2 = ((ewb-1)/(ewb-1+q));
-//    return c*temp1*temp1 + 2*temp2*temp2;
-//}
-//
-//double sp(double beta, double omega, double q, double c)
-//{
-//    double eb = exp(beta);
-//    double e2b = exp(2*beta);
-//
-//    double ewb = exp(omega*beta);
-//    double e2wb = exp(2*omega*beta);
-//
-//
-//    double temp1 = eb - 1 + q;
-//    double temp2 = ewb- 1 + q;
-//
-//    double dxlamr= 2*q*(e2b-eb)/(temp1*temp1*temp1);
-//    double dxlamt= 2*q*(e2wb-ewb)/(temp2*temp2*temp2);
-//
-//
-//    return c*dxlamr+2*dxlamt;
-//}
-
-
-//bstar and excess degree handled on python side
-//double BP_Modularity::compute_excess_degree(bool use_strength ) //default is false
-//{
-//// compute the excess degree.  If use strength uses total strength for node
-//    double d2 = 0;
-//    double d = 0;
-//    double ss=0;
-//    for (int i=0;i<n;++i)
-//    {
-//        //double nn = neighbor_count[i];
-//        for (index_t lay =0;lay<nlayers;lay++){
-//
-//            if (use_strength){
-//                ss = node_strengths[i][lay];
-//                }
-//             else{
-//                ss = neighbor_count[i];
-//             }
-//            d2 += ss*ss;
-//            d += ss;
-//        }
-//    }
-//    double c = d2/d - 1;
-//    return c;
-//
-//}
-
-//computed on python side
-//double BP_Modularity::compute_bstar(double omega_in, int q_in){
-//
-//
-//    double c = compute_excess_degree(false);
-//    double average_weight=0;
-//    double tot =0 ;
-//    //calculate average weights including omega as weights for inter layer
-//    for (index_t i=0;i<n;++i)
-//    {
-//        average_weight+=node_strengths[i];
-//        average_weight+=omega_in*neighbor_count_interlayer[i];
-//        tot+=neighbor_count[i];
-//    }
-//    average_weight/=tot;
-////    printf("q_in = %d , c = %.3f , avg_weight= %.3f , omega_in = %.3f ,tot=%.3f \n",q_in,c,average_weight,omega_in,tot);
-//    double bstar =  (1.0/average_weight)*log(q_in /(sqrt(c)-1) +1) ;
-//    return bstar;
-//
-//}
-
-//double BP_Modularity::compute_bstar(double omega_in,int q_in)
-//{
-//    // currently this assumes multiplex graph
-//
-//    // compute c - decide on the right way
-//    // the simple average degree
-//    //double c = accumulate(num_edges.begin(), num_edges.end(), 0.0)/n;
-//
-//    double c = compute_excess_degree();
-//
-//
-//    // bisection/newton hybrid method
-//    double xl=0, xr=1;
-//    double xn;
-//
-//    // find bounding interval
-//    while (s(xr,omega_in,q_in,c) < 1)
-//    {
-//        xr *= 2;
-//    }
-//
-//    // start newton's from midpoint
-//    xn = (xl+xr)/2;
-//    double yn = s(xn,omega_in,q_in,c);
-//    double ypn = sp(xn,omega_in,q_in,c);
-//
-//    int maxiters = 100;
-//    for (int iters=0;iters<maxiters;)
-//    {
-//        // try a newton step
-//
-//        xn -= (yn - 1)/ypn;
-//        yn = s(xn,omega_in,q_in,c);
-//        ypn = sp(xn,omega_in,q_in,c);
-//
-//        // check if this is in our bounding interval
-//        if (xl < xn && xn < xr)
-//        {
-//            // narrow our interval using newton point
-//            if (yn > 1)
-//            {
-//                xr = xn;
-//            }
-//            else
-//            {
-//                xl = xn;
-//            }
-//        }
-//        else
-//        {
-//            // narrow our interval using bisection
-//            double xc = (xl + xr)/2;
-//            if (s(xc,omega_in,q_in,c)>1)
-//            {
-//                xr = xc;
-//            }
-//            else
-//            {
-//                xl = xc;
-//            }
-//
-//            // restart newton's at the new midpoint
-//            xn = (xl + xr)/2;
-//            yn = s(xn,omega_in,q_in,c);
-//            ypn = sp(xn,omega_in,q_in,c);
-//        }
-//
-//        // check for convergence
-//        if (xr - xl < 1e-6)
-//        {
-//            return (xl + xr)/2;
-//        }
-//    }
-//    return (xl+xr)/2;
-//}
