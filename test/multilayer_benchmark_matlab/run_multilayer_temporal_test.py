@@ -167,7 +167,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
                            q=qmax, starting_marginals=ground_margs,
-                           resgamma=gamma, omega=omega,anneal_omega=False)
+                           resgamma=gamma, omega=omega)
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
             if mlbp_rm.iloc[-1,:]['converged'] == False: #keep track of how many converges we have
