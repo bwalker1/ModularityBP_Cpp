@@ -341,14 +341,14 @@ def collapse_over_interedges_same_community(graph,partition):
 def test_alternating_bpruns():
     n = 1000
     nlayers = 15
-    mu = .9
+    mu = .7
     p_eta = 1.0
     ncoms = 10
-    omega = 1.0
+    omega = 4
 
     t = time()
 
-    load = True
+    load = False
     if not load:
         # multiplex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
         #                                          nlayers=nlayers, ncoms=ncoms)
@@ -598,6 +598,6 @@ def test_ZM_on_collapsed():
 if __name__=="__main__":
     # test_run_modbp_on_collapse()
     # test_on_multiplex_block()
-    # test_alternating_bpruns()
+    test_alternating_bpruns()
     # test_ZM_on_collapsed()
-    test_non_backtracking_cluster()
+    # test_non_backtracking_cluster()
