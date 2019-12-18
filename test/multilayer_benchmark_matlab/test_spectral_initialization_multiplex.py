@@ -165,7 +165,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             ind = mlbp_rm.index[mlbp_rm.shape[0] - 1]  # get last line
             for col in mlbp_rm.columns:
                 output.loc[cind, col] = mlbp_rm.loc[ind, col]
-            output.loc[cind, 'isGenLouvain'] = False
+            output.loc[cind, 'isSpectral'] = False
             output.loc[cind, 'mu'] = mu
             output.loc[cind, 'p'] = p_eta
             output.loc[cind, 'trial'] = trial
