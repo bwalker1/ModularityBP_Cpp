@@ -288,3 +288,127 @@ def run_ZMBP_on_graph(graph, q, beta,niters=100):
 
     marginals = np.array(marginals, dtype=float)
     return niters, marginals
+
+def get_starting_partition_modularity(mgraph,gamma=1.0,omega=1.0,q=2):
+    """Spectral clustering on B matrix to initialize"""
+    A, C = mgraph.to_scipy_csr()
+    A+=A.T
+    C+=C.T
+    P = mgraph.create_null_adj()
+    B=A - gamma*P  + omega*C
+    evals, evecs = slinagl.eigs(B,k=q,which='LR')
+    evecs=np.array(evecs)
+    evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
+
+    if q==2:
+        mvec=(evecs2plot[:,0]>0).astype(int)
+        return np.array(mvec).flatten()
+    else:
+        kmeans = KMeans(n_clusters=q).fit(evecs2plot)
+        return kmeans.labels_
+
+def get_non_backtracking_modbp(mlgraph,q,beta,omega):
+
+    nodes2edges = {}
+    alloutgoingfactors = []
+    edge2ind={}
+    m=len(mlgraph.intralayer_edges)+len(mlgraph.interlayer_edges)
+
+    for i,e in enumerate(itertools.chain(mlgraph.intralayer_edges,mlgraph.interlayer_edges)):
+        if i<len(mlgraph.intralayer_edges):
+            w=mlgraph.intralayer_weights[i]
+        else:
+            w=omega*mlgraph.interlayer_weights[i-len(mlgraph.intralayer_edges)]
+        expfactor=np.exp(beta*w)
+        alloutgoingfactors.append((expfactor-1)/(expfactor+q-1))
+        # alloutgoingfactors.append(1)
+        nodes2edges[e[0]]=nodes2edges.get(e[0],set([])) | set([e])
+        nodes2edges[e[1]]=nodes2edges.get(e[1],set([])) | set([e])
+        if e[0]<e[1]:
+            edge2ind[e]=i
+            edge2ind[(e[1],e[0])]=i+m
+        else:
+            edge2ind[e] = i + m
+            edge2ind[(e[1], e[0])] = i
+
+
+    node2incoming_inds={}
+    node2outgoing_inds={}
+    row_inds=[]
+    col_inds=[]
+    data=[]
+    for i in range(mlgraph.N):
+        node2incoming_inds[i] = node2incoming_inds.get(i, [])
+        node2outgoing_inds[i] = node2outgoing_inds.get(i, [])
+
+        try:
+            cedges=nodes2edges[i]
+        except KeyError:
+            continue
+        if len(cedges)==1:
+            e = next(iter(cedges))
+            en = 0 if e[0]==i else 1
+            cind=edge2ind[(e[1-en],e[en])]
+            cind_out=edge2ind[(e[en],e[1-en])]
+            node2incoming_inds[i].append(cind)
+            node2outgoing_inds[i].append(cind_out)
+
+        for e1,e2 in itertools.combinations(cedges,2):
+
+            e1w=alloutgoingfactors[edge2ind[e1]]
+            e2w=alloutgoingfactors[edge2ind[e2]]
+            #tell us which of the tuple represents current node
+            e1n = 0 if e1[0]==i else 1
+            e2n = 0 if e2[0]==i else 1
+
+            #e1->e2->
+            e1ind=edge2ind[(e1[1-e1n],e1[e1n])]
+            e2ind=edge2ind[(e2[e2n],e2[1-e2n])]
+            col_inds.append(e1ind)
+            row_inds.append(e2ind)
+            node2incoming_inds[i].append(e1ind)
+            node2outgoing_inds[i].append(e2ind)
+            data.append(e2w)
+
+            #e2->e1->
+            e1ind = edge2ind[(e1[e1n], e1[1-e1n])]
+            e2ind = edge2ind[(e2[1-e2n], e2[e2n])]
+            col_inds.append(e2ind)
+            row_inds.append(e1ind)
+            node2incoming_inds[i].append(e2ind)
+            node2outgoing_inds[i].append(e1ind)
+
+            data.append(e1w)
+
+    for i,vals in node2incoming_inds.items():
+        node2incoming_inds[i]=list(set(vals))
+
+    for i, vals in node2outgoing_inds.items():
+        node2outgoing_inds[i] = list(set(vals))
+
+    nonBacktrack=sparse.csr_matrix((data,(row_inds,col_inds)),shape=(2*m,2*m),dtype=float)
+
+    return nonBacktrack, node2incoming_inds, node2outgoing_inds
+
+
+def get_starting_partition_multimodbp(mgraph,beta=1.0,omega=1.0,q=2):
+
+    nbtrack, node_in_inds, node_out_inds = get_non_backtracking_modbp(mlgraph, q=ncoms, beta=beta, omega=omega)
+
+
+    vals, vecs = slinagl.eigs(nbtrack, k=q, which='LR')
+    vecs = vecs[:, np.flip(np.argsort(np.real(vals)))]
+    comb_vecs = np.zeros((multiplex.N, vecs.shape[1]))
+    # nbtrack_comb=np.zeros((2*multiplex.N,2*multiplex.N))
+    for i in range(multiplex.N):
+        in_inds = node_in_inds[i]
+        if len(in_inds) != 0:
+            comb_vecs[i, :] = np.sum(vecs[in_inds, :], axis=0)
+
+    real_vecs=np.read(comb_vecs)
+    if q==2:
+        mvec=(real_vecs[:,0]>0).astype(int)
+        return np.array(mvec).flatten()
+    else:
+        kmeans = KMeans(n_clusters=q).fit(real_vecs)
+        return kmeans.labels_

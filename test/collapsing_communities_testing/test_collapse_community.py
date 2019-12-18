@@ -4,6 +4,7 @@ import scipy.sparse.linalg as slinagl
 from sklearn.cluster import KMeans
 import sklearn.metrics as skm
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import modbp
 import seaborn as sbn
@@ -17,6 +18,9 @@ from create_multiplex_functions import create_multiplex_graph
 from create_multiplex_functions import create_multiplex_graph_matlab
 from create_multiplex_functions import call_gen_louvain
 from create_multiplex_functions import run_ZMBP_on_graph
+
+from create_multiplex_functions import get_starting_partition_multimodbp
+
 logging.basicConfig(level=logging.ERROR)
 
 def create_marginals_from_comvec(commvec,q=None,SNR=1000):
@@ -374,9 +378,9 @@ def test_alternating_bpruns():
     start_vec = get_starting_partition(multiplex, gamma=1.0,omega=1.0,q=ncoms)
     print('time creating starting vec:{:.3f}'.format(time()-t))
     print('AMI start_vec', multiplex.get_AMI_with_communities(start_vec))
-    ground_margs = create_marginals_from_comvec(start_vec, SNR=3,
+    ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
                                                 q=qmax)
-    bstars=[bpobj.get_bstar(q=q, omega=1.0) for q in range(2, 14)]
+    bstars=[bpobj.get_bstar(q=q, omega=1.0) for q in range(1, 14)]
     print('bstars',bstars)
     not_converged=0
     #
@@ -415,51 +419,161 @@ def get_non_backtracking(mlgraph):
     A_comb=A+C
 
     D=sparse.diags(np.array(np.sum(A_comb,axis=0)).flatten())
-    ones=np.ones(A.shape)
+    ones=sparse.diags(np.ones(A.shape[0]))
+    # ones=np.ones(A.shape)
+
     zeros=sparse.csr_matrix(A.shape)
     Btop=sparse.hstack([zeros,D-ones])
     Bbottom=sparse.hstack([-ones,A_comb])
     B = sparse.vstack(([Btop,Bbottom]))
-    plt.close()
-    cmap=sbn.cubehelix_palette(light=1,as_cmap=True)
-    plt.pcolormesh(np.array(A_comb.toarray()),cmap=cmap)
-    plt.show()
+    # plt.close()
+    # cmap=sbn.cubehelix_palette(as_cmap=True)
+    # # plt.pcolormesh(np.array(A_comb.toarray()),cmap=cmap)
+    # plt.pcolormesh(np.array(B.toarray()))
+    #
+    # plt.show()
     return B
 
+def get_non_backtracking_modbp2(mlgraph,q,beta,omega):
 
-# def get_non_backtracking(mlgraph,q,beta,omega):
-#
-#     nodes2edges={}
-#     alloutgoingfactors=[]
-#     edge2ind={}
-#     for i,e in enumerate(itertools.chain(mlgraph.intralayer_edges,mlgraph.interlayer_edges)):
-#         if i<len(mlgraph.intralayer_edges):
-#             w=mlgraph.intralayer_weights[i]
-#         else:
-#             w=omega*mlgraph.interlayer_weights[i-len(mlgraph.intralayer_edges)]
-#         expfactor=np.exp(beta*w)
-#         alloutgoingfactors.append((expfactor-1)/(expfactor+q-1))
-#         nodes2edges[e[0]]=nodes2edges.get(e[0],set([])) | set([e])
-#         nodes2edges[e[1]]=nodes2edges.get(e[1],set([])) | set([e])
-#         edge2ind[e]=i
-#
-#
-#     m=len(mlgraph.intralayer_edges)+len(mlgraph.interlayer_edges)
-#     nonbacktrack=sparse.lil_matrix((2*m,2*m))
-#
-#     for i,e in enumerate(itertools.chain(mlgraph.intralayer_edges,mlgraph.interlayer_edges)):
-#         cweight=alloutgoingfactors[i]
-#         cind=edge2ind[e]
-#         e1=np.min(e[:2])
-#         e2=np.max(e[:2])
-#
-#         #e1->e2
-#         eneighs=(nodes2edges[e2]|nodes2edges[e1])-set([e])
-#         for e_other in eneighs:
-#             cind2=edge2ind[e_other]
-#             nonbacktrack[cind,cind2]=cweight
-#
-#     return(sparse.csr_matrix(nonbacktrack))
+    nodes2edges = {}
+    alloutgoingfactors = []
+    edge2ind={}
+    m=len(mlgraph.intralayer_edges)+len(mlgraph.interlayer_edges)
+    for i,e in enumerate(itertools.chain(mlgraph.intralayer_edges,mlgraph.interlayer_edges)):
+        if i<len(mlgraph.intralayer_edges):
+            w=mlgraph.intralayer_weights[i]
+        else:
+            w=omega*mlgraph.interlayer_weights[i-len(mlgraph.intralayer_edges)]
+        expfactor=np.exp(beta*w)
+        # alloutgoingfactors.append((expfactor-1)/(expfactor+q-1))
+        alloutgoingfactors.append(1)
+        nodes2edges[e[0]]=nodes2edges.get(e[0],set([])) | set([e])
+        nodes2edges[e[1]]=nodes2edges.get(e[1],set([])) | set([e])
+        if e[0]<e[1]:
+            edge2ind[e]=i
+            edge2ind[(e[1],e[0])]=i+m
+        else:
+            edge2ind[e] = i + m
+            edge2ind[(e[1], e[0])] = i
+
+    row_inds = []
+    col_inds = []
+    data = []
+    node2incoming_inds= dict(zip(range(i),[[] for _ in range(i)]))
+    node2outgoing_inds= dict(zip(range(i),[[] for _ in range(i)]))
+
+    for e1,e2 in itertools.combinations(mlgraph.intralayer_edges,2):
+        for u,v in itertools.permutations(e1):
+            for w,x in itertools.permutations(e2):
+                if v==w and u!=x:
+                    node2incoming_inds[v].append(edge2ind[(u,v)])
+                    node2outgoing_inds[w].append(edge2ind[(w,x)])
+                    row_inds.append(edge2ind[(u,v)])
+                    col_inds.append(edge2ind[(w,x)])
+                    data.append(1)
+                if x==u and w!=v:
+                    node2incoming_inds[v].append(edge2ind[(w, x)])
+                    node2outgoing_inds[w].append(edge2ind[(u, v)])
+                    row_inds.append(edge2ind[(w, x)])
+                    col_inds.append(edge2ind[(u, v)])
+                    data.append(1)
+
+    for i, vals in node2incoming_inds.items():
+        node2incoming_inds[i] = list(set(vals))
+
+    for i, vals in node2outgoing_inds.items():
+        node2outgoing_inds[i] = list(set(vals))
+
+    nonBacktrack = sparse.csr_matrix((data, (row_inds, col_inds)), shape=(2 * m, 2 * m), dtype=float)
+
+    return nonBacktrack, node2incoming_inds, node2outgoing_inds
+
+def get_non_backtracking_modbp(mlgraph,q,beta,omega):
+
+    nodes2edges = {}
+    alloutgoingfactors = []
+    edge2ind={}
+    m=len(mlgraph.intralayer_edges)+len(mlgraph.interlayer_edges)
+
+    for i,e in enumerate(itertools.chain(mlgraph.intralayer_edges,mlgraph.interlayer_edges)):
+        if i<len(mlgraph.intralayer_edges):
+            w=mlgraph.intralayer_weights[i]
+        else:
+            w=omega*mlgraph.interlayer_weights[i-len(mlgraph.intralayer_edges)]
+        expfactor=np.exp(beta*w)
+        alloutgoingfactors.append((expfactor-1)/(expfactor+q-1))
+        # alloutgoingfactors.append(1)
+        nodes2edges[e[0]]=nodes2edges.get(e[0],set([])) | set([e])
+        nodes2edges[e[1]]=nodes2edges.get(e[1],set([])) | set([e])
+        if e[0]<e[1]:
+            edge2ind[e]=i
+            edge2ind[(e[1],e[0])]=i+m
+        else:
+            edge2ind[e] = i + m
+            edge2ind[(e[1], e[0])] = i
+
+
+    node2incoming_inds={}
+    node2outgoing_inds={}
+    row_inds=[]
+    col_inds=[]
+    data=[]
+    for i in range(mlgraph.N):
+        node2incoming_inds[i] = node2incoming_inds.get(i, [])
+        node2outgoing_inds[i] = node2outgoing_inds.get(i, [])
+
+        try:
+            cedges=nodes2edges[i]
+        except KeyError:
+            continue
+        if len(cedges)==1:
+            e = next(iter(cedges))
+            en = 0 if e[0]==i else 1
+            cind=edge2ind[(e[1-en],e[en])]
+            cind_out=edge2ind[(e[en],e[1-en])]
+            node2incoming_inds[i].append(cind)
+            node2outgoing_inds[i].append(cind_out)
+
+        for e1,e2 in itertools.combinations(cedges,2):
+
+            e1w=alloutgoingfactors[edge2ind[e1]]
+            e2w=alloutgoingfactors[edge2ind[e2]]
+            #tell us which of the tuple represents current node
+            e1n = 0 if e1[0]==i else 1
+            e2n = 0 if e2[0]==i else 1
+
+            #e1->e2->
+            e1ind=edge2ind[(e1[1-e1n],e1[e1n])]
+            e2ind=edge2ind[(e2[e2n],e2[1-e2n])]
+            col_inds.append(e1ind)
+            row_inds.append(e2ind)
+            node2incoming_inds[i].append(e1ind)
+            node2outgoing_inds[i].append(e2ind)
+            data.append(e2w)
+
+            #e2->e1->
+            e1ind = edge2ind[(e1[e1n], e1[1-e1n])]
+            e2ind = edge2ind[(e2[1-e2n], e2[e2n])]
+            col_inds.append(e2ind)
+            row_inds.append(e1ind)
+            node2incoming_inds[i].append(e2ind)
+            node2outgoing_inds[i].append(e1ind)
+
+            data.append(e1w)
+
+    for i,vals in node2incoming_inds.items():
+        node2incoming_inds[i]=list(set(vals))
+
+    for i, vals in node2outgoing_inds.items():
+        node2outgoing_inds[i] = list(set(vals))
+
+    nonBacktrack=sparse.csr_matrix((data,(row_inds,col_inds)),shape=(2*m,2*m),dtype=float)
+
+    return nonBacktrack,node2incoming_inds,node2outgoing_inds
+
+
+
 
 def test_non_backtracking_cluster():
     n = 200
@@ -468,12 +582,13 @@ def test_non_backtracking_cluster():
     p_eta = 1.0
     ncoms = 3
     omega = 1.0
+    gamma = 1.0
 
     t = time()
 
     load = False
     if not load:
-        multiplex = modbp.generate_planted_partitions_dynamic_sbm(n=n,epsilon=mu,c=4,ncoms=ncoms,
+        multiplex = modbp.generate_planted_partitions_dynamic_sbm(n=n,epsilon=mu,c=6,ncoms=ncoms,
                                                                   nlayers=nlayers,eta=p_eta)
 
         # multiplex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
@@ -497,17 +612,18 @@ def test_non_backtracking_cluster():
     t=time()
 
 
-    vals,vecs=slinagl.eigs(nbtrack,k=3,which='LM')
-
-    # negvals,negvecs=slinagl.eigs(nbtrack,k=ncoms,which='SR')
+    vals,vecs=slinagl.eigs(nbtrack,k=4,which='LR')
+    # negvals,negvecs=slinagl.eigs(nbtrack,k=4,which='SR')
+    # print(negvals)
     # vals=np.append(np.real(vals),np.abs(negvals))
-
-    vals=np.abs(np.real(vals))
+    # vecs=np.hstack([vecs,negvecs])
+    # vals=np.abs(np.real(vals))
 
     inds=list(range(0,vecs.shape[0],2))
+    inds=list(range(n,vecs.shape[0]))
+
     vecs=vecs[inds,:]
 
-    print(vals)
     vecs=np.array(vecs)
     vecs[:,np.flip(np.argsort(vals))]
     vals=np.flip(np.sort(vals))
@@ -518,21 +634,121 @@ def test_non_backtracking_cluster():
     colors=sbn.color_palette("Set1",n_colors=len(coms))
     com2col=dict(zip(coms,colors))
     color_vec=list(map(lambda x:com2col[x],multiplex.comm_vec))
+    vec2plot=np.real(vecs)
+
+    cmap=sbn.cubehelix_palette(as_cmap=True,light=1.0)
+    # plt.close()
+    # f,a=plt.subplots(1,2,figsize=(6,3))
+    # a=plt.subplot(1,2,1)
+    # a.scatter(vecs[:,0],vecs[:,1],color=color_vec)
+    #
+    # # a=plt.subplot(1,2,2)
+    # a = f.add_subplot(122, projection='3d')
+    #
+    # a.scatter(vec2plot[:,0].flatten(),vec2plot[:,1].flatten(),vec2plot[:,2].flatten(),color=color_vec)
+    # plt.show()
+
+
+    kmeans = KMeans(n_clusters=ncoms, random_state=0).fit(np.real(vecs[:,range(0,ncoms)]))
+    print("Non-backtrack AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
+    S=get_starting_partition(multiplex,gamma=gamma,omega=omega,q=ncoms)
+    print("Mod Matrix AMI:",skm.adjusted_mutual_info_score(multiplex.comm_vec,S))
+
+    return
+
+def test_non_backtracking_edges_cluster():
+    n = 200
+    nlayers = 1
+    mu = .1
+    p_eta = 1.0
+    ncoms = 3
+    omega = 1.0
+    gamma = 1.0
+
+    t = time()
+
+    load = False
+    if not load:
+        multiplex = modbp.generate_planted_partitions_dynamic_sbm(n=n,epsilon=mu,c=6,ncoms=ncoms,
+                                                                  nlayers=nlayers,eta=p_eta)
+
+        # multiplex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
+        #                                          nlayers=nlayers, ncoms=ncoms)
+        # multiplex = create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+        #                                    n_layers=nlayers, ncoms=ncoms)
+        with gzip.open("working_graph.gz", 'wb') as fh:
+            pickle.dump(multiplex, fh)
+    else:
+        with gzip.open("working_graph.gz", 'rb') as fh:
+            multiplex = pickle.load(fh)
+
+    # multiplex.reorder_nodes()
+    print(np.unique(multiplex.comm_vec,return_counts=True))
+    t=time()
+    beta=1.0
+    nbtrack,node_in_inds,node_out_inds=get_non_backtracking_modbp(multiplex,q=ncoms,beta=beta,omega=omega)
+
+    print('nbtrack',nbtrack.shape)
+    print('nbtrack non-zero',nbtrack.nnz)
+    print('time calculating B: {:.3f}'.format(time()-t))
+    t=time()
+
+    vals,vecs=slinagl.eigs(nbtrack,k=3,which='LR')
+    vecs=vecs[:,np.flip(np.argsort(np.real(vals)))]
+    comb_vecs=np.zeros((multiplex.N,vecs.shape[1]))
+    # nbtrack_comb=np.zeros((2*multiplex.N,2*multiplex.N))
+    for i in range(multiplex.N):
+        in_inds=node_in_inds[i]
+        if len(in_inds)!=0:
+            comb_vecs[i,:]=np.sum(vecs[in_inds,:],axis=0)
+
+
+    print('edges',vals)
+
+    nbtrack2=get_non_backtracking(multiplex)
+    vals2,vecs2=slinagl.eigs(nbtrack2,k=3,which='LR')
+    inds=list(range(n,vecs2.shape[0]))
+    vecs2=vecs2[inds,:]
+    vecs2=vecs2[:,np.flip(np.argsort(np.real(vals2)))]
+    print('nodes',vals2)
+
+
+
+    coms=np.unique(multiplex.comm_vec)
+    colors=sbn.color_palette("Set1",n_colors=len(coms))
+    com2col=dict(zip(coms,colors))
+    color_vec=list(map(lambda x:com2col[x],multiplex.comm_vec))
+
+    vec2plot=np.real(comb_vecs)
+    vec2plot2=np.real(vecs2)
+
+
+    kmeans = KMeans(n_clusters=ncoms).fit(vec2plot[:,range(0,ncoms)])
+    print("Edges Non-backtrack AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
+    kmeans = KMeans(n_clusters=ncoms).fit(vec2plot2[:, range(0, ncoms)])
+    print("Nodes Non-backtrack AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, kmeans.labels_))
+    S=get_starting_partition(multiplex,gamma=gamma,omega=omega,q=ncoms)
+    print("Mod Matrix AMI:",skm.adjusted_mutual_info_score(multiplex.comm_vec,S))
+
+    print('edges',vec2plot[:2,:])
+    print('nodes',vec2plot2[:2,:])
 
 
     cmap=sbn.cubehelix_palette(as_cmap=True,light=1.0)
     plt.close()
     f,a=plt.subplots(1,2,figsize=(6,3))
-    a=plt.subplot(1,2,1)
-    a.scatter(vecs[:,0],vecs[:,1],color=color_vec)
+    # a=plt.subplot(1,2,1)
+    # a.scatter(vec2plot[:,0].flatten(),vec2plot[:,1].flatten(),color=color_vec)
 
-    a=plt.subplot(1,2,2)
-    a.scatter(vecs[:,1],vecs[:,2],color=color_vec)
+    a = f.add_subplot(121, projection='3d')
+    a.set_title("Edges B")
+    a.scatter(vec2plot[:, 0].flatten(), vec2plot[:, 1].flatten(), vec2plot[:, 2].flatten(), color=color_vec)
+
+    # a=plt.subplot(1,2,2)
+    a = f.add_subplot(122, projection='3d')
+    a.set_title("Nodes B")
+    a.scatter(vec2plot2[:,0].flatten(),vec2plot2[:,1].flatten(),vec2plot2[:,2].flatten(),color=color_vec)
     plt.show()
-
-
-    kmeans = KMeans(n_clusters=ncoms, random_state=0).fit(np.real(vecs[:,range(0,ncoms)]))
-    print("AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
 
 
 
@@ -598,6 +814,7 @@ def test_ZM_on_collapsed():
 if __name__=="__main__":
     # test_run_modbp_on_collapse()
     # test_on_multiplex_block()
-    test_alternating_bpruns()
+    # test_alternating_bpruns()
     # test_ZM_on_collapsed()
     # test_non_backtracking_cluster()
+    test_non_backtracking_edges_cluster()
