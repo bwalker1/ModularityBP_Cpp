@@ -182,7 +182,9 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         t=time()
         # try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
             # S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
+        t=time()
         S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
+        print("time creating starting partition from nbt : {:.4f}".format(time()-t))
         ami_layer = graph.get_AMI_layer_avg_with_communities(S)
         ami = graph.get_AMI_with_communities(S)
         nmi =  graph.get_AMI_with_communities(S,useNMI=True)
