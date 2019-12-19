@@ -207,7 +207,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
             output.iloc[-1:, :].to_csv(fh, header=False)
 
-        print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
+        print("time running matlab:{:.3f}. ".format(time() - t))
 
     return 0
 
