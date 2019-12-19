@@ -8,6 +8,7 @@ import scipy.io as scio
 import scipy.sparse as sparse
 import scipy.sparse.linalg as  slinalg
 from sklearn.cluster import KMeans
+from sklearn.cluster import MeanShift
 from sklearn.cluster import SpectralClustering
 
 from subprocess import Popen,PIPE
@@ -455,5 +456,7 @@ def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
         return np.array(mvec).flatten()
     else:
         # spectral = SpectralClustering(n_clusters=q,affinity='rbf').fit(real_vecs)
-        kmeans = KMeans(n_clusters=q).fit(real_vecs)
-        return kmeans.labels_
+        # kmeans = KMeans(n_clusters=q).fit(real_vecs)
+        meanshift = MeanShift(bin_seeding=True).fit(real_vecs)
+        # return kmeans.labels_
+        return meanshift.labels_
