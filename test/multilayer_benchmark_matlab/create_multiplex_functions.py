@@ -454,6 +454,6 @@ def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
         mvec=(real_vecs[:,0]>0).astype(int)
         return np.array(mvec).flatten()
     else:
-        spectral = SpectralClustering(n_clusters=q,affinity='rbf').fit(real_vecs)
-        # kmeans = KMeans(n_clusters=q).fit(real_vecs)
-        return spectral.labels_
+        # spectral = SpectralClustering(n_clusters=q,affinity='rbf').fit(real_vecs)
+        kmeans = KMeans(n_clusters=q).fit(real_vecs)
+        return kmeans.labels_
