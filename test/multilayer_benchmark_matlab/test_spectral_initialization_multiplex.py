@@ -20,6 +20,7 @@ import multilayerGM as gm
 from time import time
 
 from create_multiplex_functions import create_multiplex_graph
+from create_multiplex_functions import get_starting_partition_multimodbp_nodes
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
@@ -50,23 +51,6 @@ def create_marginals_from_comvec(commvec,q=None,SNR=1000):
         outmargs[i,:]=currow
     return outmargs
 
-def get_starting_partition(mgraph,gamma=1.0,omega=1.0,q=2):
-    """Spectral clustering on B matrix to initialize"""
-    A, C = mgraph.to_scipy_csr()
-    A+=A.T
-    C+=C.T
-    P = mgraph.create_null_adj()
-    B=A - gamma*P  + omega*C
-    evals, evecs = slinagl.eigs(B,k=q-1,which='LR')
-    evecs=np.array(evecs)
-    evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
-
-    if q==2:
-        mvec=(evecs2plot[:,0]>0).astype(int)
-        return np.array(mvec).flatten()
-    else:
-        kmeans = KMeans(n_clusters=q, random_state=0).fit(evecs2plot)
-        return kmeans.labels_
 
 
 
