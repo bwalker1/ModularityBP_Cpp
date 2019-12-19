@@ -219,6 +219,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             matlabfailed = False
     #    except:
             matlabfailed = True
+        print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
 
         if not matlabfailed:
             with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
