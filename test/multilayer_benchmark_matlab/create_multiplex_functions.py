@@ -5,6 +5,11 @@ import multilayerGM as gm
 import os,re,sys
 import shutil
 import scipy.io as scio
+import scipy.sparse as sparse
+import scipy.sparse.linalg as  slinalg
+from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
+
 from subprocess import Popen,PIPE
 # clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 clusterdir=os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
@@ -391,16 +396,36 @@ def get_non_backtracking_modbp(mlgraph,q,beta,omega):
     return nonBacktrack, node2incoming_inds, node2outgoing_inds
 
 
+def get_non_backtracking_nodes(mlgraph,gamma,omega):
+
+    A,C=mlgraph.to_scipy_csr()
+    A=A+A.T
+    C=C+C.T
+    P = sparse.csr_matrix(mlgraph.create_null_adj())
+    A_comb = A - gamma * P + omega * C
+
+
+
+    D=sparse.diags(np.array(np.sum(A_comb,axis=0)).flatten())
+    ones=sparse.diags(np.ones(A.shape[0]))
+    # ones=np.ones(A.shape)
+
+    zeros=sparse.csr_matrix(A.shape)
+    Btop=sparse.hstack([zeros,D-ones])
+    Bbottom=sparse.hstack([-ones,A_comb])
+    B = sparse.vstack(([Btop,Bbottom]))
+    return B
+
 def get_starting_partition_multimodbp(mgraph,beta=1.0,omega=1.0,q=2):
 
-    nbtrack, node_in_inds, node_out_inds = get_non_backtracking_modbp(mlgraph, q=ncoms, beta=beta, omega=omega)
+    nbtrack, node_in_inds, node_out_inds = get_non_backtracking_modbp(mgraph, q=q, beta=beta, omega=omega)
 
 
-    vals, vecs = slinagl.eigs(nbtrack, k=q, which='LR')
+    vals, vecs = slinalg.eigs(nbtrack, k=q, which='LR')
     vecs = vecs[:, np.flip(np.argsort(np.real(vals)))]
-    comb_vecs = np.zeros((multiplex.N, vecs.shape[1]))
+    comb_vecs = np.zeros((mgraph.N, vecs.shape[1]))
     # nbtrack_comb=np.zeros((2*multiplex.N,2*multiplex.N))
-    for i in range(multiplex.N):
+    for i in range(mgraph.N):
         in_inds = node_in_inds[i]
         if len(in_inds) != 0:
             comb_vecs[i, :] = np.sum(vecs[in_inds, :], axis=0)
@@ -412,3 +437,23 @@ def get_starting_partition_multimodbp(mgraph,beta=1.0,omega=1.0,q=2):
     else:
         kmeans = KMeans(n_clusters=q).fit(real_vecs)
         return kmeans.labels_
+
+
+def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
+
+
+    nbtrack = get_non_backtracking(multiplex, gamma=gamma, omega=omega)
+    vals, vecs = slinagl.eigs(nbtrack2, k=q, which='LR')
+    inds = list(range(multiplex.N, vecs.shape[0]))
+    vecs = vecs[inds, :]
+    vecs = vecs[:, np.flip(np.argsort(np.real(vals)))]
+
+
+    real_vecs=np.real(comb_vecs)
+    if q==2:
+        mvec=(real_vecs[:,0]>0).astype(int)
+        return np.array(mvec).flatten()
+    else:
+        spectral = SpectralClustering(n_clusters=ncoms,affinity='rbf').fit(real_vecs)
+        # kmeans = KMeans(n_clusters=q).fit(real_vecs)
+        return spectral.labels_

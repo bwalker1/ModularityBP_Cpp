@@ -2,6 +2,9 @@ import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as slinagl
 from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
+from sklearn.mixture import GaussianMixture
+
 import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -411,12 +414,15 @@ def test_alternating_bpruns():
     print("AMI_layer_matlab = {:.3f} , AMI = {:.3f} ".format(multiplex.get_AMI_layer_avg_with_communities(S),
                                                              multiplex.get_AMI_with_communities(S)))
 
-def get_non_backtracking(mlgraph):
+def get_non_backtracking(mlgraph,gamma,omega):
 
     A,C=mlgraph.to_scipy_csr()
     A=A+A.T
     C=C+C.T
-    A_comb=A+C
+    P = sparse.csr_matrix(mlgraph.create_null_adj())
+    A_comb = A - gamma * P + omega * C
+
+
 
     D=sparse.diags(np.array(np.sum(A_comb,axis=0)).flatten())
     ones=sparse.diags(np.ones(A.shape[0]))
@@ -426,12 +432,6 @@ def get_non_backtracking(mlgraph):
     Btop=sparse.hstack([zeros,D-ones])
     Bbottom=sparse.hstack([-ones,A_comb])
     B = sparse.vstack(([Btop,Bbottom]))
-    # plt.close()
-    # cmap=sbn.cubehelix_palette(as_cmap=True)
-    # # plt.pcolormesh(np.array(A_comb.toarray()),cmap=cmap)
-    # plt.pcolormesh(np.array(B.toarray()))
-    #
-    # plt.show()
     return B
 
 def get_non_backtracking_modbp2(mlgraph,q,beta,omega):
@@ -658,24 +658,24 @@ def test_non_backtracking_cluster():
 
 def test_non_backtracking_edges_cluster():
     n = 200
-    nlayers = 1
-    mu = .1
-    p_eta = 1.0
+    nlayers = 2
+    mu = 0
+    p_eta = .5
     ncoms = 3
-    omega = 1.0
+    omega = .1
     gamma = 1.0
 
     t = time()
 
     load = False
     if not load:
-        multiplex = modbp.generate_planted_partitions_dynamic_sbm(n=n,epsilon=mu,c=6,ncoms=ncoms,
-                                                                  nlayers=nlayers,eta=p_eta)
+        # multiplex = modbp.generate_planted_partitions_dynamic_sbm(n=n,epsilon=mu,c=6,ncoms=ncoms,
+        #                                                           nlayers=nlayers,eta=p_eta)
 
         # multiplex = create_multiplex_graph_matlab(n_nodes=n, mu=mu, p_in=p_eta,nblocks=3,
         #                                          nlayers=nlayers, ncoms=ncoms)
-        # multiplex = create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
-        #                                    n_layers=nlayers, ncoms=ncoms)
+        multiplex = create_multiplex_graph(n_nodes=n, mu=mu, p=p_eta,
+                                           n_layers=nlayers, ncoms=ncoms)
         with gzip.open("working_graph.gz", 'wb') as fh:
             pickle.dump(multiplex, fh)
     else:
@@ -686,14 +686,11 @@ def test_non_backtracking_edges_cluster():
     print(np.unique(multiplex.comm_vec,return_counts=True))
     t=time()
     beta=1.0
+    t = time()
+    # for beta in np.linspace(.01,1,10):
+    print(beta)
     nbtrack,node_in_inds,node_out_inds=get_non_backtracking_modbp(multiplex,q=ncoms,beta=beta,omega=omega)
-
-    print('nbtrack',nbtrack.shape)
-    print('nbtrack non-zero',nbtrack.nnz)
-    print('time calculating B: {:.3f}'.format(time()-t))
-    t=time()
-
-    vals,vecs=slinagl.eigs(nbtrack,k=3,which='LR')
+    vals,vecs=slinagl.eigs(nbtrack,k=12,which='LR')
     vecs=vecs[:,np.flip(np.argsort(np.real(vals)))]
     comb_vecs=np.zeros((multiplex.N,vecs.shape[1]))
     # nbtrack_comb=np.zeros((2*multiplex.N,2*multiplex.N))
@@ -701,15 +698,20 @@ def test_non_backtracking_edges_cluster():
         in_inds=node_in_inds[i]
         if len(in_inds)!=0:
             comb_vecs[i,:]=np.sum(vecs[in_inds,:],axis=0)
+    # vec2plot=np.real(comb_vecs)
+    print('time calculating B edges + eigen: {:.3f}'.format(time()-t))
+    # kmeans = KMeans(n_clusters=ncoms).fit(vec2plot[:, range(0, ncoms)])
+    # print("Edges Non-backtrack AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, kmeans.labels_))
 
-
-    print('edges',vals)
-
-    nbtrack2=get_non_backtracking(multiplex)
-    vals2,vecs2=slinagl.eigs(nbtrack2,k=3,which='LR')
-    inds=list(range(n,vecs2.shape[0]))
+    t=time()
+    nbtrack2=get_non_backtracking(multiplex,gamma=gamma,omega=omega)
+    vals2,vecs2=slinagl.eigs(nbtrack2,k=12,which='LR')
+    inds=list(range(multiplex.N,vecs2.shape[0]))
     vecs2=vecs2[inds,:]
     vecs2=vecs2[:,np.flip(np.argsort(np.real(vals2)))]
+    print('time calculating B nodes + eigen: {:.3f}'.format(time()-t))
+
+    print('edges', vals)
     print('nodes',vals2)
 
 
@@ -722,11 +724,26 @@ def test_non_backtracking_edges_cluster():
     vec2plot=np.real(comb_vecs)
     vec2plot2=np.real(vecs2)
 
+    print(vec2plot.shape)
+    print(vec2plot2.shape)
+
 
     kmeans = KMeans(n_clusters=ncoms).fit(vec2plot[:,range(0,ncoms)])
     print("Edges Non-backtrack AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
+    spectral = SpectralClustering(n_clusters=ncoms,affinity='rbf').fit(vec2plot[:, range(0, ncoms)])
+    print("Edges Non-backtrack SC AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, spectral.labels_))
+
     kmeans = KMeans(n_clusters=ncoms).fit(vec2plot2[:, range(0, ncoms)])
     print("Nodes Non-backtrack AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, kmeans.labels_))
+    spect_clust=SpectralClustering(n_clusters=ncoms,affinity='rbf',n_neighbors=10).fit(vec2plot2[:, range(0, ncoms)])
+    #
+    # spect_clust=SpectralClustering(n_clusters=ncoms,affinity='nearest_neighbors',n_neighbors=10).fit(vec2plot2[:, range(0, ncoms)])
+    print("Nodes Non-backtrack SC AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, spect_clust.labels_))
+
+    gauss_mix_labels=GaussianMixture(n_components=ncoms).fit_predict(vec2plot2[:, range(0, ncoms)])
+    print("Nodes Non-backtrack GaussMix AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, gauss_mix_labels))
+
+
     S=get_starting_partition(multiplex,gamma=gamma,omega=omega,q=ncoms)
     print("Mod Matrix AMI:",skm.adjusted_mutual_info_score(multiplex.comm_vec,S))
 
