@@ -442,18 +442,18 @@ def get_starting_partition_multimodbp(mgraph,beta=1.0,omega=1.0,q=2):
 def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
 
 
-    nbtrack = get_non_backtracking(multiplex, gamma=gamma, omega=omega)
-    vals, vecs = slinagl.eigs(nbtrack2, k=q, which='LR')
-    inds = list(range(multiplex.N, vecs.shape[0]))
+    nbtrack = get_non_backtracking_nodes(mgraph, gamma=gamma, omega=omega)
+    vals, vecs = slinalg.eigs(nbtrack, k=q, which='LR')
+    inds = list(range(mgraph.N, vecs.shape[0]))
     vecs = vecs[inds, :]
     vecs = vecs[:, np.flip(np.argsort(np.real(vals)))]
 
 
-    real_vecs=np.real(comb_vecs)
+    real_vecs=np.real(vecs)
     if q==2:
         mvec=(real_vecs[:,0]>0).astype(int)
         return np.array(mvec).flatten()
     else:
-        spectral = SpectralClustering(n_clusters=ncoms,affinity='rbf').fit(real_vecs)
+        spectral = SpectralClustering(n_clusters=q,affinity='rbf').fit(real_vecs)
         # kmeans = KMeans(n_clusters=q).fit(real_vecs)
         return spectral.labels_
