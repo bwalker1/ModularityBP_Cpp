@@ -205,8 +205,12 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
         print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
 
-        with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
-            output.iloc[-1:, :].to_csv(fh, header=False)
+        if trial == 0:  # write out whole thing
+            with open(outfile, 'w') as fh:
+                output.to_csv(fh, header=True)
+        else:
+            with open(outfile, 'a') as fh:  # writeout last row
+                output.iloc[-1:, :].to_csv(fh, header=False)
 
         print("time running matlab:{:.3f}. ".format(time() - t))
 
