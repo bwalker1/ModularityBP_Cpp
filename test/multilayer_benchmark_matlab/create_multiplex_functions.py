@@ -301,7 +301,7 @@ def get_starting_partition_modularity(mgraph,gamma=1.0,omega=1.0,q=2):
     C+=C.T
     P = mgraph.create_null_adj()
     B=A - gamma*P  + omega*C
-    evals, evecs = slinagl.eigs(B,k=q,which='LR')
+    evals, evecs = slinalg.eigs(B,k=q,which='LR')
     evecs=np.array(evecs)
     evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
 
