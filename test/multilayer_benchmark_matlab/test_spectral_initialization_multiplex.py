@@ -193,7 +193,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
         #we now only call this once each trial with iterated version
         t=time()
-     #   try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
+        try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
             # S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
             S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
             ami_layer = graph.get_AMI_layer_avg_with_communities(S)
@@ -217,7 +217,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             Scoms, Scnt = np.unique(S, return_counts=True)
             output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
             matlabfailed = False
-    #    except:
+        except:
             matlabfailed = True
         print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
 
