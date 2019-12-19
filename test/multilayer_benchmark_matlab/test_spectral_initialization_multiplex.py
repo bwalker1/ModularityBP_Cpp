@@ -21,7 +21,9 @@ from time import time
 
 from create_multiplex_functions import create_multiplex_graph
 from create_multiplex_functions import get_starting_partition_multimodbp_nodes
-clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
+
+clusterdir=os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+# clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_ma# tlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
 
