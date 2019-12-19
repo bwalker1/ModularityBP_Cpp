@@ -598,6 +598,6 @@ def test_ZM_on_collapsed():
 if __name__=="__main__":
     # test_run_modbp_on_collapse()
     # test_on_multiplex_block()
-    test_alternating_bpruns()
+    # test_alternating_bpruns()
     # test_ZM_on_collapsed()
     # test_non_backtracking_cluster()
