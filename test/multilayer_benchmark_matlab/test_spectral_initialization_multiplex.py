@@ -11,8 +11,6 @@ import os
 import shutil
 import gzip,pickle
 import scipy.io as scio
-import scipy.sparse.linalg as slinagl
-from sklearn.cluster import KMeans
 import sklearn.metrics as skm
 import itertools
 #generative multilayer benchmark models (now in python)
@@ -201,7 +199,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             Scoms, Scnt = np.unique(S, return_counts=True)
             output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
             matlabfailed = False
-        except:
+        except :
             matlabfailed = True
         print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
 
