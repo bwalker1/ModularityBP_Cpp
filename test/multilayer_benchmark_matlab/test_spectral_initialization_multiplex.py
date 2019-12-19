@@ -177,37 +177,33 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
         #we now only call this once each trial with iterated version
         t=time()
-        try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
+        # try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
             # S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
-            S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
-            ami_layer = graph.get_AMI_layer_avg_with_communities(S)
-            ami = graph.get_AMI_with_communities(S)
-            nmi =  graph.get_AMI_with_communities(S,useNMI=True)
-            nmi_layer  =  graph.get_AMI_layer_avg_with_communities(S,useNMI=True)
+        S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
+        ami_layer = graph.get_AMI_layer_avg_with_communities(S)
+        ami = graph.get_AMI_with_communities(S)
+        nmi =  graph.get_AMI_with_communities(S,useNMI=True)
+        nmi_layer  =  graph.get_AMI_layer_avg_with_communities(S,useNMI=True)
 
-            cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
-            cind = output.shape[0]
-            output.loc[cind, 'isSpectral'] = True
-            output.loc[cind, 'mu'] = mu
-            output.loc[cind, 'p'] = p_eta
-            output.loc[cind, 'trial'] = trial
-            output.loc[cind, 'AMI'] = ami
-            output.loc[cind, 'AMI_layer_avg'] = ami_layer
-            output.loc[cind, 'NMI'] = nmi
-            output.loc[cind, 'NMI_layer_avg'] = nmi_layer
-            output.loc[cind, 'retrieval_modularity'] = cmod
-            output.loc[cind, 'resgamma'] = gamma
-            output.loc[cind, 'omega'] = omega
-            Scoms, Scnt = np.unique(S, return_counts=True)
-            output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
-            matlabfailed = False
-        except:
-            matlabfailed = True
+        cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
+        cind = output.shape[0]
+        output.loc[cind, 'isSpectral'] = True
+        output.loc[cind, 'mu'] = mu
+        output.loc[cind, 'p'] = p_eta
+        output.loc[cind, 'trial'] = trial
+        output.loc[cind, 'AMI'] = ami
+        output.loc[cind, 'AMI_layer_avg'] = ami_layer
+        output.loc[cind, 'NMI'] = nmi
+        output.loc[cind, 'NMI_layer_avg'] = nmi_layer
+        output.loc[cind, 'retrieval_modularity'] = cmod
+        output.loc[cind, 'resgamma'] = gamma
+        output.loc[cind, 'omega'] = omega
+        Scoms, Scnt = np.unique(S, return_counts=True)
+        output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
         print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
 
-        if not matlabfailed:
-            with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
-                output.iloc[-1:, :].to_csv(fh, header=False)
+        with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
+            output.iloc[-1:, :].to_csv(fh, header=False)
 
         print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
 
