@@ -449,7 +449,6 @@ def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
     vecs = vecs[inds, :]
     vecs = vecs[:, np.flip(np.argsort(np.real(vals)))]
 
-
     real_vecs=np.real(vecs)
     if q==2:
         mvec=(real_vecs[:,0]>0).astype(int)
