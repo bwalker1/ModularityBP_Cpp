@@ -16,7 +16,7 @@ for omega in "${omegas[@]}"
             for mu in "${mus[@]}"
                 do
 	            #echo "${eps} ${gamma} ${omega}"
-                sbatch -t 200 --mem=2g -n 1 -o /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/spectral_init.txt -p general \
+                sbatch -t 200 --mem=3g -n 1 -o /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/spectral_init.txt -p general \
                 --wrap "python3 /nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/multilayer_benchmark_matlab/test_spectral_initialization_multiplex.py\
                 1000 15 ${mu} ${p} ${omega} ${gamma} 100"
                 done
