@@ -20,6 +20,8 @@ import multilayerGM as gm
 from time import time
 
 from create_multiplex_functions import create_multiplex_graph
+from create_multiplex_functions import get_starting_partition_modularity
+from create_multiplex_functions import get_starting_partition_multimodbp
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
@@ -50,23 +52,6 @@ def create_marginals_from_comvec(commvec,q=None,SNR=1000):
         outmargs[i,:]=currow
     return outmargs
 
-def get_starting_partition(mgraph,gamma=1.0,omega=1.0,q=2):
-    """Spectral clustering on B matrix to initialize"""
-    A, C = mgraph.to_scipy_csr()
-    A+=A.T
-    C+=C.T
-    P = mgraph.create_null_adj()
-    B=A - gamma*P  + omega*C
-    evals, evecs = slinagl.eigs(B,k=q-1,which='LR')
-    evecs=np.array(evecs)
-    evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
-
-    if q==2:
-        mvec=(evecs2plot[:,0]>0).astype(int)
-        return np.array(mvec).flatten()
-    else:
-        kmeans = KMeans(n_clusters=q, random_state=0).fit(evecs2plot)
-        return kmeans.labels_
 
 
 
@@ -142,11 +127,12 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
 
-        start_vec = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
-        print('time creating starting vec:{:.3f}'.format(time() - t))
-        print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
-        ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
-                                                    q=qmax)
+
+        # start_vec = get_starting_partition_multimodbp(g)
+        # # print('time creating starting vec:{:.3f}'.format(time() - t))
+        # # print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
+        # ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+        #                                             q=qmax)
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
@@ -157,6 +143,9 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
+            start_vec = get_starting_partition_multimodbp(g,beta=beta,omega=omega,q=qmax)
+            ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+                                                        q=qmax)
 
             mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, reset=True,
                             starting_marginals=ground_margs,
@@ -233,6 +222,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
 
     return 0
+
+
 
 
 def main():

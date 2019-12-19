@@ -124,7 +124,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
 def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockmultiplex=False):
     ncoms=10
 
-    finoutdir = os.path.join(matlabbench_dir, 'spectral_only_uninit_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'spectral_nbtnodes_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
@@ -194,8 +194,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         #we now only call this once each trial with iterated version
         t=time()
         try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
-            S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
-
+            # S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
+            S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
             ami_layer = graph.get_AMI_layer_avg_with_communities(S)
             ami = graph.get_AMI_with_communities(S)
             nmi =  graph.get_AMI_with_communities(S,useNMI=True)
