@@ -184,36 +184,38 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             # S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
         t=time()
         # S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
-        S = get_starting_partition_multimodbp(graph,gamma=gamma,omega=omega,q=ncoms)
-        print("time creating starting partition from nbt : {:.4f}".format(time()-t))
-        ami_layer = graph.get_AMI_layer_avg_with_communities(S)
-        ami = graph.get_AMI_with_communities(S)
-        nmi =  graph.get_AMI_with_communities(S,useNMI=True)
-        nmi_layer  =  graph.get_AMI_layer_avg_with_communities(S,useNMI=True)
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
+        for j,beta in enumerate(bstars):
+            S = get_starting_partition_multimodbp(graph,gamma=gamma,beta=beta,omega=omega,q=ncoms)
+            print("time creating starting partition from nbt : {:.4f}".format(time()-t))
+            ami_layer = graph.get_AMI_layer_avg_with_communities(S)
+            ami = graph.get_AMI_with_communities(S)
+            nmi =  graph.get_AMI_with_communities(S,useNMI=True)
+            nmi_layer  =  graph.get_AMI_layer_avg_with_communities(S,useNMI=True)
 
-        cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
-        cind = output.shape[0]
-        output.loc[cind, 'isSpectral'] = True
-        output.loc[cind, 'mu'] = mu
-        output.loc[cind, 'p'] = p_eta
-        output.loc[cind, 'trial'] = trial
-        output.loc[cind, 'AMI'] = ami
-        output.loc[cind, 'AMI_layer_avg'] = ami_layer
-        output.loc[cind, 'NMI'] = nmi
-        output.loc[cind, 'NMI_layer_avg'] = nmi_layer
-        output.loc[cind, 'retrieval_modularity'] = cmod
-        output.loc[cind, 'resgamma'] = gamma
-        output.loc[cind, 'omega'] = omega
-        Scoms, Scnt = np.unique(S, return_counts=True)
-        output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
-        print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
+            cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
+            cind = output.shape[0]
+            output.loc[cind, 'isSpectral'] = True
+            output.loc[cind, 'mu'] = mu
+            output.loc[cind, 'p'] = p_eta
+            output.loc[cind, 'trial'] = trial
+            output.loc[cind, 'AMI'] = ami
+            output.loc[cind, 'AMI_layer_avg'] = ami_layer
+            output.loc[cind, 'NMI'] = nmi
+            output.loc[cind, 'NMI_layer_avg'] = nmi_layer
+            output.loc[cind, 'retrieval_modularity'] = cmod
+            output.loc[cind, 'resgamma'] = gamma
+            output.loc[cind, 'omega'] = omega
+            Scoms, Scnt = np.unique(S, return_counts=True)
+            output.loc[cind, 'num_coms'] = np.sum(Scnt > 5)
+            print(output.loc[cind, ['isSpectral', 'AMI', 'AMI_layer_avg']])
 
-        if trial == 0:  # write out whole thing
-            with open(outfile, 'w') as fh:
-                output.to_csv(fh, header=True)
-        else:
-            with open(outfile, 'a') as fh:  # writeout last row
-                output.iloc[-1:, :].to_csv(fh, header=False)
+            if trial == 0:  # write out whole thing
+                with open(outfile, 'w') as fh:
+                    output.to_csv(fh, header=True)
+            else:
+                with open(outfile, 'a') as fh:  # writeout last row
+                    output.iloc[-1:, :].to_csv(fh, header=False)
 
         print("time running matlab:{:.3f}. ".format(time() - t))
 

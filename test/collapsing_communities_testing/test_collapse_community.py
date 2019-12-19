@@ -1,9 +1,11 @@
 import numpy as np
 import scipy.sparse as sparse
-import scipy.sparse.linalg as slinagl
+import scipy.sparse.linalg as slinalg
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
+from sklearn.cluster import MeanShift
 from sklearn.mixture import GaussianMixture
+from sklearn.cluster import OPTICS
 
 import sklearn.metrics as skm
 import matplotlib.pyplot as plt
@@ -18,6 +20,7 @@ from time import time
 import itertools
 sys.path.append(os.path.abspath("../multilayer_benchmark_matlab"))
 from create_multiplex_functions import create_multiplex_graph
+from create_multiplex_functions import get_non_backtracking_nodes
 from create_multiplex_functions import create_multiplex_graph_matlab
 from create_multiplex_functions import call_gen_louvain
 from create_multiplex_functions import run_ZMBP_on_graph
@@ -180,23 +183,6 @@ def test_run_modbp_on_collapse():
 
 
 
-def get_starting_partition(mgraph,gamma=1.0,omega=1.0,q=2):
-
-    A, C = mgraph.to_scipy_csr()
-    A+=A.T
-    C+=C.T
-    P = mgraph.create_null_adj()
-    B=A - gamma*P  + omega*C
-    evals, evecs = slinagl.eigs(B,k=q-1,which='LR')
-    evecs=np.array(evecs)
-    evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
-
-    if q==2:
-        mvec=(evecs2plot[:,0]>0).astype(int)
-        return np.array(mvec).flatten()
-    else:
-        kmeans = KMeans(n_clusters=q, random_state=0).fit(evecs2plot)
-        return kmeans.labels_
 
 
 
@@ -414,80 +400,7 @@ def test_alternating_bpruns():
     print("AMI_layer_matlab = {:.3f} , AMI = {:.3f} ".format(multiplex.get_AMI_layer_avg_with_communities(S),
                                                              multiplex.get_AMI_with_communities(S)))
 
-def get_non_backtracking(mlgraph,gamma,omega):
 
-    A,C=mlgraph.to_scipy_csr()
-    A=A+A.T
-    C=C+C.T
-    P = sparse.csr_matrix(mlgraph.create_null_adj())
-    A_comb = A - gamma * P + omega * C
-
-
-
-    D=sparse.diags(np.array(np.sum(A_comb,axis=0)).flatten())
-    ones=sparse.diags(np.ones(A.shape[0]))
-    # ones=np.ones(A.shape)
-
-    zeros=sparse.csr_matrix(A.shape)
-    Btop=sparse.hstack([zeros,D-ones])
-    Bbottom=sparse.hstack([-ones,A_comb])
-    B = sparse.vstack(([Btop,Bbottom]))
-    return B
-
-def get_non_backtracking_modbp2(mlgraph,q,beta,omega):
-
-    nodes2edges = {}
-    alloutgoingfactors = []
-    edge2ind={}
-    m=len(mlgraph.intralayer_edges)+len(mlgraph.interlayer_edges)
-    for i,e in enumerate(itertools.chain(mlgraph.intralayer_edges,mlgraph.interlayer_edges)):
-        if i<len(mlgraph.intralayer_edges):
-            w=mlgraph.intralayer_weights[i]
-        else:
-            w=omega*mlgraph.interlayer_weights[i-len(mlgraph.intralayer_edges)]
-        expfactor=np.exp(beta*w)
-        # alloutgoingfactors.append((expfactor-1)/(expfactor+q-1))
-        alloutgoingfactors.append(1)
-        nodes2edges[e[0]]=nodes2edges.get(e[0],set([])) | set([e])
-        nodes2edges[e[1]]=nodes2edges.get(e[1],set([])) | set([e])
-        if e[0]<e[1]:
-            edge2ind[e]=i
-            edge2ind[(e[1],e[0])]=i+m
-        else:
-            edge2ind[e] = i + m
-            edge2ind[(e[1], e[0])] = i
-
-    row_inds = []
-    col_inds = []
-    data = []
-    node2incoming_inds= dict(zip(range(i),[[] for _ in range(i)]))
-    node2outgoing_inds= dict(zip(range(i),[[] for _ in range(i)]))
-
-    for e1,e2 in itertools.combinations(mlgraph.intralayer_edges,2):
-        for u,v in itertools.permutations(e1):
-            for w,x in itertools.permutations(e2):
-                if v==w and u!=x:
-                    node2incoming_inds[v].append(edge2ind[(u,v)])
-                    node2outgoing_inds[w].append(edge2ind[(w,x)])
-                    row_inds.append(edge2ind[(u,v)])
-                    col_inds.append(edge2ind[(w,x)])
-                    data.append(1)
-                if x==u and w!=v:
-                    node2incoming_inds[v].append(edge2ind[(w, x)])
-                    node2outgoing_inds[w].append(edge2ind[(u, v)])
-                    row_inds.append(edge2ind[(w, x)])
-                    col_inds.append(edge2ind[(u, v)])
-                    data.append(1)
-
-    for i, vals in node2incoming_inds.items():
-        node2incoming_inds[i] = list(set(vals))
-
-    for i, vals in node2outgoing_inds.items():
-        node2outgoing_inds[i] = list(set(vals))
-
-    nonBacktrack = sparse.csr_matrix((data, (row_inds, col_inds)), shape=(2 * m, 2 * m), dtype=float)
-
-    return nonBacktrack, node2incoming_inds, node2outgoing_inds
 
 def get_non_backtracking_modbp(mlgraph,q,beta,omega):
 
@@ -658,12 +571,12 @@ def test_non_backtracking_cluster():
 
 def test_non_backtracking_edges_cluster():
     n = 200
-    nlayers = 2
-    mu = 0
+    nlayers = 10
+    mu = .1
     p_eta = .5
     ncoms = 3
-    omega = .1
-    gamma = 1.0
+    omega = 5
+    gamma = 1.5
 
     t = time()
 
@@ -685,12 +598,12 @@ def test_non_backtracking_edges_cluster():
     # multiplex.reorder_nodes()
     print(np.unique(multiplex.comm_vec,return_counts=True))
     t=time()
-    beta=1.0
+    beta=.05
     t = time()
     # for beta in np.linspace(.01,1,10):
     print(beta)
     nbtrack,node_in_inds,node_out_inds=get_non_backtracking_modbp(multiplex,q=ncoms,beta=beta,omega=omega)
-    vals,vecs=slinagl.eigs(nbtrack,k=12,which='LR')
+    vals,vecs=slinalg.eigs(nbtrack,k=ncoms,which='LR')
     vecs=vecs[:,np.flip(np.argsort(np.real(vals)))]
     comb_vecs=np.zeros((multiplex.N,vecs.shape[1]))
     # nbtrack_comb=np.zeros((2*multiplex.N,2*multiplex.N))
@@ -704,8 +617,8 @@ def test_non_backtracking_edges_cluster():
     # print("Edges Non-backtrack AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, kmeans.labels_))
 
     t=time()
-    nbtrack2=get_non_backtracking(multiplex,gamma=gamma,omega=omega)
-    vals2,vecs2=slinagl.eigs(nbtrack2,k=12,which='LR')
+    nbtrack2=get_non_backtracking_nodes(multiplex,gamma=gamma,omega=omega)
+    vals2,vecs2=slinalg.eigs(nbtrack2,k=ncoms,which='LR')
     inds=list(range(multiplex.N,vecs2.shape[0]))
     vecs2=vecs2[inds,:]
     vecs2=vecs2[:,np.flip(np.argsort(np.real(vals2)))]
@@ -713,6 +626,16 @@ def test_non_backtracking_edges_cluster():
 
     print('edges', vals)
     print('nodes',vals2)
+
+    #modularity matrix
+    A, C = multiplex.to_scipy_csr()
+    A += A.T
+    C += C.T
+    P = multiplex.create_null_adj()
+    B = A - gamma * P + omega * C
+    evals, evecs = slinalg.eigs(B, k=ncoms, which='LR')
+    evecs = np.array(evecs)
+    evecs2plot = np.real(evecs[:, np.flip(np.argsort(evals))])
 
 
 
@@ -729,23 +652,30 @@ def test_non_backtracking_edges_cluster():
 
 
     kmeans = KMeans(n_clusters=ncoms).fit(vec2plot[:,range(0,ncoms)])
-    print("Edges Non-backtrack AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
+    print("Edges Non-backtrack KMeans AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
     spectral = SpectralClustering(n_clusters=ncoms,affinity='rbf').fit(vec2plot[:, range(0, ncoms)])
     print("Edges Non-backtrack SC AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, spectral.labels_))
 
     kmeans = KMeans(n_clusters=ncoms).fit(vec2plot2[:, range(0, ncoms)])
-    print("Nodes Non-backtrack AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, kmeans.labels_))
-    spect_clust=SpectralClustering(n_clusters=ncoms,affinity='rbf',n_neighbors=10).fit(vec2plot2[:, range(0, ncoms)])
+    print("Nodes Non-backtrack KMeans AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, kmeans.labels_))
+
+    meanshift = MeanShift(bin_seeding=True).fit(vec2plot2[:, range(0, ncoms)])
+    print("Nodes Non-backtrack MeanShift AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, meanshift.labels_))
+
+
+    optics = OPTICS().fit(vec2plot2[:, range(0, ncoms)])
+    print("Nodes Non-backtrack OPTICS AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, optics.labels_))
     #
-    # spect_clust=SpectralClustering(n_clusters=ncoms,affinity='nearest_neighbors',n_neighbors=10).fit(vec2plot2[:, range(0, ncoms)])
-    print("Nodes Non-backtrack SC AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, spect_clust.labels_))
+    # spect_clust=SpectralClustering(n_clusters=ncoms,affinity='rbf',n_neighbors=10).fit(vec2plot2[:, range(0, ncoms)])
+    # print("Nodes Non-backtrack SC AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, spect_clust.labels_))
 
     gauss_mix_labels=GaussianMixture(n_components=ncoms).fit_predict(vec2plot2[:, range(0, ncoms)])
     print("Nodes Non-backtrack GaussMix AMI", skm.adjusted_mutual_info_score(multiplex.comm_vec, gauss_mix_labels))
 
-
-    S=get_starting_partition(multiplex,gamma=gamma,omega=omega,q=ncoms)
-    print("Mod Matrix AMI:",skm.adjusted_mutual_info_score(multiplex.comm_vec,S))
+    kmeans = KMeans(n_clusters=ncoms).fit(evecs2plot)
+    print("Mod Matrix Kmeans AMI:",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
+    meanshift = MeanShift(bin_seeding=True).fit(evecs2plot)
+    print("Mod Matrix MeanShift AMI:", skm.adjusted_mutual_info_score(multiplex.comm_vec, meanshift.labels_))
 
     print('edges',vec2plot[:2,:])
     print('nodes',vec2plot2[:2,:])
@@ -753,18 +683,22 @@ def test_non_backtracking_edges_cluster():
 
     cmap=sbn.cubehelix_palette(as_cmap=True,light=1.0)
     plt.close()
-    f,a=plt.subplots(1,2,figsize=(6,3))
+    f,a=plt.subplots(1,3,figsize=(18,3))
     # a=plt.subplot(1,2,1)
     # a.scatter(vec2plot[:,0].flatten(),vec2plot[:,1].flatten(),color=color_vec)
 
-    a = f.add_subplot(121, projection='3d')
+    a = f.add_subplot(131, projection='3d')
     a.set_title("Edges B")
     a.scatter(vec2plot[:, 0].flatten(), vec2plot[:, 1].flatten(), vec2plot[:, 2].flatten(), color=color_vec)
 
     # a=plt.subplot(1,2,2)
-    a = f.add_subplot(122, projection='3d')
+    a = f.add_subplot(132, projection='3d')
     a.set_title("Nodes B")
     a.scatter(vec2plot2[:,0].flatten(),vec2plot2[:,1].flatten(),vec2plot2[:,2].flatten(),color=color_vec)
+
+    a = f.add_subplot(133, projection='3d')
+    a.set_title("modularity B")
+    a.scatter(evecs2plot[:, 0].flatten(), evecs2plot[:, 1].flatten(), evecs2plot[:, 2].flatten(), color=color_vec)
     plt.show()
 
 

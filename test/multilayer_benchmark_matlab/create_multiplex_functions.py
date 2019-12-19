@@ -8,7 +8,6 @@ import scipy.io as scio
 import scipy.sparse as sparse
 import scipy.sparse.linalg as  slinalg
 from sklearn.cluster import KMeans
-from sklearn.cluster import MeanShift
 from sklearn.cluster import SpectralClustering
 
 from subprocess import Popen,PIPE
@@ -402,8 +401,10 @@ def get_non_backtracking_nodes(mlgraph,gamma,omega):
     A,C=mlgraph.to_scipy_csr()
     A=A+A.T
     C=C+C.T
-    P = sparse.csr_matrix(mlgraph.create_null_adj())
-    A_comb = A - gamma * P + omega * C
+    A_comb = A + omega * C
+    #
+    # P = sparse.csr_matrix(mlgraph.create_null_adj())
+    # A_comb = A - gamma * P + omega * C
 
 
 
@@ -449,13 +450,17 @@ def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
     vecs = vecs[inds, :]
     vecs = vecs[:, np.flip(np.argsort(np.real(vals)))]
 
+
     real_vecs=np.real(vecs)
     if q==2:
         mvec=(real_vecs[:,0]>0).astype(int)
         return np.array(mvec).flatten()
     else:
         # spectral = SpectralClustering(n_clusters=q,affinity='rbf').fit(real_vecs)
-        # kmeans = KMeans(n_clusters=q).fit(real_vecs)
-        meanshift = MeanShift(bin_seeding=True).fit(real_vecs)
-        # return kmeans.labels_
-        return meanshift.labels_
+        # return spectral.labels_
+
+        kmeans = KMeans(n_clusters=q).fit(real_vecs)
+        return kmeans.labels_
+
+        # meanshift = MeanShift(bin_seeding=True).fit(real_vecs)
+        # return meanshift.labels_
