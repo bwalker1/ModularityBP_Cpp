@@ -132,7 +132,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                                   comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
         betas=bstars
-        betas=[]
+        # betas=[]
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
