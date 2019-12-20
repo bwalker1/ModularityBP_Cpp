@@ -52,9 +52,9 @@ def main():
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
-
+        not_converged=0
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=8000, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=500, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
             mlbp_rm['trial']=trial
@@ -62,6 +62,8 @@ def main():
             mlbp_rm['eta'] = eta
             mlbp_rm['n'] = n
             mlbp_rm['q_true'] = q
+            if mlbp_rm['converged'].iloc[-1]==False:
+                not_converged+=1
             #append as we complete beta of each trial
             if ( trial == 0 and j==0):
                 with open(outfile, 'w') as fh:
@@ -69,7 +71,8 @@ def main():
             else:
                 with open(outfile, 'a') as fh:  # writeout as we go
                     mlbp_rm.iloc[[-1], :].to_csv(fh, header=False)
-
+            if not_converged > 2:
+                break
 
     return 0
 
