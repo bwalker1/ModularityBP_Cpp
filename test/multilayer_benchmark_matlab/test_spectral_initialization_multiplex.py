@@ -186,7 +186,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # S = get_starting_partition_multimodbp_nodes(graph,gamma=gamma,omega=omega,q=ncoms)
         bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
         for j,beta in enumerate(bstars):
-            S = get_starting_partition_multimodbp(graph,gamma=gamma,beta=beta,omega=omega,q=ncoms)
+            S = get_starting_partition_multimodbp(graph,beta=beta,omega=omega,q=ncoms)
             print("time creating starting partition from nbt : {:.4f}".format(time()-t))
             ami_layer = graph.get_AMI_layer_avg_with_communities(S)
             ami = graph.get_AMI_with_communities(S)
