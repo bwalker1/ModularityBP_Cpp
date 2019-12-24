@@ -72,8 +72,8 @@ def main():
             else:
                 with open(outfile, 'a') as fh:  # writeout as we go
                     mlbp_rm.iloc[[-1], :].to_csv(fh, header=False)
-            # if not_converged > 2:
-            #     break
+            if not_converged > 2:
+                break
 
     return 0
 
