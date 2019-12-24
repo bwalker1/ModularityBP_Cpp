@@ -432,7 +432,7 @@ def get_starting_partition_multimodbp(mgraph,beta=1.0,omega=1.0,q=2):
         if len(in_inds) != 0:
             comb_vecs[i, :] = np.sum(vecs[in_inds, :], axis=0)
 
-    real_vecs=np.read(comb_vecs)
+    real_vecs=np.real(comb_vecs)
     if q==2:
         mvec=(real_vecs[:,0]>0).astype(int)
         return np.array(mvec).flatten()
