@@ -46,15 +46,16 @@ def main():
     for trial in range(ntrials):
         mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,c=c,
                                                              eta=eta,nlayers=nlayers)
-        mlbp = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, accuracy_off=False)
+        mlbp = modbp.ModularityBP(mlgraph=mgraph,align_communities_across_layers_temporal=True,
+                                  use_effective=True, accuracy_off=False)
 
-        bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(1, qmax+1)]
+        bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(1, qmax+2)]
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
         not_converged=0
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=500, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
             mlbp_rm['trial']=trial
@@ -71,8 +72,8 @@ def main():
             else:
                 with open(outfile, 'a') as fh:  # writeout as we go
                     mlbp_rm.iloc[[-1], :].to_csv(fh, header=False)
-            if not_converged > 2:
-                break
+            # if not_converged > 2:
+            #     break
 
     return 0
 
