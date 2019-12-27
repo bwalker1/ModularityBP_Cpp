@@ -1,6 +1,6 @@
 for gamma in .5 1 1.5 3.0
 do
-    for omega in 2 4 #0 1 #2 4
+    for omega in 0 1 #2 4
     do
         for eta in $(seq 0.0 0.02 1.00)
         do

@@ -54,7 +54,7 @@ def main():
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
-        betas=[.739]
+        #betas=[.739]
         not_converged=0
         for j,beta in enumerate(betas):
             mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
