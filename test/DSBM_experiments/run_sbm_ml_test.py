@@ -12,12 +12,12 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+# clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 # clusterdir = "/home/wweir/Modularity_BP_proj/ModularityBP_Cpp" #lccc
-# clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
+clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 #
 # python run_sbm_ml_test.py 100 2 10 .1 5 .1 1 0.5 1.0
-# python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 2.0 .5
+# python run_sbm_ml_test.py 250 2 20 0 10 0.2 1 0.0 .5
 def main():
 
     # generate a graph and then run it some number of times
@@ -46,16 +46,18 @@ def main():
     for trial in range(ntrials):
         mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,c=c,
                                                              eta=eta,nlayers=nlayers)
-        mlbp = modbp.ModularityBP(mlgraph=mgraph,align_communities_across_layers_temporal=True,
+        mlbp = modbp.ModularityBP(mlgraph=mgraph,
+                                  align_communities_across_layers_temporal=True,
                                   use_effective=True, accuracy_off=False)
 
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(1, qmax+2)]
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
+        betas=[.739]
         not_converged=0
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=1000, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
             mlbp_rm = mlbp.retrieval_modularities
 
             mlbp_rm['trial']=trial
@@ -63,6 +65,7 @@ def main():
             mlbp_rm['eta'] = eta
             mlbp_rm['n'] = n
             mlbp_rm['q_true'] = q
+            print(mlbp_rm.iloc[[-1],:].loc[:,['beta','niters','AMI','AMI_layer_avg','avg_entropy']])
             if mlbp_rm['converged'].iloc[-1]==False:
                 not_converged+=1
             #append as we complete beta of each trial

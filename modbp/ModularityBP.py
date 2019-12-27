@@ -276,6 +276,7 @@ class ModularityBP():
             #                                                    self._get_retrieval_modularity(self.nruns)))
             t=time()
             nsweeps=alignment_function(self.nruns) # modifies partition directly
+            logging.debug("AMI after alignment: {:.3f}".format(self.graph.get_AMI_with_communities(self.partitions[self.nruns])))
             logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
@@ -793,10 +794,9 @@ class ModularityBP():
 
         curpersistence=self._compute_persistence_multiplex(ind)
         prev_per=-np.inf
+        distmat_dict = self._create_all_layer2layer_distmats(ind)
         while curpersistence-prev_per>0 and niters<max_iters:
-
             t=time()
-            distmat_dict=self._create_all_layer2layer_distmats(ind)
             for layer in np.random.choice(self.layers_unique,replace=False,size=self.nlayers):
 
                 #create permutation dictionary to the current layer based on best move
@@ -835,7 +835,6 @@ class ModularityBP():
         #layer.  We start out with each community mapped to itself.
         self._permutation_vectors[ind]=self._initialize_final_permutation_dict_all_layers(ind=ind)
 
-
         while niters<max_iters: #this could also be a while loop but added max number of cycles
         # for clayer in self.layers_unique:
             #we swap the layer with the most number of mismatching nodes here
@@ -844,13 +843,46 @@ class ModularityBP():
             #create permutation dictionary to swap layer to nex
             #note that this diction
             permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
-
             if all([k==v for k,v in permdict.items()]):
                 break #nothing changed
             for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
                 self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
             niters+=1
         return niters
+
+    # def _perform_permuation_sweep_temporal(self, ind):
+    #     """
+    #     Calculate largest difference between adjacent layers\
+    #     then perform flip for everylayer afterwards
+    #     Repeat until no more flips are performed
+    #
+    #     :param ind: partition to perform permutation on
+    #     :return: number of sweeps performed. To keep track of whether \
+    #     any layers were actually shuffled.
+    #     """
+    #     max_iters=100
+    #     niters=0
+    #
+    #     #for each sweep perform we keep track of which communities are switched within each
+    #     #layer.  We start out with each community mapped to itself.
+    #     self._permutation_vectors[ind]=self._initialize_final_permutation_dict_all_layers(ind=ind)
+    #
+    #
+    #     while niters<max_iters: #this could also be a while loop but added max number of cycles
+    #     # for clayer in self.layers_unique:
+    #         #we swap the layer with the most number of mismatching nodes here
+    #         number_switched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
+    #         max_layer_switched=np.argmax(number_switched)
+    #         #create permutation dictionary to swap layer to nex
+    #         #note that this diction
+    #         permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
+    #
+    #         if all([k==v for k,v in permdict.items()]):
+    #             break #nothing changed
+    #         for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
+    #             self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
+    #         niters+=1
+    #     return niters
 
 
     def get_number_nodes_switched_all_layers(self, ind, percent=False):
@@ -948,75 +980,108 @@ class ModularityBP():
 
 
 
+    # def _create_layer_permutation_single_layer(self,ind,layer):
+    #     """
+    #     Identify the permutation of community labels that minimizes the number\
+    #     switched at the specified layer
+    #
+    #     :param ind:
+    #     :return:
+    #     """
+    #
+    #     cind = np.where(self.layer_vec == layer)[0]
+    #     layers=self.layers_unique
+    #     #we switch only the communiites in that layer
+    #     layer_inds=np.where(self.layer_vec==layer)[0]
+    #     prev_layer = layers[np.where(layers == layer)[0][0] - 1]
+    #     prevind = np.where(self.layer_vec == prev_layer)[0]
+    #     cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
+    #     prev_inds=list(prev2cur_inds.keys())
+    #
+    #     curpart = self.partitions[ind][cind]
+    #     prevpart = self.partitions[ind][prevind]
+    #     curcoms = np.unique(curpart)
+    #     prevcoms = np.unique(prevpart)
+    #     distmat = np.zeros((len(prevcoms), len(curcoms)))
+    #
+    #     # the index within the current layer partition
+    #     prev_inds = {com: np.where(prevpart == com)[0] for com in prevcoms}
+    #     cur_inds = {com: np.where(curpart == com)[0] for com in curcoms}
+    #
+    #     prevcoms2_i=dict(zip(prevcoms,range(len(prevcoms))))
+    #     curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
+    #
+    #     #this sets upf the distance matrix to compute optimal switches
+    #     for prev_ind in prev2cur_inds.keys():
+    #         pre_com=self.partitions[ind][prev_ind]
+    #         i=prevcoms2_i[pre_com]
+    #         for cur_ind in prev2cur_inds[prev_ind]:
+    #             cur_com=self.partitions[ind][cur_ind]
+    #             j=curcoms2_j[cur_com]
+    #             #distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+    #             distmat[ i , : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+    #             distmat[ i , j ]-=(1.0/len(prev2cur_inds[prev_ind]))
+    #     for cur_ind in cur2prev_inds.keys():
+    #         cur_com = self.partitions[ind][cur_ind]
+    #         j = curcoms2_j[cur_com]
+    #         for prev_ind in cur2prev_inds[cur_ind]:
+    #             prev_com = self.partitions[ind][prev_ind]
+    #             i = prevcoms2_i[prev_com]
+    #             # distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+    #             distmat[:, j] += (1.0 / len(cur2prev_inds[cur_ind]))
+    #             distmat[i, j] -= (1.0 / len(cur2prev_inds[cur_ind]))
+    #
+    #
+    #     #solve bipartite min cost matching with munkre algorithm
+    #     row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
+    #     colcoms= list(map(lambda x : curcoms[x],col_ind))
+    #     rwcoms= list(map(lambda x : prevcoms[x],row_ind))
+    #     com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
+    #
+    #     #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
+    #     # i.e communities that aren't in either of the layers
+    #     coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
+    #     comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
+    #     #things that are in both get mapped to themselves first
+    #     for com in coms_remaining.intersection(comsnotmapped):
+    #         com_map_dict[com]=com
+    #         coms_remaining.remove(com)
+    #         comsnotmapped.remove(com)
+    #     for com in comsnotmapped:
+    #         com_map_dict[com]=coms_remaining.pop()
+    #     return com_map_dict
+
     def _create_layer_permutation_single_layer(self,ind,layer):
         """
         Identify the permutation of community labels that minimizes the number\
-        switched at the specified layer
+        switched across all other layers (in multiplex context)
 
         :param ind:
-        :return:
+        :return: com_map_dict mapping to apply to layer to minimize number of switches
         """
 
-        cind = np.where(self.layer_vec == layer)[0]
-        layers=self.layers_unique
+        #only do next layer
+
         #we switch only the communiites in that layer
         layer_inds=np.where(self.layer_vec==layer)[0]
-        prev_layer = layers[np.where(layers == layer)[0][0] - 1]
-        prevind = np.where(self.layer_vec == prev_layer)[0]
-        cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
-        prev_inds=list(prev2cur_inds.keys())
 
-        curpart = self.partitions[ind][cind]
-        prevpart = self.partitions[ind][prevind]
-        curcoms = np.unique(curpart)
-        prevcoms = np.unique(prevpart)
-        distmat = np.zeros((len(prevcoms), len(curcoms)))
+        #set up distmat to include all possible communities
+        # curcoms = np.unique(self.partitions[ind])
+        curcoms=np.unique(list(self.marginal_to_comm_number[ind].values()))
 
-        # the index within the current layer partition
-        prev_inds = {com: np.where(prevpart == com)[0] for com in prevcoms}
-        cur_inds = {com: np.where(curpart == com)[0] for com in curcoms}
+        # we precompute these upfront for each sweep so we just have to combine
+        distmat=self._create_layer_distmat(ind=ind,layer1=layer,layer2=layer-1)
 
-        prevcoms2_i=dict(zip(prevcoms,range(len(prevcoms))))
-        curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
-
-        #this sets upf the distance matrix to compute optimal switches
-        for prev_ind in prev2cur_inds.keys():
-            pre_com=self.partitions[ind][prev_ind]
-            i=prevcoms2_i[pre_com]
-            for cur_ind in prev2cur_inds[prev_ind]:
-                cur_com=self.partitions[ind][cur_ind]
-                j=curcoms2_j[cur_com]
-                #distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
-                distmat[ i , : ]+=(1.0/len(prev2cur_inds[prev_ind]))
-                distmat[ i , j ]-=(1.0/len(prev2cur_inds[prev_ind]))
-        for cur_ind in cur2prev_inds.keys():
-            cur_com = self.partitions[ind][cur_ind]
-            j = curcoms2_j[cur_com]
-            for prev_ind in cur2prev_inds[cur_ind]:
-                prev_com = self.partitions[ind][prev_ind]
-                i = prevcoms2_i[prev_com]
-                # distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
-                distmat[:, j] += (1.0 / len(cur2prev_inds[cur_ind]))
-                distmat[i, j] -= (1.0 / len(cur2prev_inds[cur_ind]))
-
+        # distmat = np.zeros((len(curcoms), len(curcoms)))
+        # for curlayer_compare in layers2compare:
+        #     distmat+=distmat_dict[layer][curlayer_compare]
 
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
         colcoms= list(map(lambda x : curcoms[x],col_ind))
-        rwcoms= list(map(lambda x : prevcoms[x],row_ind))
-        com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
+        rwcoms= list(map(lambda x : curcoms[x],row_ind))
+        com_map_dict=dict(zip(colcoms,rwcoms)) #map current layer coms to previous ones
 
-        #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
-        # i.e communities that aren't in either of the layers
-        coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
-        comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
-        #things that are in both get mapped to themselves first
-        for com in coms_remaining.intersection(comsnotmapped):
-            com_map_dict[com]=com
-            coms_remaining.remove(com)
-            comsnotmapped.remove(com)
-        for com in comsnotmapped:
-            com_map_dict[com]=coms_remaining.pop()
         return com_map_dict
 
     def _create_layer_distmat(self,ind,layer1,layer2):
@@ -1070,7 +1135,6 @@ class ModularityBP():
                 distmat_dict[layer2]=distmat_dict.get(layer2,{})
                 distmat_dict[layer][layer2]=curdistmat
                 distmat_dict[layer2][layer]=curdistmat.T #have distances both ways
-
         return distmat_dict
 
     def _create_layer_permutation_all_other_layer(self,ind,layer,distmat_dict):
@@ -1105,21 +1169,6 @@ class ModularityBP():
         colcoms= list(map(lambda x : curcoms[x],col_ind))
         rwcoms= list(map(lambda x : curcoms[x],row_ind))
         com_map_dict=dict(zip(colcoms,rwcoms)) #map current layer coms to previous ones
-
-
-        #this shoudln't be a problem since all communities have been considered above.
-
-        #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
-        # i.e communities that aren't in either of the layers
-        # coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
-        # comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
-        # #things that are in both get mapped to themselves first
-        # for com in coms_remaining.intersection(comsnotmapped):
-        #     com_map_dict[com]=com
-        #     coms_remaining.remove(com)
-        #     comsnotmapped.remove(com)
-        # for com in comsnotmapped:
-        #     com_map_dict[com]=coms_remaining.pop()
 
         return com_map_dict
 
