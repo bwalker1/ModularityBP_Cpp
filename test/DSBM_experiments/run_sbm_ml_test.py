@@ -66,7 +66,7 @@ def main():
 
         mlbp = modbp.ModularityBP(mlgraph=mgraph,
                                   align_communities_across_layers_temporal=True,
-                                  use_effective=True, accuracy_off=False)
+                                  use_effective=True, accuracy_off=True)
 
 
 
