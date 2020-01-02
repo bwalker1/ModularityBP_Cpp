@@ -41,7 +41,7 @@ def main():
 
 
 
-    finoutdir = os.path.join(clusterdir, 'test/DSBM_experiments/modbpdata/SBM_test_data_n{:}_q{:d}_nt{:}_chen'.format(n, q, ntrials))
+    finoutdir = os.path.join(clusterdir, 'test/DSBM_experiments/modbpdata/SBM_test_data_n{:}_q{:d}_nt{:}_updated'.format(n, q, ntrials))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
     outfile = os.path.join(finoutdir,
