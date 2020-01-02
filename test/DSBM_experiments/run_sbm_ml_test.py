@@ -12,7 +12,14 @@ import sklearn.metrics as skm
 import matplotlib.pyplot as plt
 import traceback
 
-clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
+
+clusterdir=os.path.abspath(os.path.join(os.path.dirname(__file__),"../.."))
+sys.path.append(os.path.join(clusterdir,"test/multilayer_benchmark_matlab"))
+
+from create_multiplex_functions import get_starting_partition_modularity
+from create_multiplex_functions import create_marginals_from_comvec
+
+# clusterdir = "/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/"
 # clusterdir = "/home/wweir/Modularity_BP_proj/ModularityBP_Cpp" #lccc
 # clusterdir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/" #for testing locally
 #
@@ -46,17 +53,30 @@ def main():
     for trial in range(ntrials):
         mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,c=c,
                                                              eta=eta,nlayers=nlayers)
+
+        start_vec = get_starting_partition_modularity(mgraph, omega=omega, q=qmax)
+        print('starting vec AMI: {:.3f}'.format(mgraph.get_AMI_layer_avg_with_communities(start_vec)))
+
+        ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+                                                    q=qmax)
+
         mlbp = modbp.ModularityBP(mlgraph=mgraph,
                                   align_communities_across_layers_temporal=True,
                                   use_effective=True, accuracy_off=False)
+
+
 
         bstars = [mlbp.get_bstar(q_i, omega) for q_i in range(1, qmax+2)]
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
+        # betas=[.67]
         not_converged=0
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=2000, q=qmax, resgamma=gamma, omega=omega,reset=True)
+            mlbp.run_modbp(beta=beta, niter=2000, q=qmax,starting_marginals=ground_margs,
+                           resgamma=gamma, omega=omega,reset=True)
+
+
             mlbp_rm = mlbp.retrieval_modularities
 
             mlbp_rm['trial']=trial
@@ -64,7 +84,16 @@ def main():
             mlbp_rm['eta'] = eta
             mlbp_rm['n'] = n
             mlbp_rm['q_true'] = q
-            print(mlbp_rm.iloc[[-1],:].loc[:,['beta','niters','AMI','AMI_layer_avg','avg_entropy']])
+            print(mlbp_rm.iloc[[-1],:].loc[:,['beta','niters','AMI','AMI_layer_avg','avg_entropy','converged','is_trivial']])
+
+            # plt.close()
+            # f, a = plt.subplots(1, 2, figsize=(6, 3))
+            # a = plt.subplot(1, 2, 1)
+            # mlbp.plot_communities(ax=a)
+            # a = plt.subplot(1, 2, 2)
+            # mlbp.plot_communities(ind=0,ax=a)
+            # plt.show()
+
             if mlbp_rm['converged'].iloc[-1]==False:
                 not_converged+=1
             #append as we complete beta of each trial

@@ -1,6 +1,7 @@
 from __future__ import print_function
 import scipy.io as scio
 import scipy.sparse as sparse
+import scipy.stats as stats
 import pandas as pd
 import sys, os
 import modbp
@@ -25,7 +26,8 @@ def create_knn_from_adj(adj_mat, k, weight_func=None):
             out_adj[i, closest_inds] = 1
             out_adj[closest_inds, i] = 1
         else:
-            vals = np.array(list(map(lambda (x): weight_func(x), adj_mat[i, closest_inds].data)))
+
+            vals = np.array(list(map(lambda x: weight_func(x), adj_mat[i, closest_inds].data)))
             for j,ind in enumerate(closest_inds):
                 out_adj[i, ind] = vals[j]
                 out_adj[ind, i] = vals[j]
@@ -53,8 +55,8 @@ def run_senate(gamma,omega):
     #senate_dir = '/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/modularity_domains/multilayer_senate'
     #senate_dir = '/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
-    #senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
-    senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
+    senate_out_dir="/Users/whweir/Documents/UNC_SOM_docs/Mucha_Lab/Mucha_Python/ModBP_gh/ModularityBP_Cpp/test/senate_data"
+    # senate_out_dir='/nas/longleaf/home/wweir/ModBP_proj/ModularityBP_Cpp/test/senate_data'
 
     if not os.path.exists(senate_out_dir):
         os.makedirs(senate_out_dir)
@@ -83,7 +85,7 @@ def run_senate(gamma,omega):
         inter_edges = adjacency_to_edges(C)
 
     else:
-        A_knn = create_knn_from_adj(A, k ,weight_func=lambda (x): x)
+        A_knn = create_knn_from_adj(A, k ,weight_func=lambda x: x)
         intra_edges = adjacency_to_edges(A_knn)
         #intra_edges = adjacency_to_edges(A)
         inter_edges = adjacency_to_edges(C)
@@ -111,7 +113,7 @@ def run_senate(gamma,omega):
     modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, align_communities_across_layers_temporal=True,
                                    accuracy_off=True, comm_vec=parties)
 
-    partition_out = os.path.join(senate_out_dir, "zippe_partitions_knn10")
+    partition_out = os.path.join(senate_out_dir, "senate_zipped_partitions_knn10")
     rm_df_out = os.path.join(senate_out_dir, "senate_ret_mod_dfs_knn10")
     if not os.path.exists(partition_out):
         os.makedirs(partition_out)
@@ -119,28 +121,39 @@ def run_senate(gamma,omega):
         os.makedirs(rm_df_out)
 
     partitions_out = os.path.join(partition_out, "senate_partitions_{:.4f}_{:.4f}_.gz".format(gamma, omega))
-    dataframe_outfile = os.path.join(rm_df_out, "senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma, omega))
+    entropies_out = os.path.join(partition_out, "senate_entropies_{:.4f}_{:.4f}_.gz".format(gamma, omega))
 
-    bstars = list(map(lambda(q): modbp_obj.get_bstar(q,omega=omega),range(2,q_max_val)))
+    dataframe_outfile = os.path.join(rm_df_out, "senate_ret_mod_df_{:.4f}_{:.4f}.csv".format(gamma, omega))
+    modbp_obj.entropies = {}
+
+    bstars = [ modbp_obj.get_bstar(q,omega=omega) for q in range(2,q_max_val)]
     for i,beta in enumerate(bstars):
-        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=2500,
+        modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=4000,
                             omega=omega,resgamma=gamma,reset=False)
+        centropy=np.apply_along_axis(stats.entropy,arr=modbp_obj.marginals[modbp_obj.nruns-1],
+                                     axis=1)
+        modbp_obj.entropies[modbp_obj.nruns-1]=centropy
+
         if i==0:
             with open(dataframe_outfile, 'w') as fh:
                 modbp_obj.retrieval_modularities.to_csv(fh, header=True)
             with gzip.open(partitions_out,'w') as fh:
                 pickle.dump(modbp_obj.partitions,fh)
+            with gzip.open(entropies_out, 'w') as fh:
+                    pickle.dump(modbp_obj.entropies, fh)
         else:
             with open(dataframe_outfile, 'a') as fh:
                 modbp_obj.retrieval_modularities.iloc[[-1], :].to_csv(fh, header=False)
             #some redudancy here
             with gzip.open(partitions_out, 'w') as fh:
                 pickle.dump(modbp_obj.partitions, fh)
+            with gzip.open(entropies_out, 'w') as fh:
+                    pickle.dump(modbp_obj.entropies, fh)
 
 
 def main():
-    sys.argv[1]=gamma
-    sys.argv[2]=omega
+    gamma=float(sys.argv[1])
+    omega=float(sys.argv[2])
     run_senate(gamma,omega)
 
 

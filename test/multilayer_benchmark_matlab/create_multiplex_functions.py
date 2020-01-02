@@ -464,3 +464,15 @@ def get_starting_partition_multimodbp_nodes(mgraph,gamma=1.0,omega=1.0,q=2):
 
         # meanshift = MeanShift(bin_seeding=True).fit(real_vecs)
         # return meanshift.labels_
+
+def create_marginals_from_comvec(commvec,q=None,SNR=1000):
+    if q is None:
+        q=len(np.unique(commvec))
+
+    outmargs=np.zeros((len(commvec),q))
+    for i in range(len(commvec)):
+        currow=np.array([1 for _ in range(q)])
+        currow[int(commvec[i])]=SNR
+        currow=1/np.sum(currow)*currow
+        outmargs[i,:]=currow
+    return outmargs

@@ -1156,7 +1156,7 @@ class MultilayerSBM(MultilayerGraph):
         return np.array(merged_blocks)
 
 
-def generate_planted_partitions_sbm(n,epsilon,c,ncoms):
+def generate_planted_partitions_sbm(n,epsilon,c,ncoms,blocks=None):
     """
 
     :param n: The number of nodes
@@ -1172,16 +1172,19 @@ def generate_planted_partitions_sbm(n,epsilon,c,ncoms):
     # of the internal and external edges
 
     noq=n/float(ncoms)
-    pin=c/(((noq-1.0)+noq*(ncoms-1)*epsilon))
+    # pin=c/(((noq-1.0)+noq*(ncoms-1)*epsilon))
+    pin = (ncoms*c)/((1+epsilon)*n)
     pout = epsilon * pin
 
-    remain=n%ncoms
-    if remain>0:
-        nodesperblock=[int(n/ncoms)]*ncoms
-        nodesperblock=[ x+1 if k<remain else x for k,x in enumerate(nodesperblock) ]
+    if blocks is None:
+        remain=n%ncoms
+        if remain>0:
+            nodesperblock=[int(n/ncoms)]*ncoms
+            nodesperblock=[ x+1 if k<remain else x for k,x in enumerate(nodesperblock) ]
+        else:
+            nodesperblock=[n/ncoms]*ncoms
     else:
-        nodesperblock=[n/ncoms]*ncoms
-
+        nodesperblock=blocks
     assert np.sum(nodesperblock)==n
 
     # prob_mat=np.identity(ncoms) * pin+(np.ones((ncoms,ncoms))-np.identity(ncoms))*pout
@@ -1198,8 +1201,8 @@ def generate_planted_partitions_sbm(n,epsilon,c,ncoms):
 def generate_planted_partitions_dynamic_sbm(n, epsilon, c, ncoms,nlayers,eta):
     """
 
-    :param n: The number of nodes
-    :param c: total average degree for the network
+    :param n: The number of nodes in each layer
+    :param c: total interalayer average degree for the network
     :param ep: detectability parameter, :math:`\epsilon=p_{out}/p_{in}`, where \
     p is the internal and external connection probabilities
     :param ncoms: number of communities within the network
@@ -1213,7 +1216,8 @@ def generate_planted_partitions_dynamic_sbm(n, epsilon, c, ncoms,nlayers,eta):
     # of the internal and external edges
 
     noq = n / float(ncoms)
-    pin = c / (((noq - 1.0) + noq * (ncoms - 1) * epsilon))
+    # pin = c / (((noq - 1.0) + noq * (ncoms - 1) * epsilon))
+    pin = (ncoms * c) / ((1 + epsilon) * n)
     pout = epsilon * pin
 
     remain = n % ncoms
@@ -1225,7 +1229,6 @@ def generate_planted_partitions_dynamic_sbm(n, epsilon, c, ncoms,nlayers,eta):
 
     assert np.sum(nodesperblock) == n
 
-    # prob_mat=np.identity(ncoms) * pin+(np.ones((ncoms,ncoms))-np.identity(ncoms))*pout
 
     prob_mat=np.identity(ncoms)*(pin-pout)+np.ones((ncoms,ncoms))*pout
 

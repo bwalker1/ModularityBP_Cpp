@@ -143,7 +143,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
-            start_vec = get_starting_partition_multimodbp(g,beta=beta,omega=omega,q=qmax)
+            start_vec = get_starting_partition_multimodbp(graph,beta=beta,omega=omega,q=qmax)
             ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
                                                         q=qmax)
 

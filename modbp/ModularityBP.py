@@ -17,7 +17,7 @@ from time import time
 import warnings
 import os,pickle,gzip
 import logging
-# logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
 logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
 
 class ModularityBP():
@@ -62,8 +62,7 @@ class ModularityBP():
             if hasattr(mlgraph, 'get_edgelist'):
                 self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
                                               interlayer_edges=np.zeros((0,2),dtype='int'),
-                                              layer_vec=[0 for _ in range(mlgraph.vcount())],
-                                              is_bipartite=is_bipartite)
+                                              layer_vec=[0 for _ in range(mlgraph.vcount())])
 
             else:
                 self.graph=mlgraph
@@ -230,7 +229,10 @@ class ModularityBP():
             centrop = _get_avg_entropy(cmargs)
             self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
             cpartition = self._get_partition(self.nruns, use_effective=False)
-            cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+            if self.graph.comm_vec is not None:
+                cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+            else:
+                cami = np.nan
             self.partitions[self.nruns] = cpartition
             _, cnts = np.unique(cpartition, return_counts=True)
             logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:},last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
@@ -276,7 +278,8 @@ class ModularityBP():
             #                                                    self._get_retrieval_modularity(self.nruns)))
             t=time()
             nsweeps=alignment_function(self.nruns) # modifies partition directly
-            logging.debug("AMI after alignment: {:.3f}".format(self.graph.get_AMI_with_communities(self.partitions[self.nruns])))
+            if self.graph.comm_vec is not None:
+                logging.debug("AMI after alignment: {:.3f}".format(self.graph.get_AMI_with_communities(self.partitions[self.nruns])))
             logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
