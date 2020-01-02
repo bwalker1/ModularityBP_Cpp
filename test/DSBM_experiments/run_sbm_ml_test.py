@@ -4,6 +4,8 @@ import modbp
 import numpy as np
 import seaborn as sbn
 import pandas as pd
+pd.set_option('display.max_columns', 500)
+
 import sys
 from subprocess import Popen, PIPE
 import re
@@ -50,15 +52,17 @@ def main():
                                                                                                          gamma))
     # print(outfile)
     qmax = 2 * q
+
     for trial in range(ntrials):
         mgraph=modbp.generate_planted_partitions_dynamic_sbm(n,ncoms=q,epsilon=ep,c=c,
                                                              eta=eta,nlayers=nlayers)
 
-        start_vec = get_starting_partition_modularity(mgraph, omega=omega, q=qmax)
-        print('starting vec AMI: {:.3f}'.format(mgraph.get_AMI_layer_avg_with_communities(start_vec)))
-
-        ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
-                                                    q=qmax)
+        # start_vec = mgraph.comm_vec
+        # # start_vec = get_starting_partition_modularity(mgraph, omega=omega, q=qmax)
+        # print('starting vec AMI: {:.3f}'.format(mgraph.get_AMI_layer_avg_with_communities(start_vec)))
+        #
+        # ground_margs = create_marginals_from_comvec(start_vec, SNR=100,
+        #                                             q=qmax)
 
         mlbp = modbp.ModularityBP(mlgraph=mgraph,
                                   align_communities_across_layers_temporal=True,
@@ -70,10 +74,10 @@ def main():
 
         betas=bstars
         betas=np.linspace(bstars[0]-.2,bstars[-1],len(bstars)*4)
-        # betas=[.67]
         not_converged=0
         for j,beta in enumerate(betas):
-            mlbp.run_modbp(beta=beta, niter=2000, q=qmax,starting_marginals=ground_margs,
+            mlbp.run_modbp(beta=beta, niter=2000, q=qmax,
+                           # starting_marginals=ground_margs,
                            resgamma=gamma, omega=omega,reset=True)
 
 
@@ -84,15 +88,16 @@ def main():
             mlbp_rm['eta'] = eta
             mlbp_rm['n'] = n
             mlbp_rm['q_true'] = q
-            print(mlbp_rm.iloc[[-1],:].loc[:,['beta','niters','AMI','AMI_layer_avg','avg_entropy','converged','is_trivial']])
+            print(mlbp_rm.iloc[[-1],:].loc[:,['beta','niters','resgamma','omega','AMI','AMI_layer_avg','avg_entropy','converged','is_trivial']])
 
-            # plt.close()
-            # f, a = plt.subplots(1, 2, figsize=(6, 3))
-            # a = plt.subplot(1, 2, 1)
-            # mlbp.plot_communities(ax=a)
-            # a = plt.subplot(1, 2, 2)
-            # mlbp.plot_communities(ind=0,ax=a)
-            # plt.show()
+            # if mlbp_rm.iloc[-1,:]['converged'] and not mlbp_rm.iloc[-1,:]['is_trivial']:
+                # plt.close()
+                # f, a = plt.subplots(1, 2, figsize=(6, 3))
+                # a = plt.subplot(1, 2, 1)
+                # mlbp.plot_communities(ax=a)
+                # a = plt.subplot(1, 2, 2)
+                # mlbp.plot_communities(ind=0,ax=a)
+                # plt.show()
 
             if mlbp_rm['converged'].iloc[-1]==False:
                 not_converged+=1
