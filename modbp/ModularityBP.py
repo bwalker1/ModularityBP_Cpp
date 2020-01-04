@@ -150,6 +150,7 @@ class ModularityBP():
             beta=np.power(10.0,-16)
 
         assert(q>0),"q must be > 0"
+        q=int(q) #q must be int
         q_orig=q #before collapsing
         self.retrieval_modularities.loc[self.nruns, 'q'] = q_orig
         self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
