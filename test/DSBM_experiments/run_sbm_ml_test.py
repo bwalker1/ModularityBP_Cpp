@@ -39,7 +39,6 @@ def main():
     ntrials = int(sys.argv[7])
     omega = float(sys.argv[8])
     gamma = float(sys.argv[9])
-    nblocks = q
 
 
 
