@@ -110,7 +110,8 @@ def run_senate(gamma,omega):
     #gamma_vals = [.5, 1.0, 1.5 , 2 , 4]
     #omega_vals = [0.0, 1, 2, 4, 8]
 
-    modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, align_communities_across_layers_temporal=True,
+    modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True,
+                                   align_communities_across_layers_temporal=True,
                                    accuracy_off=True, comm_vec=parties)
 
     partition_out = os.path.join(senate_out_dir, "senate_zipped_partitions_knn10")
