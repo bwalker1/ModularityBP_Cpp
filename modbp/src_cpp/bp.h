@@ -26,10 +26,11 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<index_t> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<double> &intra_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nt, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
+	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double, double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const index_t num_biparte_classes, const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false, bool parallel = false);
 
     // run BP to convergence
-    long run(unsigned long maxIters=100);
+//    long run(unsigned long maxIters=100);
+    vector<double> run(unsigned long maxIters=100);
 
     // run one pass of the belief propagation update
     bool step();
@@ -39,6 +40,7 @@ public:
     double compute_factorized_free_energy();
 
     vector<vector<double> > return_marginals();
+    vector<double>  getBeliefs();
 
     // accessors
     double getBeta() const { return beta; };
@@ -65,10 +67,14 @@ public:
     bool getVerbose() const { return verbose; };
     void setVerbose(bool in) { verbose = in; };
 
-    double compute_excess_degree(bool use_strength = false);
-    double compute_bstar(double omega_in, int q_in);
+// handle on python side
+//    double compute_excess_degree(bool use_strength = false);
+//    double compute_bstar(double omega_in, int q_in);
 
     void permute_beliefs(vector<vector<index_t> > permutation);
+
+    void setBeliefs(vector<double> new_beliefs );
+
     void merge_communities(vector<index_t> merges);
 
 private:
@@ -88,17 +94,17 @@ private:
     vector<index_t> neighbor_count;
     vector<index_t> neighbor_count_interlayer;
 
-    vector<double> node_strengths;
+    vector<vector<double>> node_strengths;
     vector<double> edge_weights;
 
     // private variables
     vector<double> beliefs;
     vector<double> beliefs_old;     // for out-of-place updates
-    vector<size_t> beliefs_offsets;
+    vector<index_t> beliefs_offsets;
 
     vector<index_t> neighbors;
     vector<index_t> neighbors_reversed;
-    vector<size_t> neighbors_offsets;
+    vector<index_t> neighbors_offsets;
     vector<index_t> neighbors_type;
 
     vector<bool> connection_type;
@@ -111,10 +117,10 @@ private:
     vector< vector<double> > theta;
     vector< vector<double> > theta_bipartite;
 
-    vector<index_t> layer_membership;
+    vector<vector<index_t>> layer_membership;
     vector<index_t> bipartite_class;
 
-    index_t n, nt ,num_biparte_classes;
+    index_t n, nlayers ,num_biparte_classes;
 
     int q;
     double beta;
@@ -123,6 +129,8 @@ private:
     double dumping_rate;
 
     bool transform;
+
+	bool parallel;
 
     index_t max_degree;
 
@@ -135,6 +143,7 @@ private:
     // sum of num_edges
 
     unsigned long total_edges;
+    unsigned long total_belief_edges; //number of edges with beliefs = total_edges - # self_loops
     double total_strength;
 
     double change;

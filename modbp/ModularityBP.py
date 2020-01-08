@@ -5,7 +5,8 @@ from future.utils import iteritems,iterkeys
 from collections import Hashable
 from .GenerateGraphs import MultilayerGraph
 import sklearn.metrics as skm
-from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray
+import sklearn.preprocessing as skp
+from .bp import BP_Modularity,PairVector,IntArray,IntMatrix,DoubleArray,DoublePairArray
 import itertools
 import pandas as pd
 import scipy.optimize as sciopt
@@ -16,8 +17,8 @@ from time import time
 import warnings
 import os,pickle,gzip
 import logging
-logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
-#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
+#logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format=':%(asctime)s:%(levelname)s:%(message)s', level=logging.ERROR)
 
 class ModularityBP():
 
@@ -34,7 +35,6 @@ class ModularityBP():
                  accuracy_off=True, use_effective=False, comm_vec=None,
                  align_communities_across_layers_temporal=False,
                  align_communities_across_layers_multiplex=False,
-                 normalize_edge_weights=False,
                  min_com_size=5, is_bipartite=False):
 
         """
@@ -62,8 +62,7 @@ class ModularityBP():
             if hasattr(mlgraph, 'get_edgelist'):
                 self.graph = MultilayerGraph (intralayer_edges=np.array(mlgraph.get_edgelist()),
                                               interlayer_edges=np.zeros((0,2),dtype='int'),
-                                              layer_vec=[0 for _ in range(mlgraph.vcount())],
-                                              is_bipartite=is_bipartite)
+                                              layer_vec=[0 for _ in range(mlgraph.vcount())])
 
             else:
                 self.graph=mlgraph
@@ -84,13 +83,23 @@ class ModularityBP():
         self.intralayer_edges=self.graph.intralayer_edges
         self.interlayer_edges=self.graph.interlayer_edges
         self._cpp_intra_weights=self._get_cpp_intra_weights()
+        self._cpp_inter_weights=self._get_cpp_inter_weights()
+
+        if hasattr(self.graph,"merged_layer"):
+            self.layer_vec=self.graph.merged_layer
+        else:
+            ohe=skp.OneHotEncoder(categories='auto')
+            self.layer_vec=np.array(ohe.fit_transform(self.graph.layer_vec.reshape(-1,1)).toarray())
+
+        #
+        self.layer_vec = [[int(i) for i in row] for row in self.layer_vec]
+        self._layer_vec_ia=IntMatrix(self.layer_vec)
         self.layer_vec=np.array(self.graph.layer_vec)
-        self._layer_vec_ia=IntArray([int(i) for i in self.layer_vec])#must be integers!
+
         self.layers_unique=np.unique(self.layer_vec)
         self._accuracy_off=accuracy_off #calculating permuated accuracy can be expensive for large q
         self._align_communities_across_layers_temporal=align_communities_across_layers_temporal
         self._align_communities_across_layers_multiplex=align_communities_across_layers_multiplex
-        self.normalize_edge_weights = normalize_edge_weights
 
         self.marginals={}
         self.partitions={} # max of marginals
@@ -109,6 +118,7 @@ class ModularityBP():
 
         self._intraedgelistpv= self._get_edgelistpv()
         self._interedgelistpv= self._get_edgelistpv(inter=True)
+
         self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
@@ -116,9 +126,13 @@ class ModularityBP():
         if self.nlayers>1 and self.graph.is_bipartite:
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
 
-    def run_modbp(self,beta,q,niter=100,resgamma=1.0,omega=1.0,dumping_rate=1.0,
-                  reset=False,iterate_alignment=True,anneal_omega=False,
-                  normalize_edge_weights=None):
+    def run_modbp(self, beta, q, niter=100, resgamma=1.0, omega=1.0, dumping_rate=1.0,
+                  reset=True,
+                  iterate_alignment=True,
+                  niters_per_update=None,
+                  starting_partition=None,
+                  starting_marginals=None,
+                  starting_SNR=10):
         """
 
         :param beta: The inverse tempature parameter at which to run the modularity belief propagation algorithm.  Must be specified each time BP is run.
@@ -135,6 +149,7 @@ class ModularityBP():
             beta=np.power(10.0,-16)
 
         assert(q>0),"q must be > 0"
+        q=int(q) #q must be int
         q_orig=q #before collapsing
         self.retrieval_modularities.loc[self.nruns, 'q'] = q_orig
         self.retrieval_modularities.loc[self.nruns, 'beta'] = beta
@@ -148,26 +163,24 @@ class ModularityBP():
         t=time()
 
         #if not supplied use the default when modbp object was created
-        if normalize_edge_weights is None:
-            normalize_edge_weights=self.normalize_edge_weights
 
-        if normalize_edge_weights:
-            self._normalize_edge_weights(omega=omega)
-
-        omega_set = omega if not normalize_edge_weights else 1.0
-
-        if self._bpmod is None or normalize_edge_weights:
-            self._bpmod=BP_Modularity(layer_membership=self._layer_vec_ia,
-                                        intra_edgelist=self._intraedgelistpv,intra_edgeweight=self._cpp_intra_weights,
+        changes=[]
+        if self._bpmod is None:
+            self._bpmod=BP_Modularity(_n=self.n,
+                                      layer_membership=self._layer_vec_ia,
+                                      intra_edgelist=self._intraedgelistpv,
+                                      intra_edgeweight=self._cpp_intra_weights,
                                       inter_edgelist=self._interedgelistpv,
-                                      _n=self.n, _nt= self.nlayers , q=q, beta=beta,
+                                      inter_edgeweight=self._cpp_inter_weights,
+                                      _nlayers= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega_set,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
-                self._bpmod.setBeta(beta)
+                self._bpmod.setBeta(beta,reset=reset)
+
             if self._bpmod.getq() != q:
                 self._bpmod.setq(q)
             if self._bpmod.getResgamma() != resgamma:
@@ -176,8 +189,17 @@ class ModularityBP():
                 self._bpmod.setOmega(omega)
             if self._bpmod.getDumpingRate() != dumping_rate:
                 self._bpmod.setDumpingRate(dumping_rate)
-                
 
+        assert (starting_marginals is None or starting_partition is None),'Cannot input both starting marginal and starting partition'
+
+        if not starting_partition is None:
+            start_margs=self.create_marginals_from_partition(starting_partition,SNR=starting_SNR)
+            start_beliefs=self._create_beliefs_from_marginals(start_margs)
+            self._set_beliefs(start_beliefs)
+
+        if not starting_marginals is None:
+            start_beliefs=self._create_beliefs_from_marginals(starting_marginals)
+            self._set_beliefs(start_beliefs)
 
         if self._align_communities_across_layers_temporal or self._align_communities_across_layers_multiplex:
             iters_per_run=niter//2 #somewhat arbitrary divisor
@@ -188,76 +210,36 @@ class ModularityBP():
         #logging.debug('Running modbp at beta={:.3f}'.format(beta))
         converged=False
 
-        if not anneal_omega:
-            iters=self._bpmod.run(iters_per_run)
-        else:
-            # omega_update_scheme=np.linspace(0,omega,50)
-            # omega_update_scheme=np.append([0],np.logspace(-2,np.log10(omega),50))
-            # bstar=self.get_bstar(q=10,omega=omega)
-            # print('bstar',bstar)
-            # beta_update_scheme=np.logspace(-1,np.log10(bstar),100)
-            dumping_rates=[.01,.02,.05,.1,.2,.5,1]
-            converged=False
-            iters=0
-            cnt=0
-            itersper_dr=iters_per_run//len(dumping_rates)
-            while (not converged) and iters<niter:
-                dr=dumping_rates[np.min([len(dumping_rates)-1,cnt])]
-                self._bpmod.setDumpingRate(dr)
-                citers=self._bpmod.run(itersper_dr)
-                if citers<itersper_dr:
-                    converged=True
-                    logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
-                iters+=citers
-                cnt+=1
-                cmargs = np.array(self._bpmod.return_marginals())
-                self.marginals[self.nruns] = cmargs
-                centrop = _get_avg_entropy(cmargs)
-                self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
-                cpartition = self._get_partition(self.nruns, use_effective=False)
-                try:
-                    cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
-                except ValueError:
-                    cami = np.nan
-                self.partitions[self.nruns] = cpartition
-                _,cnts=np.unique(cpartition,return_counts=True)
-                logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}'.format(iters,dr,centrop,cami,cnts))
+        if niters_per_update is None:
+            niters_per_update=niter
 
-            # for i,cur_omega in enumerate(omega_update_scheme):
-            # for i,cur_beta in enumerate(beta_update_scheme):
-            # ent_targets=[.7,.4,.2,.1]
-            # for target_ent in ent_targets:
-            #     curiters=0
-            #     while curiters<num_iters:
-            #         # self._bpmod.setOmega(cur_omega,reset=False)
-            #         # cbeta=self.get_bstar(q=initq,omega=cur_omega)
-            #         self._bpmod.setBeta(cur_beta,reset=False)
-            #         self._bpmod.step()
-            #         citers=1
-            #         # citers=self._bpmod.run(1)
-            #         iters+=citers
-            #
-            #         cmargs = np.array(self._bpmod.return_marginals())
-            #         centrop=_get_avg_entropy(cmargs)
-            #         if np.abs(centrop-target_ent)<np.power(10.0,-1.0): #once close enough start counting
-            #             curiters+=1
-            #         cur_step=np.min([(centrop - target_ent)/(target_ent),1])
-            #         cur_beta=np.min([(centrop - target_ent)/(target_ent),1])*step+cur_beta
-            #         self.marginals[self.nruns] = cmargs
-            #         self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
-            #         cpartition = self._get_partition(self.nruns, use_effective=False)
-            #         cami=self.graph.get_AMI_layer_avg_with_communities(cpartition)
-            #         self.partitions[self.nruns]=cpartition
-            #         print('curstep:{:.4f},curiters: {:d}, entropy: {:.2e} , AMI : {:.3f}'.format(cur_step,curiters,
-            #                                                                                      centrop,cami))
-                    # if centrop<.6:
+        converged=False
+        iters=0
+        cnt=0
+        itersper_dr=niters_per_update
+        centrop=1.0
+        while (not converged) and iters<niter:
+            dr=dumping_rate
+            changes=np.array(self._bpmod.run(itersper_dr))
+            citers=len(changes)
+            iters+=citers
+            cnt+=1
+            cmargs = np.array(self._bpmod.return_marginals())
+            self.marginals[self.nruns] = cmargs
+            centrop = _get_avg_entropy(cmargs)
+            self._get_community_distances(self.nruns, use_effective=False)  # sets values in method
+            cpartition = self._get_partition(self.nruns, use_effective=False)
+            if self.graph.comm_vec is not None:
+                cami = self.graph.get_AMI_layer_avg_with_communities(cpartition)
+            else:
+                cami = np.nan
+            self.partitions[self.nruns] = cpartition
+            _, cnts = np.unique(cpartition, return_counts=True)
+            logging.debug('iters: {:d}, dr: {:.3f}, entropy : {:.4f}, AMI: {:.4f}, cnts:{:},last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
+            if citers<itersper_dr:
+                converged=True
+                logging.debug('converged iters: {:d}, dr: {:.3f}, entropy : {:.3f}, AMI: {:.4f}, cnts:{:}, last change {:.3e}'.format(iters,dr,centrop,cami,cnts,changes[-1]))
 
-                # logging.debug("Update scheme at omega={:.5f}.  iters = {:d}".format(cur_omega, citers))
-                # iters+=citers
-                # iters+=1
-
-            # citers=self._bpmod.run(iters_per_run)
-            # iters+=citers
 
         cmargs=np.array(self._bpmod.return_marginals())
         logging.debug('modbp run time: {:.4f}, {:d} iterations '.format(time() - t, iters))
@@ -296,6 +278,8 @@ class ModularityBP():
             #                                                    self._get_retrieval_modularity(self.nruns)))
             t=time()
             nsweeps=alignment_function(self.nruns) # modifies partition directly
+            if self.graph.comm_vec is not None:
+                logging.debug("AMI after alignment: {:.3f}".format(self.graph.get_AMI_with_communities(self.partitions[self.nruns])))
             logging.debug('aligning communities across layers time: {:.4f} : nsweeps: {:d}'.format(time() - t,nsweeps))
             t = time()
             cnt=0
@@ -315,8 +299,8 @@ class ModularityBP():
 
                 self._switch_beliefs_bp(self.nruns)
                 #can't go more than the alloted number of runs
-                citers = self._bpmod.run(iters_per_run)
-
+                changes = self._bpmod.run(iters_per_run)
+                citers=len(changes)
                 # plt.close()
                 # f, a = plt.subplots(1, 1, figsize=(6, 6))
                 # self.plot_communities(self.nruns, ax=a)
@@ -363,7 +347,10 @@ class ModularityBP():
 
 
         self.retrieval_modularities.loc[self.nruns, 'niters'] = iters
-        self.retrieval_modularities.loc[self.nruns, 'converged'] = converged
+        if len(changes)>0:
+            self.retrieval_modularities.loc[self.nruns, 'converged'] = changes[-1]<np.power(10.0,-8) #last change was small enough
+        else:
+            self.retrieval_modularities.loc[self.nruns, 'converged']=False
         retmod=self._get_retrieval_modularity(self.nruns)
         #logging.debug('calculating bethe_free energy')
         bethe_energy=self._get_bethe_free_energy()
@@ -399,12 +386,35 @@ class ModularityBP():
             raise AssertionError( "cannot calculate the bethe free energy without running first.  Please call run_mobp.")
         return self._bpmod.compute_bethe_free_energy()
 
+
+
     def _get_cpp_intra_weights(self):
-        if self.graph.unweighted:
-            return DoubleArray([])
+        #supply weights if none
+        if self.graph.intralayer_weights is None:
+            weights=[1.0 for i in range(len(self.graph.intralayer_edges)) ]
         else:
-            assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
-            return DoubleArray(self.graph.intralayer_weights)
+            weights=self.graph.intralayer_weights
+        assert len(self.graph.intralayer_weights)==len(self.graph.intralayer_edges),"length of weights must match number of edges"
+        layers=[]
+        if hasattr(self.graph,'intralayer_layers') :
+            #we are using the MergedMultilayerGraph with edges (i,j, layer , weight)
+            layers=self.graph.intralayer_layers
+        else:
+            for e in self.graph.intralayer_edges:
+                clayer=self.graph.layer_vec[e[1]]
+                layers.append(float(clayer))
+
+        layer_weights=np.array(list(zip(layers,weights)))
+        return DoublePairArray(layer_weights)
+
+    def _get_cpp_inter_weights(self):
+        if self.graph.interlayer_weights is None:
+            weights=[1.0 for i in range(len(self.graph.interlayer_edges)) ]
+        else:
+            weights=self.graph.interlayer_weights
+
+        return DoubleArray(weights)
+
 
     def _get_edgelistpv(self,inter=False):
         ''' Return PairVector swig wrapper version of edgelist'''
@@ -461,7 +471,12 @@ class ModularityBP():
 
     def _get_excess_degree(self):
         """get excess degree.  Note that this is unweighted degree """
-        degrees = self.graph.get_intralayer_degrees(weighted=False)+ self.graph.get_interlayer_degrees()
+        intradegrees=self.graph.get_intralayer_degrees(weighted=False)
+        if len(intradegrees.shape)>1:
+            intradegrees=np.sum(intradegrees,axis=1)
+
+        degrees = np.append(intradegrees,self.graph.get_interlayer_degrees())
+
         # degrees = self.graph.intradegrees + self.graph.interdegrees
         d_avg = np.mean(degrees)
         d2=np.mean(np.power(degrees,2.0))
@@ -471,34 +486,43 @@ class ModularityBP():
         "Implementation to calculate bstar from Chen Shi et al 2018 (Weighted community\
          detection and data clustering using message passing)"
 
-        if self.normalize_edge_weights:
-            self._normalize_edge_weights(omega=omega)
-            set_omega=np.min([omega,1.0]) # we don't flip the weights if omega < 1
-        else:
-            set_omega=omega
 
-        if self.graph.nlayers==1:
-            weights=self.graph.intralayer_weights
-        else:
-            weights=np.append(self.graph.intralayer_weights,
-                              set_omega*np.array(self.graph.interlayer_weights))
+        ind2keep=np.where(np.logical_not(self.graph.self_loops_intra))[0]
+        weights=np.array(self.graph.intralayer_weights)[ind2keep]
+        if self.graph.nlayers > 1:
+            ind2keep_inter=np.where(np.logical_not(self.graph.self_loops_inter))[0]
+
+            weights=np.append(weights,omega * np.array(self.graph.interlayer_weights)[ind2keep_inter])
 
         def avg_weights(bstar, weights, q, c):
             # bstar should be scalar
             exp_b_w = np.exp(bstar * weights)
             return np.mean(np.power((exp_b_w - 1) / (exp_b_w + q - 1), 2.0)) * c - 1
 
+
+
         deg_excess=self._get_excess_degree()
-        bstar = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))[0]
-        return bstar
+        # print("deg_excess = {:.3f}".format(deg_excess))
+        # plt.close()
+        # bs = np.linspace(-.1, 2, 200)
+        # plt.plot(bs, np.array(list(map(lambda x: avg_weights(x, weights=weights, q=q, c=deg_excess), bs))))
+        # plt.show()
+        # sols = sciopt.fsolve(avg_weights, x0=.5, args=(weights, q, deg_excess ))
+        sols,r = sciopt.bisect(avg_weights, a=0,b=100, args=(weights, q, deg_excess ),full_output=True)
+
+        if not r.converged:
+            warnings.warn("Unable to compute bstar for inputs. Check weights of graph")
+        return sols
 
     def _get_qval(self, bstar, omega):
         "given a choice of bstar and omega, what value of q was given intially"
-        if self.graph.nlayers == 1:
-            weights = self.graph.intralayer_weights
-        else:
-            weights = np.append(self.graph.intralayer_weights,
-                                omega * np.array(self.graph.interlayer_weights))
+        ind2keep = np.where(np.logical_not(self.graph.self_loops_intra))[0]
+        weights = np.array(self.graph.intralayer_weights)[ind2keep]
+        if self.graph.nlayers > 1:
+            ind2keep_inter = np.where(np.logical_not(self.graph.self_loops_inter))[0]
+
+            weights = np.append(weights, omega * np.array(self.graph.interlayer_weights)[ind2keep_inter])
+
 
         def avg_weights(q, weights, bstar, c):
             # bstar should be scalar
@@ -773,10 +797,9 @@ class ModularityBP():
 
         curpersistence=self._compute_persistence_multiplex(ind)
         prev_per=-np.inf
+        distmat_dict = self._create_all_layer2layer_distmats(ind)
         while curpersistence-prev_per>0 and niters<max_iters:
-
             t=time()
-            distmat_dict=self._create_all_layer2layer_distmats(ind)
             for layer in np.random.choice(self.layers_unique,replace=False,size=self.nlayers):
 
                 #create permutation dictionary to the current layer based on best move
@@ -815,7 +838,6 @@ class ModularityBP():
         #layer.  We start out with each community mapped to itself.
         self._permutation_vectors[ind]=self._initialize_final_permutation_dict_all_layers(ind=ind)
 
-
         while niters<max_iters: #this could also be a while loop but added max number of cycles
         # for clayer in self.layers_unique:
             #we swap the layer with the most number of mismatching nodes here
@@ -824,13 +846,46 @@ class ModularityBP():
             #create permutation dictionary to swap layer to nex
             #note that this diction
             permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
-
             if all([k==v for k,v in permdict.items()]):
                 break #nothing changed
             for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
                 self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
             niters+=1
         return niters
+
+    # def _perform_permuation_sweep_temporal(self, ind):
+    #     """
+    #     Calculate largest difference between adjacent layers\
+    #     then perform flip for everylayer afterwards
+    #     Repeat until no more flips are performed
+    #
+    #     :param ind: partition to perform permutation on
+    #     :return: number of sweeps performed. To keep track of whether \
+    #     any layers were actually shuffled.
+    #     """
+    #     max_iters=100
+    #     niters=0
+    #
+    #     #for each sweep perform we keep track of which communities are switched within each
+    #     #layer.  We start out with each community mapped to itself.
+    #     self._permutation_vectors[ind]=self._initialize_final_permutation_dict_all_layers(ind=ind)
+    #
+    #
+    #     while niters<max_iters: #this could also be a while loop but added max number of cycles
+    #     # for clayer in self.layers_unique:
+    #         #we swap the layer with the most number of mismatching nodes here
+    #         number_switched = self.get_number_nodes_switched_all_layers(ind=ind, percent=True)
+    #         max_layer_switched=np.argmax(number_switched)
+    #         #create permutation dictionary to swap layer to nex
+    #         #note that this diction
+    #         permdict=self._create_layer_permutation_single_layer(ind,max_layer_switched)
+    #
+    #         if all([k==v for k,v in permdict.items()]):
+    #             break #nothing changed
+    #         for layer in range(max_layer_switched,self.layers_unique[-1]+1): #permute all layers behind
+    #             self._permute_layer_with_dict(ind,layer=layer,permutation=permdict)
+    #         niters+=1
+    #     return niters
 
 
     def get_number_nodes_switched_all_layers(self, ind, percent=False):
@@ -928,75 +983,108 @@ class ModularityBP():
 
 
 
+    # def _create_layer_permutation_single_layer(self,ind,layer):
+    #     """
+    #     Identify the permutation of community labels that minimizes the number\
+    #     switched at the specified layer
+    #
+    #     :param ind:
+    #     :return:
+    #     """
+    #
+    #     cind = np.where(self.layer_vec == layer)[0]
+    #     layers=self.layers_unique
+    #     #we switch only the communiites in that layer
+    #     layer_inds=np.where(self.layer_vec==layer)[0]
+    #     prev_layer = layers[np.where(layers == layer)[0][0] - 1]
+    #     prevind = np.where(self.layer_vec == prev_layer)[0]
+    #     cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
+    #     prev_inds=list(prev2cur_inds.keys())
+    #
+    #     curpart = self.partitions[ind][cind]
+    #     prevpart = self.partitions[ind][prevind]
+    #     curcoms = np.unique(curpart)
+    #     prevcoms = np.unique(prevpart)
+    #     distmat = np.zeros((len(prevcoms), len(curcoms)))
+    #
+    #     # the index within the current layer partition
+    #     prev_inds = {com: np.where(prevpart == com)[0] for com in prevcoms}
+    #     cur_inds = {com: np.where(curpart == com)[0] for com in curcoms}
+    #
+    #     prevcoms2_i=dict(zip(prevcoms,range(len(prevcoms))))
+    #     curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
+    #
+    #     #this sets upf the distance matrix to compute optimal switches
+    #     for prev_ind in prev2cur_inds.keys():
+    #         pre_com=self.partitions[ind][prev_ind]
+    #         i=prevcoms2_i[pre_com]
+    #         for cur_ind in prev2cur_inds[prev_ind]:
+    #             cur_com=self.partitions[ind][cur_ind]
+    #             j=curcoms2_j[cur_com]
+    #             #distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+    #             distmat[ i , : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+    #             distmat[ i , j ]-=(1.0/len(prev2cur_inds[prev_ind]))
+    #     for cur_ind in cur2prev_inds.keys():
+    #         cur_com = self.partitions[ind][cur_ind]
+    #         j = curcoms2_j[cur_com]
+    #         for prev_ind in cur2prev_inds[cur_ind]:
+    #             prev_com = self.partitions[ind][prev_ind]
+    #             i = prevcoms2_i[prev_com]
+    #             # distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
+    #             distmat[:, j] += (1.0 / len(cur2prev_inds[cur_ind]))
+    #             distmat[i, j] -= (1.0 / len(cur2prev_inds[cur_ind]))
+    #
+    #
+    #     #solve bipartite min cost matching with munkre algorithm
+    #     row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
+    #     colcoms= list(map(lambda x : curcoms[x],col_ind))
+    #     rwcoms= list(map(lambda x : prevcoms[x],row_ind))
+    #     com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
+    #
+    #     #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
+    #     # i.e communities that aren't in either of the layers
+    #     coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
+    #     comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
+    #     #things that are in both get mapped to themselves first
+    #     for com in coms_remaining.intersection(comsnotmapped):
+    #         com_map_dict[com]=com
+    #         coms_remaining.remove(com)
+    #         comsnotmapped.remove(com)
+    #     for com in comsnotmapped:
+    #         com_map_dict[com]=coms_remaining.pop()
+    #     return com_map_dict
+
     def _create_layer_permutation_single_layer(self,ind,layer):
         """
         Identify the permutation of community labels that minimizes the number\
-        switched at the specified layer
+        switched across all other layers (in multiplex context)
 
         :param ind:
-        :return:
+        :return: com_map_dict mapping to apply to layer to minimize number of switches
         """
 
-        cind = np.where(self.layer_vec == layer)[0]
-        layers=self.layers_unique
+        #only do next layer
+
         #we switch only the communiites in that layer
         layer_inds=np.where(self.layer_vec==layer)[0]
-        prev_layer = layers[np.where(layers == layer)[0][0] - 1]
-        prevind = np.where(self.layer_vec == prev_layer)[0]
-        cur2prev_inds, prev2cur_inds = self._get_previous_layer_inds_dict(layer)
-        prev_inds=list(prev2cur_inds.keys())
 
-        curpart = self.partitions[ind][cind]
-        prevpart = self.partitions[ind][prevind]
-        curcoms = np.unique(curpart)
-        prevcoms = np.unique(prevpart)
-        distmat = np.zeros((len(prevcoms), len(curcoms)))
+        #set up distmat to include all possible communities
+        # curcoms = np.unique(self.partitions[ind])
+        curcoms=np.unique(list(self.marginal_to_comm_number[ind].values()))
 
-        # the index within the current layer partition
-        prev_inds = {com: np.where(prevpart == com)[0] for com in prevcoms}
-        cur_inds = {com: np.where(curpart == com)[0] for com in curcoms}
+        # we precompute these upfront for each sweep so we just have to combine
+        distmat=self._create_layer_distmat(ind=ind,layer1=layer,layer2=layer-1)
 
-        prevcoms2_i=dict(zip(prevcoms,range(len(prevcoms))))
-        curcoms2_j=dict(zip(curcoms,range(len(curcoms))))
-
-        #this sets upf the distance matrix to compute optimal switches
-        for prev_ind in prev2cur_inds.keys():
-            pre_com=self.partitions[ind][prev_ind]
-            i=prevcoms2_i[pre_com]
-            for cur_ind in prev2cur_inds[prev_ind]:
-                cur_com=self.partitions[ind][cur_ind]
-                j=curcoms2_j[cur_com]
-                #distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
-                distmat[ i , : ]+=(1.0/len(prev2cur_inds[prev_ind]))
-                distmat[ i , j ]-=(1.0/len(prev2cur_inds[prev_ind]))
-        for cur_ind in cur2prev_inds.keys():
-            cur_com = self.partitions[ind][cur_ind]
-            j = curcoms2_j[cur_com]
-            for prev_ind in cur2prev_inds[cur_ind]:
-                prev_com = self.partitions[ind][prev_ind]
-                i = prevcoms2_i[prev_com]
-                # distmat[i, : ]+=(1.0/len(prev2cur_inds[prev_ind]))
-                distmat[:, j] += (1.0 / len(cur2prev_inds[cur_ind]))
-                distmat[i, j] -= (1.0 / len(cur2prev_inds[cur_ind]))
-
+        # distmat = np.zeros((len(curcoms), len(curcoms)))
+        # for curlayer_compare in layers2compare:
+        #     distmat+=distmat_dict[layer][curlayer_compare]
 
         #solve bipartite min cost matching with munkre algorithm
         row_ind,col_ind=sciopt.linear_sum_assignment(distmat)
         colcoms= list(map(lambda x : curcoms[x],col_ind))
-        rwcoms= list(map(lambda x : prevcoms[x],row_ind))
-        com_map_dict=dict(zip(colcoms,rwcoms)) #map to current layer coms to previous ones
+        rwcoms= list(map(lambda x : curcoms[x],row_ind))
+        com_map_dict=dict(zip(colcoms,rwcoms)) #map current layer coms to previous ones
 
-        #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
-        # i.e communities that aren't in either of the layers
-        coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
-        comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
-        #things that are in both get mapped to themselves first
-        for com in coms_remaining.intersection(comsnotmapped):
-            com_map_dict[com]=com
-            coms_remaining.remove(com)
-            comsnotmapped.remove(com)
-        for com in comsnotmapped:
-            com_map_dict[com]=coms_remaining.pop()
         return com_map_dict
 
     def _create_layer_distmat(self,ind,layer1,layer2):
@@ -1050,7 +1138,6 @@ class ModularityBP():
                 distmat_dict[layer2]=distmat_dict.get(layer2,{})
                 distmat_dict[layer][layer2]=curdistmat
                 distmat_dict[layer2][layer]=curdistmat.T #have distances both ways
-
         return distmat_dict
 
     def _create_layer_permutation_all_other_layer(self,ind,layer,distmat_dict):
@@ -1085,21 +1172,6 @@ class ModularityBP():
         colcoms= list(map(lambda x : curcoms[x],col_ind))
         rwcoms= list(map(lambda x : curcoms[x],row_ind))
         com_map_dict=dict(zip(colcoms,rwcoms)) #map current layer coms to previous ones
-
-
-        #this shoudln't be a problem since all communities have been considered above.
-
-        #Mapping needs to be one-to-one so we have to fill in communities which weren't mapped
-        # i.e communities that aren't in either of the layers
-        # coms_remaining=set(curcoms).difference(list(com_map_dict.values()))
-        # comsnotmapped=set(curcoms).difference(list(com_map_dict.keys()))
-        # #things that are in both get mapped to themselves first
-        # for com in coms_remaining.intersection(comsnotmapped):
-        #     com_map_dict[com]=com
-        #     coms_remaining.remove(com)
-        #     comsnotmapped.remove(com)
-        # for com in comsnotmapped:
-        #     com_map_dict[com]=coms_remaining.pop()
 
         return com_map_dict
 
@@ -1212,6 +1284,74 @@ class ModularityBP():
         self._bpmod.merge_communities(merge_vec)
         return len(set(self.marginal_to_comm_number[ind].values())) #new number of communities
 
+    def _create_node_2_beliefs_dict(self,recreate=False,q=None):
+        """For each node, get the indices of the incoming beliefs \
+        so that we can pass a new belief into the _bpobj"""
+        if q is None:
+            assert not self._bpmod is None, "Must either specify q, or create the _bpmod obj"
+            q=self._bpmod.getq()
+        if self._node2beliefsinds_dict is None or recreate:
+            node2beliefsinds_dict={}
+            ecounts=np.array([ 0 for _ in range(self.graph.N)])
+            #in the cpp beliefs are arrange in order of node indices
+            #with all incoming beliefs contiguous ( and in blocks of q)
+            for e in itertools.chain(self.graph.intralayer_edges, self.graph.interlayer_edges):
+                if e[0]==e[1]:
+                    continue
+                ecounts[e[0]]+=1
+                ecounts[e[1]]+=1
+            ecounts=ecounts*q #factor in q
+            cumsum_ecnt=np.cumsum(ecounts)
+            for i,cnt in enumerate(cumsum_ecnt):
+                if i==0:
+                    node2beliefsinds_dict[i]=range(0,cnt)
+                else:
+                    node2beliefsinds_dict[i]=range(cumsum_ecnt[i-1],cnt)
+            self._node2beliefsinds_dict=node2beliefsinds_dict
+
+        return self._node2beliefsinds_dict
+
+    def _get_belief_size(self,q=None):
+        """calc size of belief vector"""
+        node2beliefs=self._create_node_2_beliefs_dict(q=q)
+        return np.sum([len(v) for v in node2beliefs.values()])
+
+    def _create_beliefs_from_marginals(self,marginals):
+        """We set all incoming beliefs to be the current marginal for the node"""
+        q=marginals.shape[1]
+        if not self._bpmod is None:
+            assert self._bpmod.getq() == q , "Size of input marginals does not equal current beliefs"
+        belief_size=self._get_belief_size(q=q)
+        newbeliefs=np.array([-1.0 for _ in range(belief_size)])
+        node2beliefinds=self._create_node_2_beliefs_dict(q=q)
+
+        assert marginals.shape[1]==q ,"Marginals are not the correct shape"
+        for i in range(marginals.shape[0]):
+            cinds = node2beliefinds[i]
+            #fill in new incoming beliefs for node i with copies of the marginal
+            num2fill=len(cinds)//q
+            newbeliefs[cinds]=np.array([ marginals[i,s] for s in range(q) for j in range(num2fill) ]).flatten()
+        assert -1.0 not in newbeliefs, "one of new belief has not been created.  Check index dictionary"
+        return newbeliefs
+
+    def create_marginals_from_partition(self, partition, q=None, SNR=1000):
+
+        if q is None:
+            assert not self._bpmod is None, "Must either specify q, or create the _bpmod obj"
+            q=self._bpmod.getq()
+
+
+        outmargs = np.zeros((len(partition), q))
+        for i in range(len(partition)):
+            currow = np.array([1 for _ in range(q)])
+            currow[int(partition[i])] = SNR
+            currow = 1 / np.sum(currow) * currow
+            outmargs[i, :] = currow
+        return outmargs
+
+    def _set_beliefs(self,beliefs):
+        _da_beliefs=DoubleArray(beliefs)
+        self._bpmod.setBeliefs(_da_beliefs)
 
 
     def _switch_beliefs_bp(self, ind):
@@ -1226,21 +1366,7 @@ class ModularityBP():
 
         self._bpmod.permute_beliefs(perm_vec_c)
 
-    def _normalize_edge_weights(self,omega=1.0):
-        """
-        We scale the intralayer edges by 1/omega while fixing the interlayer edges to be one
-        :param omega:
-        :return:
-        """
 
-        factor = np.min([1/omega,1.0])
-        new_intralayer_weights = factor*np.array(self.graph.intralayer_weights)
-        #these variables have to also be updated
-        self.graph.intralayer_weights = new_intralayer_weights
-
-        self.totaledgeweight = self.graph.totaledgeweight
-        self.intralayer_edges = self.graph.intralayer_edges
-        self._cpp_intra_weights = self._get_cpp_intra_weights()
 
 
 

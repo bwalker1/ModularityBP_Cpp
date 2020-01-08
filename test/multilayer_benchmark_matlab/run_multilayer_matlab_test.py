@@ -11,6 +11,8 @@ import os
 import shutil
 import gzip,pickle
 import scipy.io as scio
+import scipy.sparse.linalg as slinagl
+from sklearn.cluster import KMeans
 import sklearn.metrics as skm
 import itertools
 #generative multilayer benchmark models (now in python)
@@ -18,6 +20,8 @@ import multilayerGM as gm
 from time import time
 
 from create_multiplex_functions import create_multiplex_graph
+from create_multiplex_functions import get_starting_partition_modularity
+from create_multiplex_functions import get_starting_partition_multimodbp
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
@@ -35,6 +39,18 @@ oncluster=False
 if re.search("/nas/longleaf",clusterdir):
     oncluster=True
 arch = "elf64" if oncluster else "x86_64" #for different compiled code to run
+
+def create_marginals_from_comvec(commvec,q=None,SNR=1000):
+    if q is None:
+        q=len(np.unique(commvec))
+
+    outmargs=np.zeros((len(commvec),q))
+    for i in range(len(commvec)):
+        currow=np.array([1 for _ in range(q)])
+        currow[int(commvec[i])]=SNR
+        currow=1/np.sum(currow)*currow
+        outmargs[i,:]=currow
+    return outmargs
 
 
 
@@ -93,7 +109,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
 def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockmultiplex=False):
     ncoms=10
 
-    finoutdir = os.path.join(matlabbench_dir, 'anneal_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'initialized_multiplex_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
@@ -112,18 +128,30 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         #     pickle.dump(graph,fh)
 
 
+        # start_vec = get_starting_partition_multimodbp(g)
+        # # print('time creating starting vec:{:.3f}'.format(time() - t))
+        # # print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
+        # ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+        #                                             q=qmax)
 
         print('time creating graph: {:.3f}'.format(time()-t))
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
-                                  align_communities_across_layers_multiplex=True,comm_vec=graph.comm_vec)
-        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(2, qmax+2,2)]
+                                  align_communities_across_layers_multiplex=True,
+                                  comm_vec=graph.comm_vec)
+        bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
         betas=bstars
         notconverged = 0
         for j,beta in enumerate(betas):
             t=time()
-            mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
-                           normalize_edge_weights=False,
-                           q=qmax, resgamma=gamma, omega=omega,anneal_omega=True)
+            start_vec = get_starting_partition_multimodbp(graph,beta=beta,omega=omega,q=qmax)
+            ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+                                                        q=qmax)
+
+            mlbp.run_modbp(beta=beta, niter=max_iters, q=qmax, reset=True,
+                            starting_marginals=ground_margs,
+                            dumping_rate=1.0,
+                            resgamma=gamma, omega=omega)
+
 
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
@@ -150,8 +178,15 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
                 with open(outfile, 'a') as fh:  # writeout last 2 rows for genlouvain + multimodbp
                     output.iloc[-1:, :].to_csv(fh, header=False)
 
-            # if notconverged>1: #hasn't converged twice now.
-            #     break
+            if notconverged>2: #hasn't converged three now.
+                break
+
+            #we have found 2 non-trivial structures in a row
+            if np.sum(np.logical_and(np.logical_not(mlbp_rm['is_trivial']),
+                                  mlbp_rm['converged']))>2:
+                break
+
+
         #we now only call this once each trial with iterated version
         t=time()
         try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
@@ -187,6 +222,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         print("time running matlab:{:.3f}. sucess: {:}".format(time() - t, str(not matlabfailed)))
 
     return 0
+
+
 
 
 def main():

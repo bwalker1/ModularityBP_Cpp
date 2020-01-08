@@ -44,6 +44,10 @@ def main(pargs=None):
 		cfile=os.path.join(args.input,file)
 		try:
 			c_df=pd.read_csv(cfile,index_col=0)
+			if 'Accuracy_layer_avg' in c_df.columns:
+				c_df.drop('Accuracy_layer_avg',axis=1,inplace=True)
+			if 'Accuracy' in c_df.columns:
+				c_df.drop('Accuracy', axis=1, inplace=True)
 		except :
 			print("unable to read file: {}".format(cfile))
 			continue
