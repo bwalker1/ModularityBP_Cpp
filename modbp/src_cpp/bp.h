@@ -26,7 +26,7 @@ class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double,double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const index_t num_biparte_classes,const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false  );
+	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double, double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const index_t num_biparte_classes, const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false, bool parallel = false);
 
     // run BP to convergence
 //    long run(unsigned long maxIters=100);
@@ -100,11 +100,11 @@ private:
     // private variables
     vector<double> beliefs;
     vector<double> beliefs_old;     // for out-of-place updates
-    vector<size_t> beliefs_offsets;
+    vector<index_t> beliefs_offsets;
 
     vector<index_t> neighbors;
     vector<index_t> neighbors_reversed;
-    vector<size_t> neighbors_offsets;
+    vector<index_t> neighbors_offsets;
     vector<index_t> neighbors_type;
 
     vector<bool> connection_type;
@@ -129,6 +129,8 @@ private:
     double dumping_rate;
 
     bool transform;
+
+	bool parallel;
 
     index_t max_degree;
 

@@ -52,7 +52,7 @@ public:
     edge_data(index_t _target, index_t _layer, bool _type, double _weight) : target(_target), layer(_layer),  type(_type), weight(_weight) {};
 };
 
-BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<double,double>> &intra_edgeweight,const vector<double> &inter_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _dumping_rate, const double _resgamma, bool _verbose, bool _transform) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nlayers),theta_bipartite(_num_biparte_classes), num_edges(_nlayers), n(_n), nlayers(_nlayers), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), dumping_rate(_dumping_rate), resgamma(_resgamma), verbose(_verbose), transform(_transform), order(_n), rng(time(NULL))
+BP_Modularity::BP_Modularity(const vector<vector<index_t>>& _layer_membership, const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<double,double>> &intra_edgeweight,const vector<double> &inter_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers,  const int _q, const index_t _num_biparte_classes, const double _beta, const vector<index_t>& _bipartite_class,  const double _omega, const double _dumping_rate, const double _resgamma, bool _verbose, bool _transform, bool _parallel) :  layer_membership(_layer_membership), bipartite_class(_bipartite_class),neighbor_count(_n), neighbor_count_interlayer(_n), node_strengths(_n), theta(_nlayers),theta_bipartite(_num_biparte_classes), num_edges(_nlayers), n(_n), nlayers(_nlayers), num_biparte_classes(_num_biparte_classes), q(_q), beta(_beta), omega(_omega), dumping_rate(_dumping_rate), resgamma(_resgamma), verbose(_verbose), transform(_transform), parallel(_parallel), order(_n), rng(time(NULL))
 {
     //TODO consider only allowing weighted option
     if (intra_edgeweight.size() > 0)
@@ -401,9 +401,7 @@ bool BP_Modularity::step()
     for (index_t node_idx = 0;node_idx<n;++node_idx)
     {
         index_t i;
-        //We update nodes in a random order every other step.
-        
-        
+
         i = order[node_idx];
         
         
@@ -431,6 +429,19 @@ bool BP_Modularity::step()
         // if we changed any nodes, set this to true so we know we haven't converged
         //changed = true;
         change += local_change;
+
+		// depending on if we're doing serial or parallel updates, we read beliefs from either the beliefs or beliefs_old variable
+		vector<double> * beliefs_to_use_p;
+		if (parallel)
+		{
+			// read out of old beliefs so we aren't changing them as we go node to node
+			beliefs_to_use_p = &beliefs_old;
+		}
+		else
+		{
+			// make sure we use the most up-to-date (if we already changed some this step)
+			beliefs_to_use_p = &beliefs;
+		}
         
         // we should update the nodes contribution to theta
         compute_marginal(i);
@@ -476,7 +487,8 @@ bool BP_Modularity::step()
             double total_factor = 1.0;
             for (index_t idx=0; idx<nn; ++idx)
             {
-                total_factor *= (1+scaleEdges[neighbors_offsets[i]+idx]*(beliefs[beliefs_offsets[i]+nn*s+idx]));
+                //total_factor *= (1+scaleEdges[neighbors_offsets[i]+idx]*(beliefs[beliefs_offsets[i]+nn*s+idx]));
+				total_factor *= (1 + scaleEdges[neighbors_offsets[i] + idx] * ((*beliefs_to_use_p)[beliefs_offsets[i] + nn * s + idx]));
             }
             
             // figure out the sum of logs part of the update equation that uses the incoming beliefs
@@ -499,7 +511,8 @@ bool BP_Modularity::step()
                 }*/
                 
                 // put in the total factor minus the one we aren't factoring in
-                scratch[nn*s+idx] = total_factor/(1+scaleEdges[neighbors_offsets[i]+idx]*(beliefs[beliefs_offsets[i]+nn*s+idx]));
+                //scratch[nn*s+idx] = total_factor/(1+scaleEdges[neighbors_offsets[i]+idx]*(beliefs[beliefs_offsets[i]+nn*s+idx]));
+				scratch[nn*s + idx] = total_factor / (1 + scaleEdges[neighbors_offsets[i] + idx] * ((*beliefs_to_use_p)[beliefs_offsets[i] + nn * s + idx]));
                 // evaluate the rest of the update equation
                 
                 double field=0;
@@ -1015,11 +1028,11 @@ void BP_Modularity::permute_beliefs(vector<vector<index_t> > permutation)
         return;
     }
     vector<double> vals(q); //storage for current beliefs
-    vector<size_t> c_layer_ind;
+    vector<index_t> c_layer_ind;
     
     for (index_t i = 0; i < n; ++i) //iterate through all nodes (n)
     {
-        c_layer_ind=layer_membership[i];
+        c_layer_ind = layer_membership[i];
         index_t nonzero;
         bool found= false;
         for (index_t li=0;li<nlayers;li++){

@@ -23,13 +23,39 @@ int main(void)
     vector<pair<double,double>> intra_edgeweight;
     vector<double> inter_edgeweight;
     vector<pair<index_t, index_t> > inter_edgelist;
+
+	vector<int> cluster_membership;
+	cluster_membership.resize(n);
+	for (int i = 0; i < n; ++i)
+	{
+		int c;
+		if (i > 750)
+		{
+			c = 0;
+		}
+		else if (i > 500)
+		{
+			c = 1;
+		}
+		else if (i > 250)
+		{
+			c = 1;
+		}
+		else
+		{
+			c = 0;
+		}
+		cluster_membership[i] = c;
+	}
     
     for (int i=0;i<n;++i)
     {
         for (int j=i+1;j<n;++j)
         {
-            if (double(rand())/double(RAND_MAX) < 0.05)
+			double p = cluster_membership[i] == cluster_membership[j] ? 0.5 : 0.001;
+            if (double(rand())/double(RAND_MAX) < p)
             {
+				//printf("Edge from %d to %d\n", i, j);
                 intra_edgelist.push_back(pair<index_t, index_t>(i, j));
                 intra_edgeweight.push_back(pair<double, double>(0, 1));
             }
@@ -47,12 +73,22 @@ int main(void)
     double resgamma = 1.0;
     bool verbose = false;
     bool transform = false;
+	bool parallel = false;
     
     // create the bp class
-    auto bp = BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgeweight, inter_edgelist, n, nlayers, q, num_biparte_classes, beta, bipartite_class, omega, dumping_rate, resgamma, verbose, transform);
+    auto bp = BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgeweight, inter_edgelist, n, nlayers, q, num_biparte_classes, beta, bipartite_class, omega, dumping_rate, resgamma, verbose, transform, parallel);
     
     for (int i=0;i<100; ++i)
     {
         bp.step();
     }
+
+	for (auto v : bp.return_marginals())
+	{
+		for (auto d : v)
+		{
+			printf("%f ", d);
+		}
+		printf("\n");
+	}
 }
