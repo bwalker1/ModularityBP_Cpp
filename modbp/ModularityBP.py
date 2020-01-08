@@ -122,6 +122,7 @@ class ModularityBP():
         self._bipart_class_ia =  self._get_bipart_vec()
         self.min_community_size = min_com_size  #for calculating true number of communities min number of node assigned to count.
         self._bpmod=None
+        self._node2beliefsinds_dict=None
 
         if self.nlayers>1 and self.graph.is_bipartite:
             raise NotImplementedError("bipartite modularity belief propagation only available for single layer")
@@ -175,12 +176,11 @@ class ModularityBP():
                                       _nlayers= self.nlayers , q=q, beta=beta,
                                       dumping_rate=dumping_rate,
                                       num_biparte_classes=num_bipart,bipartite_class=self._bipart_class_ia, #will be empty if not bipartite.  Found that had to make parameter mandatory for buidling swig Python Class
-                                      resgamma=resgamma,omega=omega,transform=False,verbose=False)
+                                      resgamma=resgamma,omega=omega,transform=False,verbose=False,parallel=False)
 
         else:
             if self._bpmod.getBeta() != beta or reset:
                 self._bpmod.setBeta(beta,reset=reset)
-
             if self._bpmod.getq() != q:
                 self._bpmod.setq(q)
             if self._bpmod.getResgamma() != resgamma:

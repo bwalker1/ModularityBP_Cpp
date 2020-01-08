@@ -106,8 +106,8 @@ class BP_Modularity(_object):
     __getattr__ = lambda self, name: _swig_getattr(self, BP_Modularity, name)
     __repr__ = _swig_repr
 
-    def __init__(self, layer_membership, intra_edgelist, intra_edgeweight, inter_edgeweight, inter_edgelist, _n, _nlayers, q, num_biparte_classes, beta, bipartite_class, omega=1.0, dumping_rate=1.0, resgamma=1.0, verbose=False, transform=False):
-        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgeweight, inter_edgelist, _n, _nlayers, q, num_biparte_classes, beta, bipartite_class, omega, dumping_rate, resgamma, verbose, transform)
+    def __init__(self, layer_membership, intra_edgelist, intra_edgeweight, inter_edgeweight, inter_edgelist, _n, _nlayers, q, num_biparte_classes, beta, bipartite_class, omega=1.0, dumping_rate=1.0, resgamma=1.0, verbose=False, transform=False, parallel=False):
+        this = _bp.new_BP_Modularity(layer_membership, intra_edgelist, intra_edgeweight, inter_edgeweight, inter_edgelist, _n, _nlayers, q, num_biparte_classes, beta, bipartite_class, omega, dumping_rate, resgamma, verbose, transform, parallel)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -175,6 +175,9 @@ class BP_Modularity(_object):
 
     def permute_beliefs(self, permutation):
         return _bp.BP_Modularity_permute_beliefs(self, permutation)
+
+    def setBeliefs(self, new_beliefs):
+        return _bp.BP_Modularity_setBeliefs(self, new_beliefs)
 
     def merge_communities(self, merges):
         return _bp.BP_Modularity_merge_communities(self, merges)

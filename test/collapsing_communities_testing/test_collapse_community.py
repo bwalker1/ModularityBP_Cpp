@@ -24,7 +24,7 @@ from create_multiplex_functions import get_non_backtracking_nodes
 from create_multiplex_functions import create_multiplex_graph_matlab
 from create_multiplex_functions import call_gen_louvain
 from create_multiplex_functions import run_ZMBP_on_graph
-
+from create_multiplex_functions import get_starting_partition_modularity
 from create_multiplex_functions import get_starting_partition_multimodbp
 
 logging.basicConfig(level=logging.ERROR)
@@ -354,6 +354,16 @@ def test_alternating_bpruns():
             multiplex = pickle.load(fh)
 
     multiplex.reorder_nodes()
+
+    print('interlayer avg: {:.3f}'.format(np.mean(multiplex.interdegrees)))
+    print('intralayer avg: {:.3f}'.format(np.mean(multiplex.intradegrees)))
+    print('total_edge_weight:{:.3f}'.format(multiplex.totaledgeweight))
+
+    plt.close()
+    f,a=plt.subplots(1,1,figsize=(6,6))
+    degs,cnts=np.unique(multiplex.intradegrees,return_counts=True)
+    plt.bar(x=degs,height=cnts)
+    plt.show()
     print(np.unique(multiplex.comm_vec, return_counts=True))
     print('time creating graph: {:.3f}'.format(time() - t))
 
@@ -364,7 +374,7 @@ def test_alternating_bpruns():
                                align_communities_across_layers_multiplex=True)
 
     t=time()
-    start_vec = get_starting_partition(multiplex, gamma=1.0,omega=1.0,q=ncoms)
+    start_vec = get_starting_partition_modularity(multiplex, gamma=1.0,omega=1.0,q=ncoms)
     print('time creating starting vec:{:.3f}'.format(time()-t))
     print('AMI start_vec', multiplex.get_AMI_with_communities(start_vec))
     ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
@@ -375,7 +385,7 @@ def test_alternating_bpruns():
     #
     # for beta in np.linspace(bstars[0],bstars[-1],10):
     # for beta in np.linspace(.05, 2, 20):
-    for beta in [.6]:
+    for beta in bstars:
         bpobj.run_modbp(beta=beta, niter=300, q=qmax, reset=True,
                         starting_marginals=ground_margs,
                         dumping_rate=1.0,
@@ -392,6 +402,8 @@ def test_alternating_bpruns():
     a.plot(rm_df['beta'],rm_df['niters'])
     a2=a.twinx()
     a2.scatter(rm_df['beta'],rm_df["AMI"],color='r')
+    # a2.scatter(rm_df['beta'],rm_df["bethe_free_energy"],color='purple',marker='x')
+
     a2.vlines(x=bstars,ymin=0,ymax=1,linestyle='--')
     plt.show()
 
@@ -741,12 +753,14 @@ def test_ZM_on_collapsed():
         print('beta', beta)
         t=time()
         niters,cmarginals=run_ZMBP_on_graph(ig_col,q=ncoms,beta=beta,niters=2000)
+        cpart=np.argmax(cmarginals,axis=1)
+        print("ZM modbp AMI: {:.3f}".format(collapse_graph.get_AMI_layer_avg_with_communities(cpart)))
         t2=time()-t
         print("time to run {:d} iters: {:.3f}.  iters/s = {:.3f}".format(niters,t2,niters/t2))
         t=time()
         bpobj.run_modbp(beta=beta, niter=1000, q=ncoms,
                         # starting_marginals=cmarginals,
-                        resgamma=1.0, omega=1.0, anneal_omega=False)
+                        resgamma=.5, omega=1.0)
         t2=time()-t
         rm_df=bpobj.retrieval_modularities
         niters = bpobj.retrieval_modularities.loc[rm_df.shape[0] - 1,'niters']
@@ -765,7 +779,7 @@ def test_ZM_on_collapsed():
 if __name__=="__main__":
     # test_run_modbp_on_collapse()
     # test_on_multiplex_block()
-    # test_alternating_bpruns()
+    test_alternating_bpruns()
     # test_ZM_on_collapsed()
     # test_non_backtracking_cluster()
-    test_non_backtracking_edges_cluster()
+    # test_non_backtracking_edges_cluster()
