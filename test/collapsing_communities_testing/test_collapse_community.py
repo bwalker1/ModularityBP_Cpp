@@ -529,7 +529,7 @@ def test_non_backtracking_cluster():
     # multiplex.reorder_nodes()
     print(np.unique(multiplex.comm_vec,return_counts=True))
     t=time()
-    nbtrack=get_non_backtracking(multiplex)
+    nbtrack=get_non_backtracking_nodes(multiplex)
     print('nbtrack',nbtrack.shape)
     print('nbtrack non-zero',nbtrack.nnz)
 
@@ -576,7 +576,7 @@ def test_non_backtracking_cluster():
 
     kmeans = KMeans(n_clusters=ncoms, random_state=0).fit(np.real(vecs[:,range(0,ncoms)]))
     print("Non-backtrack AMI",skm.adjusted_mutual_info_score(multiplex.comm_vec,kmeans.labels_))
-    S=get_starting_partition(multiplex,gamma=gamma,omega=omega,q=ncoms)
+    S=get_starting_partition_multimodbp(multiplex,gamma=gamma,omega=omega,q=ncoms)
     print("Mod Matrix AMI:",skm.adjusted_mutual_info_score(multiplex.comm_vec,S))
 
     return
@@ -588,7 +588,7 @@ def test_non_backtracking_edges_cluster():
     p_eta = .5
     ncoms = 3
     omega = 5
-    gamma = 1.5
+    gamma = 1
 
     t = time()
 
@@ -719,7 +719,7 @@ def test_non_backtracking_edges_cluster():
 
 def test_ZM_on_collapsed():
     n = 200
-    nlayers = 15
+    nlayers = 20
     mu = .85
     p_eta = 1.0
     ncoms = 2
