@@ -94,7 +94,9 @@ def run_senate(gamma,omega,beta,ntrials):
 
     q_max_val = 15
 
-    modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True, align_communities_across_layers_temporal=True,accuracy_off=True, comm_vec=parties)
+    modbp_obj = modbp.ModularityBP(mlgraph=mgraph, use_effective=True,
+                                   align_communities_across_layers_temporal=True,
+                                   accuracy_off=True, comm_vec=parties)
 
     rm_df_out = os.path.join(senate_out_dir, "senate_beta_scan_knn10")
 

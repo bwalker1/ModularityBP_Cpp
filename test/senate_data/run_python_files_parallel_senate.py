@@ -52,8 +52,8 @@ def wrap_function_senate(args):
 def run_senate_parallel():
 	gamma=[.4]
 	omegas=6.0
-	betas=np.linspace(0,1.5,100)
-	ntrials=5
+	betas=np.linspace(1.5,4,20)
+	ntrials=20
 	# ps = np.array([.5])
 	#note the order must be correct here
 	args = list(itertools.product([gamma], [omegas], betas,[ntrials]))

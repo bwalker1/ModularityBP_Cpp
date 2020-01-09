@@ -130,7 +130,7 @@ def run_senate(gamma,omega):
     bstars = [ modbp_obj.get_bstar(q,omega=omega) for q in range(2,q_max_val)]
     for i,beta in enumerate(bstars):
         modbp_obj.run_modbp(beta=beta,q=q_max_val,niter=4000,
-                            omega=omega,resgamma=gamma,reset=False)
+                            omega=omega,resgamma=gamma,reset=True)
         centropy=np.apply_along_axis(stats.entropy,arr=modbp_obj.marginals[modbp_obj.nruns-1],
                                      axis=1)
         modbp_obj.entropies[modbp_obj.nruns-1]=centropy
