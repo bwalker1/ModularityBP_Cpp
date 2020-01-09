@@ -592,7 +592,7 @@ class ModularityBP():
         # fitted 2nd degree polynomial up to q=20 for large graph and
         # take 1/10 of average distances (from initialized values)
         if thresh == None:
-            coefs = [0.01451001, -0.58031171, 0.46811701]
+            coefs = [0.00344322, -0.18963259, -0.85389837]
 
             def polycurve(x, coefs):
                 tot = 0
@@ -705,7 +705,7 @@ class ModularityBP():
         # mean distances were fit using numpy.polyfit based on number of marginals
         #for large network.
         if thresh == None:
-            coefs = [0.01451001, -0.58031171, 0.46811701]
+            coefs = [0.00341228, -0.18898041, -0.85312958]
 
             def polycurve(x, coefs):
                 tot = 0
@@ -714,9 +714,9 @@ class ModularityBP():
                     tot += c * np.power(x, i)
                 return tot
 
-            thresh = .1 * np.power(10.0, polycurve(q, coefs))
+            thresh = 2*np.power(10.0, polycurve(q, coefs))
         trival=np.ones(cmarginal.shape)/cmarginal.shape[1]
-        if np.mean(np.power(cmarginal-trival,2.0))<thresh:
+        if np.mean(np.power(cmarginal-trival,2.0))<=thresh:
             return True
         else:
             return False
