@@ -22,11 +22,22 @@ typedef unsigned long index_t;
 
 void print_array(index_t *arr, index_t n);
 
+struct edge_data
+{
+public:
+    index_t target;
+    index_t layer;
+    bool type;
+    double weight;
+    
+    edge_data(index_t _target, index_t _layer, bool _type, double _weight) : target(_target), layer(_layer),  type(_type), weight(_weight) {};
+};
+
 class BP_Modularity
 {
 public:
     // initialize from two edgelists: one giving intra-layer connections and another giving inter-layer connections, and also a list of which layer each node is in
-	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double, double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const index_t num_biparte_classes, const double beta, const vector<index_t> &bipartite_class, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false, bool parallel = false);
+	BP_Modularity(const vector<vector<index_t>> &layer_membership, const vector<pair<index_t, index_t> > &intra_edgelist, const vector<pair<double, double>> &intra_edgeweight, const vector<double> &inter_edgeweight, const vector<pair<index_t, index_t> > &inter_edgelist, const index_t _n, const index_t _nlayers, const int q, const double beta, const double omega = 1.0, const double dumping_rate = 1.0, const double resgamma = 1.0, bool verbose = false, bool transform = false, bool parallel = false);
 
     // run BP to convergence
 //    long run(unsigned long maxIters=100);
@@ -79,11 +90,14 @@ public:
 
 private:
     bool weighted;
+    
+    // functions set up to be overloaded for variations on the algorithm
+    inline double edge_equation(vector<double> *beliefs_p, index_t i, index_t s, index_t nn, index_t idx);
+    void initialize_edge_data(const vector<pair<index_t,index_t> > &intra_edgelist, const vector<pair<double,double>> &intra_edgeweight,const vector<double> &inter_edgeweight, const vector<pair<index_t,index_t> > &inter_edgelist, vector<vector< edge_data > > &edges);
 
 //    void shuffleBeliefs(vector<vector<double>> in_beliefs);
     void initializeBeliefs();
     void initializeTheta();
-    void initializeTheta_bipartite();
 
     void normalize(vector<double> & beliefs, index_t i);
     void reinit(bool init_beliefs=true, bool init_theta=true);
@@ -115,12 +129,10 @@ private:
 	vector<double> marginals_old;
 
     vector< vector<double> > theta;
-    vector< vector<double> > theta_bipartite;
 
     vector<vector<index_t>> layer_membership;
-    vector<index_t> bipartite_class;
 
-    index_t n, nlayers ,num_biparte_classes;
+    index_t n, nlayers;
 
     int q;
     double beta;
@@ -158,7 +170,7 @@ private:
     
     bool changed;
     bool computed_marginals;
-    bool is_bipartite = false;
+    bool no_field;
     inline index_t n_neighbors(index_t i) { return (index_t) neighbors_offsets[i+1]-neighbors_offsets[i]; }
     
     default_random_engine rng;
