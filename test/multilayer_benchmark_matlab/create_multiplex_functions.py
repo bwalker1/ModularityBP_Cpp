@@ -146,7 +146,7 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_ma
     partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
 
     # with use the degree corrected SBM to mirror paper
-    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2.5)
+    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-4)
     #     return multinet
     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet,multiplex=True)
     return mbpmulltinet
