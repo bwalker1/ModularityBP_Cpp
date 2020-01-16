@@ -139,14 +139,14 @@ def create_temporal_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=5, k_max=
     return mbpmulltinet
 
 
-def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=50,k_min=3):
+def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=30,k_min=3):
     theta = 1
     dt = gm.dependency_tensors.UniformMultiplex(n_nodes, n_layers, p)
     null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=ncoms)
     partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
 
     # with use the degree corrected SBM to mirror paper
-    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2.5)
+    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-4)
     #     return multinet
     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet,multiplex=True)
     return mbpmulltinet
