@@ -1,4 +1,4 @@
-for gamma in `seq 0.001 .05 3`
+for gamma in `seq 0.001 .025 3`
 do
     for omega in `seq 0 .05 8`
     do
