@@ -145,12 +145,12 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # with gzip.open("working_graph.gz",'rb') as fh:
         #     graph=pickle.load(fh)
 
-        print('time creating graph: {:.3f}'.format(time()-t))
-        start_vec = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
-        print('time creating starting vec:{:.3f}'.format(time() - t))
-        print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
-        ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
-                                                    q=qmax)
+        # print('time creating graph: {:.3f}'.format(time()-t))
+        # start_vec = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
+        # print('time creating starting vec:{:.3f}'.format(time() - t))
+        # print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
+        # ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
+        #                                             q=qmax)
 
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
                                   align_communities_across_layers_temporal=True, comm_vec=graph.comm_vec)
@@ -167,7 +167,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
                            q=qmax,
-                           #starting_marginals=ground_margs,
+                           # starting_marginals=ground_margs,
                            resgamma=gamma, omega=omega)
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
@@ -199,7 +199,9 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         #we now only call this once each trial with iterated version
         t=time()
         try:  # the matlab call has been dicey on the cluster for some.  This results in jobs quitting prematurely.
-            S = call_gen_louvain(graph, gamma, omega)
+            #use spectral initialization
+            S = get_starting_partition(graph, gamma=gamma, omega=omega, q=ncoms)
+            # S = call_gen_louvain(graph, gamma, omega)
             ami_layer = graph.get_AMI_layer_avg_with_communities(S)
             ami = graph.get_AMI_with_communities(S)
             nmi =  graph.get_AMI_with_communities(S,useNMI=True)
@@ -207,7 +209,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
             cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
             cind = output.shape[0]
-            output.loc[cind, 'isGenLouvain'] = True
+            output.loc[cind, 'isSpectral'] = True
             output.loc[cind, 'mu'] = mu
             output.loc[cind, 'p'] = p_eta
             output.loc[cind, 'trial'] = trial
@@ -235,13 +237,13 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         # else:
         #     with open(outfile, 'a') as fh:  # writeout as we go
         #         output.iloc[[-1], :].to_csv(fh, header=False)
-    plt.close()
-    f,a=plt.subplots(1,1,figsize=(5,5))
-    a.scatter(output['beta'].values,output['niters'].values)
-    a2=a.twinx()
-    a2.scatter(output['beta'].values,output['AMI_layer_avg'].values)
-
-    plt.show()
+    # plt.close()
+    # f,a=plt.subplots(1,1,figsize=(5,5))
+    # a.scatter(output['beta'].values,output['niters'].values)
+    # a2=a.twinx()
+    # a2.scatter(output['beta'].values,output['AMI_layer_avg'].values)
+    #
+    # plt.show()
     return 0
 
 
