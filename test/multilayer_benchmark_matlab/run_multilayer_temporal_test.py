@@ -209,7 +209,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
 
             cmod = modbp.calc_modularity(graph, S, resgamma=gamma, omega=omega)
             cind = output.shape[0]
-            output.loc[cind, 'isSpectral'] = True
+            output.loc[cind, 'isGenLouvain'] = True
             output.loc[cind, 'mu'] = mu
             output.loc[cind, 'p'] = p_eta
             output.loc[cind, 'trial'] = trial
