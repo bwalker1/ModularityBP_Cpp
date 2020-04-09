@@ -124,12 +124,12 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
 def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockmultiplex=False):
     ncoms=5
 
-    finoutdir = os.path.join(matlabbench_dir, 'temporal_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
+    finoutdir = os.path.join(matlabbench_dir, 'temporal_noinit_matlab_test_data_n{:d}_nlayers{:d}_trials{:d}_{:d}ncoms_multilayer'.format(n,nlayers,ntrials,ncoms))
     if not os.path.exists(finoutdir):
         os.makedirs(finoutdir)
 
     output = pd.DataFrame()
-    outfile="{:}/temporal_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
+    outfile="{:}/temporal_noinit_test_n{:d}_L{:d}_mu{:.4f}_p{:.4f}_gamma{:.4f}_omega{:.4f}_trials{:d}.csv".format(finoutdir,n,nlayers,mu,p_eta, gamma,omega,ntrials)
 
     qmax=8
     max_iters=400
@@ -166,7 +166,8 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials,use_blockm
         for j,beta in enumerate(betas):
             t=time()
             mlbp.run_modbp(beta=beta, niter=max_iters, reset=True,
-                           q=qmax, starting_marginals=ground_margs,
+                           q=qmax,
+                           #starting_marginals=ground_margs,
                            resgamma=gamma, omega=omega)
             print("time running modbp at mu,p={:.3f},{:.3f}: {:.3f}. niters={:.3f}".format(mu,p_eta,time()-t,mlbp.retrieval_modularities.iloc[-1,:]['niters']))
             mlbp_rm = mlbp.retrieval_modularities
