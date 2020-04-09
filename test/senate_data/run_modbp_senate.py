@@ -114,8 +114,8 @@ def run_senate(gamma,omega):
                                    align_communities_across_layers_temporal=True,
                                    accuracy_off=True, comm_vec=parties)
 
-    partition_out = os.path.join(senate_out_dir, "senate_zipped_partitions_knn10")
-    rm_df_out = os.path.join(senate_out_dir, "senate_ret_mod_dfs_knn10")
+    partition_out = os.path.join(senate_out_dir, "senate_zipped_partitions_knn10_dense")
+    rm_df_out = os.path.join(senate_out_dir, "senate_ret_mod_dfs_knn10_dense")
     if not os.path.exists(partition_out):
         os.makedirs(partition_out)
     if not os.path.exists(rm_df_out):

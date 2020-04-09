@@ -602,7 +602,7 @@ class ModularityBP():
                 return tot
 
             thresh = .1 * np.power(10.0, polycurve(q, coefs))
-
+            # thresh=np.power(10.0,-3)
         distmat=np.zeros((q,q))
 
         # everyone starts out in their own group initially.
@@ -713,9 +713,9 @@ class ModularityBP():
                 for i, c in enumerate(coefs):
                     tot += c * np.power(x, i)
                 return tot
-
+            # thresh = np.power(10.0,-3)
             thresh = 2*np.power(10.0, polycurve(q, coefs))
-        trival=np.ones(cmarginal.shape)/cmarginal.shape[1]
+        trival=np.ones(cmarginal.shape)/q
         if np.mean(np.power(cmarginal-trival,2.0))<=thresh:
             return True
         else:
