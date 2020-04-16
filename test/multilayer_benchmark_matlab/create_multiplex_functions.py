@@ -60,9 +60,10 @@ def create_ml_graph_from_matlab(moutputfile,ismultiplex=True):
             #connect all possible pairs state nodes
             interlayer_edges.extend( itertools.combinations([i+l*nnodes for l in range(nlayers)],2))
         else: #temporal case only connect adjacent
-            interlayer_edges.extend([ (i+(l*nnodes), i+(l+1)*nnodes) for l in range(1,nlayers-1)])
+            interlayer_edges.extend([ (i+(l*nnodes), i+(l+1)*nnodes) for l in range(nlayers-1)])
 
-    comm_vec=matoutputdict['S'].flatten('F') #flatten by column
+    comm_vec = matoutputdict['S'].flatten('F')  # flatten by column
+
 
 
     mlgraph=modbp.MultilayerGraph(intralayer_edges=all_intra_edges,interlayer_edges=interlayer_edges,\
@@ -138,8 +139,24 @@ def create_temporal_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=5, k_max=
     mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet,multiplex=False)
     return mbpmulltinet
 
+def create_temporal_graph_block(n_nodes=100, n_layers=5, mu=.99, p_in=.1,p_out=0,n_blocks=1, ncoms=5, k_max=30,k_min=3):
+    theta = 1
+    dt = gm.dependency_tensors.Temporal(n_nodes, n_layers, p_in)
+    layperblock=int(np.ceil(n_layers/n_blocks))
+    for i in range(n_blocks-1):
+        if (i+1)*layperblock-1 < len(dt.p):
+            dt.p[(i+1)*layperblock-1]=p_out
+    null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=ncoms)
+    partition = gm.sample_partition(dependency_tensor=dt, null_distribution=null)
 
-def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=30,k_min=3):
+    # with use the degree corrected SBM to mirror paper
+    multinet = gm.multilayer_DCSBM_network(partition, mu=mu, k_min=k_min, k_max=k_max, t_k=-2)
+    #     return multinet
+    mbpmulltinet = convert_nxmg_to_mbp_multigraph(multinet,multiplex=False)
+    return mbpmulltinet
+
+
+def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_max=150,k_min=3):
     theta = 1
     dt = gm.dependency_tensors.UniformMultiplex(n_nodes, n_layers, p)
     null = gm.dirichlet_null(layers=dt.shape[1:], theta=theta, n_sets=ncoms)
@@ -152,10 +169,13 @@ def create_multiplex_graph(n_nodes=100, n_layers=5, mu=.99, p=.1, ncoms=10, k_ma
     return mbpmulltinet
 
 
+
+
 #For the block multiplex we have to use the matlab
 # since the dependency matrix hadn't been implemented in python
 #at the time of running
-def create_multiplex_graph_matlab(n_nodes=1000, nlayers=15, mu=.99,nblocks=3,p_in=.9,p_out=0,ismultiplex = True, ncoms=2):
+#set ismultiplex to false to do temporal
+def create_multiplex_graph_matlab(n_nodes=1000, n_layers=15, mu=.99,nblocks=3,p_in=.9,p_out=0,ismultiplex = True, ncoms=2):
     rprefix=np.random.randint(1000000)
     rprefix_dir=os.path.join(matlaboutdir,str(rprefix))
     if not os.path.exists(rprefix_dir):
@@ -166,17 +186,19 @@ def create_multiplex_graph_matlab(n_nodes=1000, nlayers=15, mu=.99,nblocks=3,p_i
     parameters = [call_matlab_createbenchmark_file,
                   moutputfile,
                   "{:d}".format(n_nodes),
-                  "{:d}".format(nlayers),
+                  "{:d}".format(n_layers),
                   "{:d}".format(nblocks),
                   "{:.5f}".format(mu),
                   "{:.5f}".format(p_in),
                   "{:.5f}".format(p_out),
-                  "{:d}".format(ncoms)
+                  "{:d}".format(ncoms),
+                  "{:d}".format(int(ismultiplex))
                   ]
     print(parameters)
     process = Popen(parameters, stderr=PIPE, stdout=PIPE)
     stdout, stderr = process.communicate()
     process.wait()
+    print(stderr)
     if process.returncode != 0:
         raise RuntimeError("creating benchmark graph failed : {:}".format(stderr))
 
@@ -221,7 +243,9 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
     print(stderr)
 
     try:
-        S = scio.loadmat(matlaboutput)['S'][:, 0]
+        results=scio.loadmat(matlaboutput)
+        S = results['S'][:, 0]
+        runtime=results['t'][0][0]
     except:
         print(stderr)
         os.remove(scio_outfile)
@@ -236,7 +260,7 @@ def call_gen_louvain(mgraph, gamma, omega, S=None):
     except:
         pass
 
-    return S
+    return S,runtime
 
 
 def run_ZMBP_on_graph(graph, q, beta,niters=100):
