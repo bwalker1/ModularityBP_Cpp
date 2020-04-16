@@ -3,6 +3,7 @@ import modbp
 import numpy as np
 import seaborn as sbn
 import pandas as pd
+import gzip,pickle
 import matplotlib.pyplot as plt
 import sys
 from subprocess import Popen,PIPE
@@ -14,7 +15,7 @@ import scipy.sparse.linalg as slinalg
 #generative multilayer benchmark models (now in python)
 from time import time
 
-from create_multiplex_functions import create_temporal_graph_block,call_gen_louvain,get_starting_partition_modularity
+from create_multiplex_functions import create_temporal_graph_block,call_gen_louvain,get_starting_partition_modularity,get_starting_partition_multimodbp_nodes
 clusterdir=os.path.abspath('../..') # should be in test/multilayer_benchmark_matlab
 matlabbench_dir=os.path.join(clusterdir, 'test/multilayer_benchmark_matlab/')
 matlaboutdir = os.path.join(matlabbench_dir,"matlab_temp_outfiles")
@@ -85,29 +86,30 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     for trial in range(ntrials):
 
         t=time()
-        graph=create_temporal_graph_block(n_nodes=n, mu=mu,p_in=p_eta,p_out=0,n_blocks=4,
+        graph=create_temporal_graph_block(n_nodes=n, mu=mu,p_in=p_eta,p_out=0,n_blocks=1,
                                      n_layers=nlayers, ncoms=ncoms)
         graph.reorder_nodes()
 
-        plt.close()
-        f,a=plt.subplots(1,1,figsize=(8,8))
-        graph.plot_communities(ax=a)
-        plt.show()
+        # plt.close()
+        # f,a=plt.subplots(1,1,figsize=(8,8))
+        # graph.plot_communities(ax=a)
+        # plt.show()
         # with gzip.open("working_graph.gz",'wb') as fh:
         #     pickle.dump(graph,fh)
-        #
+        # #
         # with gzip.open("working_graph.gz",'rb') as fh:
         #     graph=pickle.load(fh)
 
-        # print('time creating graph: {:.3f}'.format(time()-t))
-        start_vec = get_starting_partition_modularity(graph, gamma=gamma, omega=omega, q=ncoms)
+        print('time creating graph: {:.3f}'.format(time()-t))
+        # start_vec = get_starting_partition_multimodbp_nodes(graph, gamma=gamma, omega=omega, q=ncoms)
+        start_vec = get_starting_partition(graph, gamma=gamma, omega=10, q=ncoms)
         # print('time creating starting vec:{:.3f}'.format(time() - t))
-        # print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
+        print('AMI start_vec', graph.get_AMI_with_communities(start_vec))
         ground_margs = create_marginals_from_comvec(start_vec, SNR=5,
                                                     q=qmax)
 
         mlbp = modbp.ModularityBP(mlgraph=graph, accuracy_off=True, use_effective=True,
-                                  align_communities_across_layers_temporal=True, comm_vec=graph.comm_vec)
+                                  align_communities_across_layers_temporal=False, comm_vec=graph.comm_vec)
         bstars = [mlbp.get_bstar(q,omega=omega) for q in range(1, qmax+2,2)]
         # bstars = np.linspace(1,4,10)
 
@@ -212,7 +214,7 @@ def main():
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,
                                ntrials=ntrials)
-    # run_louvain_multiplex_test(n=150,nlayers=100,mu=.1,p_eta=.9,omega=1.0,gamma=1.0,ntrials=1)
+    # run_louvain_multiplex_test(n=150,nlayers=100,mu=.7,p_eta=1.0,omega=4,gamma=1.0,ntrials=1)
 
     return 0
 
