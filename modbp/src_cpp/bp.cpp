@@ -550,7 +550,7 @@ bool BP_Modularity::step()
             if (compute_bfe)
             {
                 //                printf("in loop sum %.3f\n",sum);
-                bfe -= log(sum);
+                bfe += log(sum);
             }
             if (sum > 0)
             {
