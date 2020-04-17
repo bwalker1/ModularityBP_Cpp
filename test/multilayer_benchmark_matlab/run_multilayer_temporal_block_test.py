@@ -86,7 +86,7 @@ def run_louvain_multiplex_test(n,nlayers,mu,p_eta,omega,gamma,ntrials):
     for trial in range(ntrials):
 
         t=time()
-        graph=create_temporal_graph_block(n_nodes=n, mu=mu,p_in=p_eta,p_out=0,n_blocks=1,
+        graph=create_temporal_graph_block(n_nodes=n, mu=mu,p_in=p_eta,p_out=0,n_blocks=4,
                                      n_layers=nlayers, ncoms=ncoms)
         graph.reorder_nodes()
 
@@ -214,7 +214,7 @@ def main():
     ntrials = int(sys.argv[7])
     run_louvain_multiplex_test(n=n,nlayers=nlayers,mu=mu,p_eta=p_eta,omega=omega,gamma=gamma,
                                ntrials=ntrials)
-    # run_louvain_multiplex_test(n=150,nlayers=100,mu=.7,p_eta=1.0,omega=4,gamma=1.0,ntrials=1)
+    # run_louvain_multiplex_test(n=150,nlayers=100,mu=.8,p_eta=1.0,omega=4,gamma=1.0,ntrials=1)
 
     return 0
 
