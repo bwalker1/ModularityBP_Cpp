@@ -11,7 +11,7 @@ We have implemented a belief propagation solution for multilayer modularity in b
 C++ and Python.  Our implementation allows for both weighted and unweighted single layer networks\
 as well as a variety of multilayer topologies.  The C++ backend provides significant performance increase\
 and allows for running the algorithm at larger scale networks.  Our method extends the approach of \
-Pan Zhang and Christopher Moore :cite:`Zhang:2014gea` and provides a convenient interface with \
+ `Pan Zhang and Christopher Moore <https://https://arxiv.org/abs/1403.5787>`_ and provides a convenient interface with \
 the standard networks analysis library, igraph.
 
 
@@ -57,10 +57,7 @@ Citation
 ___________
 
 
-
-`bibtex <docs/sub_docs/biblio.bib>`_
-
-For more details and results see our `manuscript <http://>`_
+For more details and results see our `manuscript <https://arxiv.org/abs/1908.04653>`_
 
 
 

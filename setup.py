@@ -1,4 +1,6 @@
-from distutils.core import setup, Extension
+#from distutils.core import setup, Extension
+
+from setuptools import setup, Extension
 import os,re
 ext_module=Extension(name="_bp",
                     sources=["modbp/src_cpp/bp.cpp","modbp/bp.i"],
@@ -33,7 +35,7 @@ options=dict( name=PKG,
     author='William Weir',
     provides=['modbp'],
     author_email='wweir@med.unc.edu',
-    description='',
+    description='This is a community detection package that used a belief propagation approach to optimize modularity on multilayer networks.  Algorithm is implemented in c++ with python interface for convenience. ',
     ext_modules=[ext_module],
     zip_safe=False,
     classifiers=["Programming Language :: Python :: 2.7",

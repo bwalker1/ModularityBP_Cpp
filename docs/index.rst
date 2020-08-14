@@ -25,6 +25,7 @@ __________
    :maxdepth: 2
 
    self
+   ./sub_docs/quick_start.rst
    ./sub_docs/intro.rst
    ./sub_docs/generategraph.rst
    ./sub_docs/modularitybp.rst
