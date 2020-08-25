@@ -4,7 +4,8 @@ from setuptools import setup, Extension
 import os,re
 ext_module=Extension(name="_bp",
                     sources=["modbp/src_cpp/bp.cpp","modbp/bp.i"],
-                    include_dirs=["modbp/src_cpp"],swig_opts=["-c++"],extra_compile_args=['-std=c++11'],
+                    include_dirs=["modbp/src_cpp"],
+                    swig_opts=["-c++"],extra_compile_args=['-std=c++11'],
                     )
 
 #setup version information

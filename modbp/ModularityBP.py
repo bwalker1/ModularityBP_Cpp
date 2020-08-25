@@ -35,7 +35,7 @@ class ModularityBP():
                  accuracy_off=True, use_effective=False, comm_vec=None,
                  align_communities_across_layers_temporal=False,
                  align_communities_across_layers_multiplex=False,
-                 min_com_size=5, is_bipartite=False):
+                 min_com_size=5, bipartite_classes=None):
 
         """
 
@@ -73,7 +73,7 @@ class ModularityBP():
             self.graph = MultilayerGraph(intralayer_edges=intralayer_edgelist,
                                          interlayer_edges=interlayer_edgelist,
                                          layer_vec=layer_vec,
-                                         is_bipartite=is_bipartite)
+                                         bipartite_classes=bipartite_classes)
 
         if not comm_vec is None:
             self.graph.comm_vec = comm_vec
