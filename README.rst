@@ -1,7 +1,7 @@
 
-Multilayer Modularity Belief Propagation (modbp)
+Multilayer Modularity Belief Propagation (multimodbp)
 =================================================================
-A belief propagation solution to multilay modularity community detection.
+A belief propagation solution to multilayer modularity community detection.
 
 .. figure::  docs/sub_docs/images/modbp_illustration.png
    :align:   center
