@@ -1,4 +1,5 @@
 venv/*
+venv2/*
 .DS_Store
 modbp/src_cpp/Mod_BP_Xcode/
 *.pyc
